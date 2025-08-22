@@ -41,19 +41,20 @@
 
 // Two replicators, replicates docs to the listener; validates connection status
 - (void) validateMultipleReplicationsTo: (Listener*)listener replType: (CBLReplicatorType)type {
+    NSError* error;
     XCTestExpectation* exp1 = [self expectationWithDescription: @"replicator#1 stopped"];
     XCTestExpectation* exp2 = [self expectationWithDescription: @"replicator#2 stopped"];
+    CBLCollection* col = listener.config.collections.firstObject;
+    uint64_t existingDocsInListener = col.count;
     
-    NSUInteger existingDocsInListener = listener.config.database.count;
+    CBLDatabase* db1 = [self openDBNamed: @"db1" error: &error];
+    CBLCollection* db1Col = [db1 defaultCollection: &error];
+    AssertNil(error);
+    CBLDatabase* db2 = [self openDBNamed: @"db2" error: &error];
+    CBLCollection* db2Col = [db2 defaultCollection: &error];
+    AssertNil(error);
     
-    // open DBs
-    NSError* err = nil;
-    Assert([self deleteDBNamed: @"db1" error: &err], @"Failed to delete db1 %@", err);
-    Assert([self deleteDBNamed: @"db2" error: &err], @"Failed to delete db2 %@", err);
-    CBLDatabase* db1 = [self openDBNamed: @"db1" error: &err];
-    AssertNil(err);
-    CBLDatabase* db2 = [self openDBNamed: @"db2" error: &err];
-    AssertNil(err);
+    
     
     NSData* content = [@"i am a blob" dataUsingEncoding: NSUTF8StringEncoding];
     
@@ -61,18 +62,20 @@
     CBLBlob* blob1 = [[CBLBlob alloc] initWithContentType: @"text/plain" data: content];
     CBLMutableDocument* doc1 = [self createDocument: @"doc-1"];
     [doc1 setValue: blob1 forKey: @"blob"];
-    Assert([db1 saveDocument: doc1 error: &err], @"Fail to save db1 %@", err);
+    Assert([db1Col saveDocument: doc1 error: &error], @"Fail to save to db.defaultCollection %@", error);
     
     // DB#2
     CBLBlob* blob2 = [[CBLBlob alloc] initWithContentType: @"text/plain" data: content];
     CBLMutableDocument* doc2 = [self createDocument: @"doc-2"];
     [doc2 setValue: blob2 forKey: @"blob"];
-    Assert([db2 saveDocument: doc2 error: &err], @"Fail to save db2 %@", err);
+    Assert([db2Col saveDocument: doc2 error: &error], @"Fail to save to otherDB.defaultCollection %@", error);
     
     // replicators
     CBLReplicatorConfiguration *config1, *config2;
-    config1 = [[CBLReplicatorConfiguration alloc] initWithDatabase: db1 target: listener.localEndpoint];
-    config2 = [[CBLReplicatorConfiguration alloc] initWithDatabase: db2 target: listener.localEndpoint];
+    CBLCollectionConfiguration* collConfig1 = [[CBLCollectionConfiguration alloc] initWithCollection: db1Col];
+    CBLCollectionConfiguration* collConfig2 = [[CBLCollectionConfiguration alloc] initWithCollection: db2Col];
+    config1 = [[CBLReplicatorConfiguration alloc] initWithCollections: @[collConfig1] target: listener.localEndpoint];
+    config2 = [[CBLReplicatorConfiguration alloc] initWithCollections: @[collConfig2] target: listener.localEndpoint];
     config1.replicatorType = type;
     config2.replicatorType = type;
     config1.pinnedServerCertificate = (__bridge SecCertificateRef) listener.tlsIdentity.certs[0];
@@ -101,22 +104,19 @@
         // the extra doc from db#2 and vice versa
         expectedReplicatorDBDocs += 1;
     }
-    AssertEqual(db1.count, expectedReplicatorDBDocs);
-    AssertEqual(db2.count, expectedReplicatorDBDocs);
+    AssertEqual(db1Col.count, expectedReplicatorDBDocs);
+    AssertEqual(db2Col.count, expectedReplicatorDBDocs);
     if (type == kCBLReplicatorTypePush || type == kCBLReplicatorTypePushAndPull) {
         // it should have two extra docs from each db#1 and db#2
-        AssertEqual(listener.config.database.count, existingDocsInListener + 2);
+        col = listener.config.collections.firstObject;
+        AssertEqual(col.count, existingDocsInListener + 2);
     }
     
     // cleanup
-    [repl1 removeChangeListenerWithToken: token1];
-    [repl2 removeChangeListenerWithToken: token2];
+    [token1 remove];
+    [token2 remove];
     repl1 = nil;
     repl2 = nil;
-    Assert([db1 close: &err], @"Failed to close db1 %@", err);
-    Assert([db2 close: &err], @"Failed to close db2 %@", err);
-    db1 = nil;
-    db2 = nil;
 }
 
 - (void) validateActiveReplicationsAndURLEndpointListener: (BOOL)isDeleteDBs {
@@ -129,26 +129,29 @@
     
     NSError* err;
     CBLMutableDocument* doc =  [self createDocument: @"db-doc"];
-    Assert([self.db saveDocument: doc error: &err], @"Fail to save DB %@", err);
+    Assert([self.defaultCollection saveDocument: doc error: &err], @"Fail to save DB %@", err);
     doc =  [self createDocument: @"other-db-doc"];
-    Assert([self.otherDB saveDocument: doc error: &err], @"Fail to save otherDB %@", err);
+    Assert([self.otherDBDefaultCollection saveDocument: doc error: &err], @"Fail to save otherDB %@", err);
     
     // start listener
     [self listen];
     
     // replicator #1
     id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.db];
-    CBLReplicatorConfiguration* config = [[CBLReplicatorConfiguration alloc] initWithDatabase: self.otherDB
-                                                                                       target: target];
+    CBLCollectionConfiguration* collConfig = [[CBLCollectionConfiguration alloc] initWithCollection: self.otherDBDefaultCollection];
+    CBLReplicatorConfiguration* config = [[CBLReplicatorConfiguration alloc] initWithCollections: @[collConfig]
+                                                                                          target: target];
     config.continuous = YES;
     CBLReplicator* repl1 = [[CBLReplicator alloc] initWithConfig: config];
 
     // replicator #2
     [self deleteDBNamed: @"db2" error: &err];
     CBLDatabase* db2 = [self openDBNamed: @"db2" error: &err];
+    CBLCollection* db2DefaultCollection = [db2 defaultCollection: &err];
     AssertNil(err);
-    config = [[CBLReplicatorConfiguration alloc] initWithDatabase: db2
-                                                           target: _listener.localEndpoint];
+    CBLCollectionConfiguration* coll2Config = [[CBLCollectionConfiguration alloc] initWithCollection: db2DefaultCollection];
+    config = [[CBLReplicatorConfiguration alloc] initWithCollections: @[coll2Config]
+                                                              target: _listener.localEndpoint];
     config.continuous = YES;
     config.pinnedServerCertificate = (__bridge SecCertificateRef) _listener.tlsIdentity.certs[0];
     CBLReplicator* repl2 = [[CBLReplicator alloc] initWithConfig: config];
@@ -188,8 +191,8 @@
     }
     
     [self waitForExpectations: @[stopExp1, stopExp2] timeout: kExpTimeout];
-    [repl1 removeChangeListenerWithToken: token1];
-    [repl2 removeChangeListenerWithToken: token2];
+    [token1 remove];
+    [token2 remove];
     [self stopListen];
 }
 
@@ -210,9 +213,9 @@
     AssertNil(err);
     
     CBLMutableDocument* doc =  [self createDocument: @"db-doc"];
-    Assert([self.db saveDocument: doc error: &err], @"Fail to save DB %@", err);
+    Assert([self.defaultCollection saveDocument: doc error: &err], @"Fail to save DB %@", err);
     doc =  [self createDocument: @"other-db-doc"];
-    Assert([self.otherDB saveDocument: doc error: &err], @"Fail to save otherDB %@", err);
+    Assert([self.otherDBDefaultCollection saveDocument: doc error: &err], @"Fail to save otherDB %@", err);
     
     // start replicator
     CBLReplicatorConfiguration* rConfig = [[CBLReplicatorConfiguration alloc] initWithDatabase: self.db
@@ -240,7 +243,7 @@
     [self waitForExpectations: @[stopExp] timeout: kExpTimeout];
     
     // cleanup
-    [replicator removeChangeListenerWithToken: token];
+    [token remove];
     [self stopListener: listener1];
     [self stopListener: listener2];
 }
@@ -367,7 +370,7 @@
     
     // save doc on remote end
     CBLMutableDocument* doc = [self createDocument];
-    Assert([self.otherDB saveDocument: doc error: &err], @"Failed to save %@", err);
+    Assert([self.otherDBDefaultCollection saveDocument: doc error: &err], @"Failed to save %@", err);
     
     CBLReplicatorConfiguration* rConfig = [self configWithTarget: _listener.localEndpoint
                                                             type: kCBLReplicatorTypePull
@@ -389,11 +392,11 @@
     
     [replicator start];
     [self waitForExpectations: @[pullFilterBusy, replicatorStop] timeout: kExpTimeout];
-    [replicator removeChangeListenerWithToken: token];
+    [token remove];
     
     AssertEqual(maxActiveCount, 1);
     AssertEqual(maxConnectionCount, 1);
-    AssertEqual(self.otherDB.count, 1);
+    AssertEqual(self.otherDBDefaultCollection.count, 1);
     
     // stops
     [self stopListener: _listener];
@@ -406,7 +409,7 @@
     
     NSError* error;
     CBLMutableDocument* doc = [self createDocument];
-    Assert([self.otherDB saveDocument: doc error: &error], @"Fail to save otherDB %@", error);
+    Assert([self.otherDBDefaultCollection saveDocument: doc error: &error], @"Fail to save otherDB %@", error);
     
     Config* config = [[Config alloc] initWithDatabase: self.otherDB];
     Listener* listener = [[Listener alloc] initWithConfig: config];
@@ -452,7 +455,7 @@
     
     NSError* error;
     CBLMutableDocument* doc = [self createDocument];
-    Assert([self.otherDB saveDocument: doc error: &error], @"Fail to save otherDB %@", error);
+    Assert([self.otherDBDefaultCollection saveDocument: doc error: &error], @"Fail to save otherDB %@", error);
     
     CBLTLSIdentity* tlsIdentity = [self tlsIdentity: YES];
     Config* config = [[Config alloc] initWithDatabase: self.otherDB];
@@ -501,7 +504,7 @@
     
     NSError* err;
     CBLMutableDocument* doc1 =  [self createDocument];
-    Assert([self.otherDB saveDocument: doc1 error: &err], @"Fail to save to otherDB %@", err);
+    Assert([self.otherDBDefaultCollection saveDocument: doc1 error: &err], @"Fail to save to otherDB %@", err);
     Listener* listener = [self listenWithTLS: NO];
     AssertNil(listener.tlsIdentity);
     
@@ -604,7 +607,7 @@
     
     NSError* err;
     CBLMutableDocument* doc1 =  [self createDocument];
-    Assert([self.otherDB saveDocument: doc1 error: &err], @"Fail to save to otherDB %@", err);
+    Assert([self.otherDBDefaultCollection saveDocument: doc1 error: &err], @"Fail to save to otherDB %@", err);
     
     // Listener:
     CBLListenerPasswordAuthenticator* auth = [[CBLListenerPasswordAuthenticator alloc] initWithBlock:
@@ -830,7 +833,7 @@
         AssertNil(err);
         CBLMutableDocument* doc = [self createDocument];
         [doc setString: url.absoluteString forKey: @"url"];
-        [db saveDocument: doc error: &err];
+        [self saveDocument: doc collection: [db defaultCollection: &err]];
         AssertNil(err);
         
         // separate replicator instance
@@ -843,7 +846,7 @@
         [self deleteDatabase: db];
     }
     
-    AssertEqual(self.otherDB.count, notLinkLocal.count);
+    AssertEqual(self.otherDBDefaultCollection.count, notLinkLocal.count);
     CBLQuery* q = [CBLQueryBuilder select: @[[CBLQuerySelectResult all]]
                                      from: [CBLQueryDataSource database: self.otherDB]];
     CBLQueryResultSet* rs = [q execute: &err];
@@ -922,7 +925,7 @@
     
     [listener2 stop];
     [self stopListener: listener1];
-    AssertEqual(self.otherDB.count, 1);
+    AssertEqual(self.otherDBDefaultCollection.count, 1);
 }
 
 - (void) testMultipleReplicatorsToListener {
@@ -934,7 +937,7 @@
     NSError* err = nil;
     CBLMutableDocument* doc = [self createDocument: @"doc"];
     [doc setValue: @"Tiger" forKey: @"species"];
-    Assert([self.otherDB saveDocument: doc error: &err], @"Failed to save listener DB %@", err);
+    Assert([self.otherDBDefaultCollection saveDocument: doc error: &err], @"Failed to save listener DB %@", err);
     
     // pushAndPull can cause race; so only push is validated
     [self validateMultipleReplicationsTo: _listener replType: kCBLReplicatorTypePush];
@@ -954,7 +957,7 @@
     NSError* err = nil;
     CBLMutableDocument* doc = [self createDocument: @"doc"];
     [doc setValue: @"Tiger" forKey: @"species"];
-    Assert([self.otherDB saveDocument: doc error: &err], @"Failed to save listener DB %@", err);
+    Assert([self.otherDBDefaultCollection saveDocument: doc error: &err], @"Failed to save listener DB %@", err);
     
     [self validateMultipleReplicationsTo: _listener replType: kCBLReplicatorTypePull];
     
@@ -967,7 +970,7 @@
     
     NSError* err;
     CBLMutableDocument* doc1 =  [self createDocument];
-    Assert([self.db saveDocument: doc1 error: &err], @"Fail to save db1 %@", err);
+    Assert([self.defaultCollection saveDocument: doc1 error: &err], @"Fail to save db1 %@", err);
     
     Config* config = [[Config alloc] initWithDatabase: self.otherDB];
     config.readOnly = YES;
@@ -1220,7 +1223,7 @@
     
     // make sure, replication works
     [self generateDocumentWithID: @"doc-1"];
-    AssertEqual(self.otherDB.count, 0);
+    AssertEqual(self.otherDBDefaultCollection.count, 0);
     [self runWithTarget: _listener.localEndpoint
                    type: kCBLReplicatorTypePushAndPull
              continuous: NO
@@ -1228,7 +1231,7 @@
              serverCert: (__bridge SecCertificateRef) _listener.tlsIdentity.certs[0]
               errorCode: 0
             errorDomain: nil];
-    AssertEqual(self.otherDB.count, 1u);
+    AssertEqual(self.otherDBDefaultCollection.count, 1u);
     
     // stop and cleanup
     [self stopListen];
@@ -1434,7 +1437,7 @@
     }];
     
     [self generateDocumentWithID: @"doc-1"];
-    AssertEqual(self.otherDB.count, 0);
+    AssertEqual(self.otherDBDefaultCollection.count, 0);
     
     self.disableDefaultServerCertPinning = YES;
     

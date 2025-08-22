@@ -35,6 +35,9 @@ const NSTimeInterval kExpTimeout = 20.0;
     int _c4ObjectCount;
 }
 
+@dynamic defaultCollection;
+@dynamic otherDBDefaultCollection;
+
 @synthesize db=_db, otherDB=_otherDB, disableObjectLeakCheck=_disableObjectLeakCheck;
 
 // TODO: Remove https://issues.couchbase.com/browse/CBL-3206
@@ -68,19 +71,16 @@ const NSTimeInterval kExpTimeout = 20.0;
 
 - (void) tearDown {
     [CBLLogSinks resetApiVersion];
+    NSError* error;
     
-    if (_db) {
-        NSError* error;
-        Assert([_db close: &error], @"Failed to close db: %@", error);
-        _db = nil;
-    }
-    
+    Assert([_db close: &error], @"Failed to close db: %@", error);
+    _db = nil;
+
     if (_otherDB) {
-        NSError* error;
         Assert([_otherDB close: &error], @"Failed to close otherdb: %@", error);
         _otherDB = nil;
     }
-    
+
     if (!_disableObjectLeakCheck) {
         // Wait a little while for objects to be cleaned up:
         int leaks = 0;
@@ -209,6 +209,22 @@ const NSTimeInterval kExpTimeout = 20.0;
     AssertNil(error);
 }
 
+- (CBLCollection*) defaultCollection {
+    NSError* error;
+    CBLCollection* collection = [_db defaultCollection: &error];
+    AssertNotNil(collection);
+    AssertNil(error);
+    return collection;
+}
+
+- (CBLCollection*) otherDBDefaultCollection {
+    NSError* error;
+    CBLCollection* collection = [_otherDB defaultCollection: &error];
+    AssertNotNil(collection);
+    AssertNil(error);
+    return collection;
+}
+
 - (CBLMutableDocument*) createDocument {
     return [[CBLMutableDocument alloc] init];
 }
@@ -224,41 +240,36 @@ const NSTimeInterval kExpTimeout = 20.0;
 - (CBLMutableDocument*) generateDocumentWithID: (NSString*)documentID {
     CBLMutableDocument* doc = [self createDocument: documentID];
     [doc setValue: @1 forKey:@"key"];
-    [self saveDocument: doc];
+    [self saveDocument: doc collection: self.defaultCollection];
     AssertEqual(doc.sequence, 1u);
     if (documentID)
         AssertEqualObjects(doc.id, documentID);
     return doc;
 }
 
-- (void) saveDocument: (CBLMutableDocument*)document {
-    [self saveDocument: document collection: nil];
-}
-
-- (void) saveDocument:(CBLMutableDocument *)document collection: (nullable CBLCollection*)col {
+- (void) saveDocument: (CBLMutableDocument*)document collection: (CBLCollection*)col {
     NSError* error;
-    CBLCollection* c = col ?: [self.db defaultCollection: &error];
-    AssertNotNil(c);
-    
-    Assert([c saveDocument: document error: &error], @"Saving error: %@", error);
+    Assert([col saveDocument: document error: &error], @"Saving error: %@", error);
     AssertNil(error);
     
-    CBLDocument* savedDoc = [c documentWithID: document.id error: &error];
+    CBLDocument* savedDoc = [col documentWithID: document.id error: &error];
     AssertNotNil(savedDoc);
     AssertEqualObjects(savedDoc.id, document.id);
     AssertEqualObjects([savedDoc toDictionary], [document toDictionary]);
     AssertNil(error);
 }
 
-- (void) saveDocument: (CBLMutableDocument*)document eval: (void(^)(CBLDocument*))block {
-    NSError* error;
-    block(document);
-    Assert([_db saveDocument: document error: &error], @"Saving error: %@", error);
-    block(document);
-    block([_db documentWithID: document.id]);
+- (void) saveDocument: (CBLMutableDocument*)document eval: (void(^)(CBLDocument*))block  {
+    @autoreleasepool {
+        NSError* error;
+        block(document);
+        Assert([self.defaultCollection saveDocument: document error: &error], @"Saving error: %@", error);
+        block(document);
+        block([self.defaultCollection documentWithID: document.id error: &error]);
+    }
 }
 
-- (void) createDocNumbered: (nullable CBLCollection*)col start: (NSInteger)start num: (NSInteger)num {
+- (void) createDocNumbered: (CBLCollection*)col start: (NSInteger)start num: (NSInteger)num {
     for (NSInteger i = start; i < (start+num); i++) {
         NSString* docID = [NSString stringWithFormat: @"doc%ld", (long)i];
         CBLMutableDocument* doc = [[CBLMutableDocument alloc] initWithID: docID];
@@ -303,30 +314,6 @@ const NSTimeInterval kExpTimeout = 20.0;
     return s;
 }
 
-- (void) loadJSONResource: (NSString*)resourceName {
-    NSError* error = nil;
-    CBLCollection* defaultCollection = [self.db defaultCollection: &error];
-    AssertNil(error);
-    
-    [self loadJSONResource: resourceName toCollection: defaultCollection];
-    
-}
-
-- (void) loadJSONResource: (NSString*)resourceName toCollection: (CBLCollection*)collection {
-    @autoreleasepool {
-        NSString* contents = [self stringFromResource: resourceName ofType: @"json"];
-        return [self loadJSONString: contents named: resourceName toCollection: collection];
-    }
-}
-
-- (void) loadJSONString: (NSString*)contents named: (NSString*)resourceName {
-    NSError* error = nil;
-    CBLCollection* defaultCollection = [self.db defaultCollection: &error];
-    AssertNil(error);
-    
-    [self loadJSONString: contents named: resourceName toCollection: defaultCollection];
-}
-
 - (void) loadJSONString: (NSString*)contents
                   named: (NSString*)resourceName
            toCollection: (CBLCollection*)collection {
@@ -339,6 +326,27 @@ const NSTimeInterval kExpTimeout = 20.0;
             Assert([collection saveDocument: doc error: &err], @"Couldn't save document: %@", err);
         }];
     }
+}
+
+- (void) loadJSONString: (NSString*)contents named: (NSString*)resourceName {
+    NSError* error = nil;
+    AssertNil(error);
+    
+    [self loadJSONString: contents named: resourceName toCollection: self.defaultCollection];
+}
+
+- (void) loadJSONResource: (NSString*)resourceName toCollection: (CBLCollection*)collection {
+    @autoreleasepool {
+        NSString* contents = [self stringFromResource: resourceName ofType: @"json"];
+        return [self loadJSONString: contents named: resourceName toCollection: collection];
+    }
+}
+
+- (void) loadJSONResource: (NSString*)resourceName {
+    NSError* error = nil;
+    AssertNil(error);
+    
+    [self loadJSONResource: resourceName toCollection: self.defaultCollection];
 }
 
 - (CBLBlob*) blobForString: (NSString*)string {
@@ -474,11 +482,11 @@ const NSTimeInterval kExpTimeout = 20.0;
     NSError* err;
     NSData* content = [@"Earth(C-137)" dataUsingEncoding: NSUTF8StringEncoding];
     CBLBlob* blob = [[CBLBlob alloc] initWithContentType:@"text/plain" data: content];
-    [self.db saveBlob: blob error: &err];
+    [_db saveBlob: blob error: &err];
     
     content = [@"Grandpa Rick" dataUsingEncoding: NSUTF8StringEncoding];
     blob = [[CBLBlob alloc] initWithContentType:@"text/plain" data: content];
-    [self.db saveBlob: blob error: &err];
+    [_db saveBlob: blob error: &err];
     
     return [self stringFromResource: @"rick_morty" ofType: @"json"];
 }

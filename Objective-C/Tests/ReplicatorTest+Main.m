@@ -45,209 +45,6 @@
 
 #ifdef COUCHBASE_ENTERPRISE
 
-- (void) testEmptyPush {
-    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
-    id config = [self configWithTarget: target type: kCBLReplicatorTypePush continuous: NO];
-    [self run: config errorCode: 0 errorDomain: nil];
-}
-
-- (void) testPushDoc {
-    NSError* error;
-    CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: @"doc1"];
-    [doc1 setValue: @"Tiger" forKey: @"name"];
-    Assert([self.db saveDocument: doc1 error: &error]);
-    AssertEqual(self.db.count, 1u);
-    
-    CBLMutableDocument* doc2 = [[CBLMutableDocument alloc] initWithID: @"doc2"];
-    [doc2 setValue: @"Cat" forKey: @"name"];
-    Assert([self.otherDB saveDocument: doc2 error: &error]);
-    
-    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
-    id config = [self configWithTarget: target type: kCBLReplicatorTypePush continuous: NO];
-    [self run: config errorCode: 0 errorDomain: nil];
-    
-    AssertEqual(self.otherDB.count, 2u);
-    CBLDocument* savedDoc1 = [self.otherDB documentWithID: @"doc1"];
-    AssertEqualObjects([savedDoc1 stringForKey:@"name"], @"Tiger");
-}
-
-- (void) testPushDocContinuous {
-    NSError* error;
-    CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: @"doc1"];
-    [doc1 setValue: @"Tiger" forKey: @"name"];
-    Assert([self.db saveDocument: doc1 error: &error]);
-    AssertEqual(self.db.count, 1u);
-    
-    CBLMutableDocument* doc2 = [[CBLMutableDocument alloc] initWithID: @"doc2"];
-    [doc2 setValue: @"Cat" forKey: @"name"];
-    Assert([self.otherDB saveDocument: doc2 error: &error]);
-    
-    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
-    id config = [self configWithTarget: target type: kCBLReplicatorTypePush continuous: YES];
-    [self run: config errorCode: 0 errorDomain: nil];
-    
-    AssertEqual(self.otherDB.count, 2u);
-    CBLDocument* savedDoc1 = [self.otherDB documentWithID: @"doc1"];
-    AssertEqualObjects([savedDoc1 stringForKey:@"name"], @"Tiger");
-}
-
-- (void) testPullDoc {
-    // For https://github.com/couchbase/couchbase-lite-core/issues/156
-    NSError* error;
-    CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: @"doc1"];
-    [doc1 setValue: @"Tiger" forKey: @"name"];
-    Assert([self.db saveDocument: doc1 error: &error]);
-    AssertEqual(self.db.count, 1u);
-    
-    CBLMutableDocument* doc2 = [[CBLMutableDocument alloc] initWithID: @"doc2"];
-    [doc2 setValue: @"Cat" forKey: @"name"];
-    Assert([self.otherDB saveDocument: doc2 error: &error]);
-    
-    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
-    id config = [self configWithTarget: target type: kCBLReplicatorTypePull continuous: NO];
-    [self run: config errorCode: 0 errorDomain: nil];
-    
-    AssertEqual(self.db.count, 2u);
-    CBLDocument* savedDoc2 = [self.db documentWithID:@"doc2"];
-    AssertEqualObjects([savedDoc2 stringForKey:@"name"], @"Cat");
-}
-
-- (void) testPullDocContinuous {
-    // For https://github.com/couchbase/couchbase-lite-core/issues/156
-    NSError* error;
-    CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID:@"doc1"];
-    [doc1 setValue: @"Tiger" forKey: @"name"];
-    Assert([self.db saveDocument: doc1 error: &error]);
-    AssertEqual(self.db.count, 1u);
-    
-    CBLMutableDocument* doc2 = [[CBLMutableDocument alloc] initWithID:@"doc2"];
-    [doc2 setValue: @"Cat" forKey: @"name"];
-    Assert([self.otherDB saveDocument: doc2 error: &error]);
-    
-    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
-    id config = [self configWithTarget: target type: kCBLReplicatorTypePull continuous: YES];
-    [self run: config errorCode: 0 errorDomain: nil];
-    
-    AssertEqual(self.db.count, 2u);
-    CBLDocument* savedDoc2 = [self.db documentWithID: @"doc2"];
-    AssertEqualObjects([savedDoc2 stringForKey:@"name"], @"Cat");
-}
-
-- (void) testPullConflict {
-    // Create a document and push it to otherDB:
-    NSError* error;
-    CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID:@"doc"];
-    [doc1 setValue: @"Tiger" forKey: @"species"];
-    Assert([self.db saveDocument: doc1 error: &error]);
-    
-    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
-    CBLReplicatorConfiguration* pushConfig = [self configWithTarget: target type :kCBLReplicatorTypePush continuous: NO];
-    [self run: pushConfig errorCode: 0 errorDomain: nil];
-    
-    // Now make different changes in db and otherDB:
-    doc1 = [[self.db documentWithID: @"doc"] toMutable];
-    [doc1 setValue: @"Hobbes" forKey: @"name"];
-    Assert([self.db saveDocument: doc1 error: &error]);
-    
-    CBLMutableDocument* doc2 = [[self.otherDB documentWithID: @"doc"] toMutable];
-    Assert(doc2);
-    [doc2 setValue: @"striped" forKey: @"pattern"];
-    Assert([self.otherDB saveDocument: doc2 error: &error]);
-    
-    [doc2 setValue: @"black-yellow" forKey: @"color"];
-    Assert([self.otherDB saveDocument: doc2 error: &error]);
-    
-    // Pull from otherDB, creating a conflict to resolve:
-    id pullConfig = [self configWithTarget: target type: kCBLReplicatorTypePull continuous: NO];
-    [self run: pullConfig errorCode: 0 errorDomain: nil];
-    
-    // Check that it was resolved:
-    AssertEqual(self.db.count, 1u);
-    CBLDocument* savedDoc = [self.db documentWithID: @"doc"];
-    
-    // Most-Active Win:
-    NSDictionary* expectedResult = @{@"species": @"Tiger",
-                                     @"pattern": @"striped",
-                                     @"color": @"black-yellow"};
-    AssertEqualObjects(savedDoc.toDictionary, expectedResult);
-    
-    AssertNil(pushConfig.conflictResolver);
-    
-    // Push to otherDB again to verify there is no replication conflict now,
-    // and that otherDB ends up with the same resolved document:
-    [self run: pushConfig errorCode: 0 errorDomain: nil];
-    
-    AssertEqual(self.otherDB.count, 1u);
-    CBLDocument* otherSavedDoc = [self.otherDB documentWithID: @"doc"];
-    AssertEqualObjects(otherSavedDoc.toDictionary, expectedResult);
-}
-
-- (void) testPullConflictNoBaseRevision {
-    // Create the conflicting docs separately in each database. They have the same base revID
-    // because the contents are identical, but because the db never pushed revision 1, it doesn't
-    // think it needs to preserve its body; so when it pulls a conflict, there won't be a base
-    // revision for the resolver.
-    NSError* error;
-    CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: @"doc"];
-    [doc1 setValue: @"Tiger" forKey: @"species"];
-    Assert([self.db saveDocument: doc1 error: &error]);
-    [doc1 setValue: @"Hobbes" forKey: @"name"];
-    Assert([self.db saveDocument: doc1 error: &error]);
-    
-    CBLMutableDocument* doc2 = [[CBLMutableDocument alloc] initWithID: @"doc"];
-    [doc2 setValue: @"Tiger" forKey: @"species"];
-    Assert([self.otherDB saveDocument: doc2 error: &error]);
-    [doc2 setValue: @"striped" forKey: @"pattern"];
-    Assert([self.otherDB saveDocument: doc2 error: &error]);
-    [doc2 setValue: @"black-yellow" forKey: @"color"];
-    Assert([self.otherDB saveDocument: doc2 error: &error]);
-    
-    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
-    CBLReplicatorConfiguration* config = [self configWithTarget: target type :kCBLReplicatorTypePull continuous: NO];
-    AssertNil(config.conflictResolver);
-    [self run: config errorCode: 0 errorDomain: nil];
-    
-    AssertEqual(self.db.count, 1u);
-    CBLDocument* savedDoc = [self.db documentWithID: @"doc"];
-    AssertEqualObjects(savedDoc.toDictionary, (@{@"species": @"Tiger",
-                                                 @"pattern": @"striped",
-                                                 @"color": @"black-yellow"}));
-}
-
-- (void) testPullConflictDeleteWins {
-    // Create a document and push it to otherDB:
-    NSError* error;
-    CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID:@"doc"];
-    [doc1 setValue: @"Tiger" forKey: @"species"];
-    Assert([self.db saveDocument: doc1 error: &error]);
-    
-    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
-    id pushConfig = [self configWithTarget: target type :kCBLReplicatorTypePush continuous: NO];
-    [self run: pushConfig errorCode: 0 errorDomain: nil];
-    
-    // Delete the document from db:
-    Assert([self.db deleteDocument: doc1 error: &error]);
-    AssertNil([self.db documentWithID: doc1.id]);
-    
-    // Update the document in otherDB:
-    CBLMutableDocument* doc2 = [[self.otherDB documentWithID: doc1.id] toMutable];
-    Assert(doc2);
-    [doc2 setValue: @"striped" forKey: @"pattern"];
-    Assert([self.otherDB saveDocument: doc2 error: &error]);
-    
-    [doc2 setValue: @"black-yellow" forKey: @"color"];
-    Assert([self.otherDB saveDocument: doc2 error: &error]);
-    
-    // Pull from otherDB, creating a conflict to resolve:
-    CBLReplicatorConfiguration* pullConfig = [self configWithTarget: target type: kCBLReplicatorTypePull continuous: NO];
-    AssertNil(pullConfig.conflictResolver);
-    [self run: pullConfig errorCode: 0 errorDomain: nil];
-    
-    // Check that it was resolved as delete wins:
-    AssertEqual(self.db.count, 0u);
-    AssertNil([self.db documentWithID: doc1.id]);
-}
-
 - (void) testStopContinuousReplicator {
     id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
     id config = [self configWithTarget: target type: kCBLReplicatorTypePushAndPull continuous: YES];
@@ -274,7 +71,7 @@
         NSLog(@"****** Start Replicator ******");
         [r start];
         [self waitForExpectations: @[x] timeout: kExpTimeout];
-        [r removeChangeListenerWithToken: token];
+        [token remove];
     }
     r = nil;
 }
@@ -304,15 +101,15 @@
     CBLBlob* blob = [[CBLBlob alloc] initWithContentType: @"image/jpg"
                                                     data: data];
     [doc1 setBlob: blob forKey: @"blob"];
-    Assert([self.db saveDocument: doc1 error: &error]);
-    AssertEqual(self.db.count, 1u);
+    Assert([self.defaultCollection saveDocument: doc1 error: &error]);
+    AssertEqual(self.defaultCollection.count, 1u);
     
     id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
     id config = [self configWithTarget: target type: kCBLReplicatorTypePush continuous: NO];
     [self run: config errorCode: 0 errorDomain: nil];
     
-    AssertEqual(self.otherDB.count, 1u);
-    CBLDocument* savedDoc1 = [self.otherDB documentWithID: @"doc1"];
+    AssertEqual(self.otherDBDefaultCollection.count, 1u);
+    CBLDocument* savedDoc1 = [self.otherDBDefaultCollection documentWithID: @"doc1" error: &error];
     AssertEqualObjects([savedDoc1 blobForKey:@"blob"], blob);
 }
 
@@ -324,15 +121,15 @@
     CBLBlob* blob = [[CBLBlob alloc] initWithContentType: @"image/jpg"
                                                     data: data];
     [doc1 setBlob: blob forKey: @"blob"];
-    Assert([self.otherDB saveDocument: doc1 error: &error]);
-    AssertEqual(self.otherDB.count, 1u);
+    Assert([self.otherDBDefaultCollection saveDocument: doc1 error: &error]);
+    AssertEqual(self.otherDBDefaultCollection.count, 1u);
     
     id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
     id config = [self configWithTarget: target type: kCBLReplicatorTypePull continuous: YES];
     [self run: config errorCode: 0 errorDomain: nil];
     
-    AssertEqual(self.db.count, 1u);
-    CBLDocument* savedDoc1 = [self.db documentWithID: @"doc1"];
+    AssertEqual(self.defaultCollection.count, 1u);
+    CBLDocument* savedDoc1 = [self.defaultCollection documentWithID: @"doc1" error: &error];
     AssertEqualObjects([savedDoc1 blobForKey:@"blob"], blob);
 }
 
@@ -389,7 +186,7 @@
     AssertEqual(foregroundCount, numRounds + 1);
     AssertEqual(backgroundCount, numRounds);
     
-    [r removeChangeListenerWithToken: token];
+    [token remove];
     r = nil;
 }
 
@@ -427,7 +224,7 @@
     [r stop];
     [self waitForExpectations: @[stopped] timeout: kExpTimeout];
 
-    [r removeChangeListenerWithToken: token];
+    [token remove];
     r = nil;
 }
 
@@ -474,7 +271,7 @@
                                    selector: @selector(main) userInfo: nil repeats: NO];
     [self waitForExpectations: @[done] timeout: kExpTimeout];
     
-    [r removeChangeListenerWithToken: token];
+    [token remove];
     r = nil;
 }
 
@@ -508,7 +305,7 @@
     }];
     
     // start and wait for idle
-    AssertEqual(self.otherDB.count, 0);
+    AssertEqual(self.otherDBDefaultCollection.count, 0);
     [replicator start];
     [self waitForExpectations: @[idle] timeout: kExpTimeout];
     
@@ -518,7 +315,7 @@
     NSData* data = [self dataFromResource: @"image" ofType: @"jpg"];
     CBLBlob* blob = [[CBLBlob alloc] initWithContentType: @"image/jpg" data: data];
     [doc1 setBlob: blob forKey: @"blob"];
-    Assert([self.db saveDocument: doc1 error: &error]);
+    Assert([self.defaultCollection saveDocument: doc1 error: &error]);
     [self waitForExpectations: @[busy] timeout: kExpTimeout];
     
     // background during the data transfer!
@@ -530,11 +327,11 @@
     [replicator setSuspended: NO];
     
     [self waitForExpectations: @[stop] timeout: kExpTimeout];
-    [replicator removeChangeListenerWithToken: token];
+    [token remove];
     
     // make sure the doc with blob transferred successfully!
-    AssertEqual(self.otherDB.count, 1);
-    CBLDocument* doc = [self.otherDB documentWithID: @"doc1"];
+    AssertEqual(self.otherDBDefaultCollection.count, 1);
+    CBLDocument* doc = [self.otherDBDefaultCollection documentWithID: @"doc1" error: &error];
     CBLBlob* blob2 = [doc blobForKey: @"blob"];
     AssertEqualObjects(blob2.digest, blob.digest);
 }
@@ -547,11 +344,11 @@
         NSString* docID = [NSString stringWithFormat: @"doc-%lu", (unsigned long)i];
         CBLMutableDocument *doc1a = [[CBLMutableDocument alloc] initWithID: docID];
         [doc1a setString: self.db.name forKey: @"name"];
-        Assert([self.db saveDocument: doc1a error: &error]);
+        Assert([self.defaultCollection saveDocument: doc1a error: &error]);
         
         CBLMutableDocument *doc1b = [[CBLMutableDocument alloc] initWithID: docID];
         [doc1b setString: self.otherDB.name forKey: @"name"];
-        Assert([self.otherDB saveDocument: doc1b error: &error]);
+        Assert([self.otherDBDefaultCollection saveDocument: doc1b error: &error]);
     }
     
     NSLock* lock = [[NSLock alloc] init];
@@ -613,7 +410,7 @@
     // Wait until the replicator is stopped:
     [self waitForExpectations: @[stopped] timeout: kExpTimeout];
     
-    [r removeChangeListenerWithToken: token];
+    [token remove];
 }
 
 #endif // TARGET_OS_IPHONE
@@ -623,12 +420,12 @@
     CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: @"doc1"];
     [doc1 setString: @"Tiger" forKey: @"species"];
     [doc1 setString: @"Hobbes" forKey: @"name"];
-    Assert([self.db saveDocument: doc1 error: &error]);
+    Assert([self.defaultCollection saveDocument: doc1 error: &error]);
     
     CBLMutableDocument* doc2 = [[CBLMutableDocument alloc] initWithID: @"doc2"];
     [doc2 setString: @"Tiger" forKey: @"species"];
     [doc2 setString: @"striped" forKey: @"pattern"];
-    Assert([self.db saveDocument: doc2 error: &error]);
+    Assert([self.defaultCollection saveDocument: doc2 error: &error]);
     
     // Push:
     id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
@@ -639,23 +436,23 @@
     config = [self configWithTarget: target type: kCBLReplicatorTypePull continuous: NO];
     [self run: config errorCode: 0 errorDomain: nil];
     
-    AssertEqual(self.db.count, 2u);
+    AssertEqual(self.defaultCollection.count, 2u);
     
-    CBLDocument* doc = [self.db documentWithID: @"doc1"];
-    Assert([self.db purgeDocument: doc error: &error]);
+    CBLDocument* doc = [self.defaultCollection documentWithID: @"doc1" error: &error];
+    Assert([self.defaultCollection purgeDocument: doc error: &error]);
     
-    doc = [self.db documentWithID: @"doc2"];
-    Assert([self.db purgeDocument: doc error: &error]);
+    doc = [self.defaultCollection documentWithID: @"doc2" error: &error];
+    Assert([self.defaultCollection purgeDocument: doc error: &error]);
     
-    AssertEqual(self.db.count, 0u);
+    AssertEqual(self.defaultCollection.count, 0u);
     
     // Pull again, shouldn't have any new changes:
     [self run: config errorCode: 0 errorDomain: nil];
-    AssertEqual(self.db.count, 0u);
+    AssertEqual(self.defaultCollection.count, 0u);
     
     // Reset and pull:
     [self run: config reset: YES errorCode: 0 errorDomain: nil];
-    AssertEqual(self.db.count, 2u);
+    AssertEqual(self.defaultCollection.count, 2u);
 }
 
 - (void) testStartWithResetCheckpointContinuous {
@@ -663,12 +460,12 @@
     CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: @"doc1"];
     [doc1 setString: @"Tiger" forKey: @"species"];
     [doc1 setString: @"Hobbes" forKey: @"name"];
-    Assert([self.db saveDocument: doc1 error: &error]);
+    Assert([self.defaultCollection saveDocument: doc1 error: &error]);
     
     CBLMutableDocument* doc2 = [[CBLMutableDocument alloc] initWithID: @"doc2"];
     [doc2 setString: @"Tiger" forKey: @"species"];
     [doc2 setString: @"striped" forKey: @"pattern"];
-    Assert([self.db saveDocument: doc2 error: &error]);
+    Assert([self.defaultCollection saveDocument: doc2 error: &error]);
     
     // Push:
     id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
@@ -679,118 +476,23 @@
     config = [self configWithTarget: target type: kCBLReplicatorTypePull continuous: YES];
     [self run: config errorCode: 0 errorDomain: nil];
     
-    AssertEqual(self.db.count, 2u);
+    AssertEqual(self.defaultCollection.count, 2u);
     
-    CBLDocument* doc = [self.db documentWithID: @"doc1"];
-    Assert([self.db purgeDocument: doc error: &error]);
+    CBLDocument* doc = [self.defaultCollection documentWithID: @"doc1" error: &error];
+    Assert([self.defaultCollection purgeDocument: doc error: &error]);
     
-    doc = [self.db documentWithID: @"doc2"];
-    Assert([self.db purgeDocument: doc error: &error]);
+    doc = [self.defaultCollection documentWithID: @"doc2" error: &error];
+    Assert([self.defaultCollection purgeDocument: doc error: &error]);
     
-    AssertEqual(self.db.count, 0u);
+    AssertEqual(self.defaultCollection.count, 0u);
     
     // Pull again, shouldn't have any new changes:
     [self run: config errorCode: 0 errorDomain: nil];
-    AssertEqual(self.db.count, 0u);
+    AssertEqual(self.defaultCollection.count, 0u);
     
     // Reset and pull:
     [self run: config reset: YES errorCode: 0 errorDomain: nil];
-    AssertEqual(self.db.count, 2u);
-}
-
-- (void) testDb2DbPushWithDocIDsFilter {
-    NSError* error;
-    CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: @"doc1"];
-    [doc1 setString: @"doc1" forKey: @"name"];
-    Assert([self.db saveDocument: doc1 error: &error]);
-    
-    CBLMutableDocument* doc2 = [[CBLMutableDocument alloc] initWithID: @"doc2"];
-    [doc2 setString: @"doc2" forKey: @"name"];
-    Assert([self.db saveDocument: doc2 error: &error]);
-    
-    CBLMutableDocument* doc3 = [[CBLMutableDocument alloc] initWithID: @"doc3"];
-    [doc3 setString: @"doc3" forKey: @"name"];
-    Assert([self.db saveDocument: doc3 error: &error]);
-    
-    // Push:
-    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
-    CBLReplicatorConfiguration* config =
-    [self configWithTarget: target type: kCBLReplicatorTypePush continuous: NO];
-    config.documentIDs = @[@"doc1", @"doc3"];
-    
-    [self run: config errorCode: 0 errorDomain: nil];
-    
-    AssertEqual(self.otherDB.count, 2u);
-    AssertNotNil([self.otherDB documentWithID: @"doc1"]);
-    AssertNotNil([self.otherDB documentWithID: @"doc3"]);
-    AssertNil([self.otherDB documentWithID: @"doc2"]);
-}
-
-- (void) testDb2DbPullWithDocIDsFilter {
-    NSError* error;
-    CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: @"doc1"];
-    [doc1 setString: @"doc1" forKey: @"name"];
-    Assert([self.otherDB saveDocument: doc1 error: &error]);
-    
-    CBLMutableDocument* doc2 = [[CBLMutableDocument alloc] initWithID: @"doc2"];
-    [doc2 setString: @"doc2" forKey: @"name"];
-    Assert([self.otherDB saveDocument: doc2 error: &error]);
-    
-    CBLMutableDocument* doc3 = [[CBLMutableDocument alloc] initWithID: @"doc3"];
-    [doc3 setString: @"doc3" forKey: @"name"];
-    Assert([self.otherDB saveDocument: doc3 error: &error]);
-    
-    // Pull:
-    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
-    CBLReplicatorConfiguration* config =
-    [self configWithTarget: target type: kCBLReplicatorTypePull continuous: NO];
-    config.documentIDs = @[@"doc1", @"doc3"];
-    
-    [self run: config errorCode: 0 errorDomain: nil];
-    
-    AssertEqual(self.db.count, 2u);
-    AssertNotNil([self.db documentWithID: @"doc1"]);
-    AssertNotNil([self.db documentWithID: @"doc3"]);
-    AssertNil([self.db documentWithID: @"doc2"]);
-}
-
-- (void) testDb2DbPushAndPullWithDocIDsFilter {
-    NSError* error;
-    CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: @"doc1"];
-    [doc1 setString: @"doc1" forKey: @"name"];
-    Assert([self.db saveDocument: doc1 error: &error]);
-    
-    CBLMutableDocument* doc2 = [[CBLMutableDocument alloc] initWithID: @"doc2"];
-    [doc2 setString: @"doc2" forKey: @"name"];
-    Assert([self.db saveDocument: doc2 error: &error]);
-    
-    CBLMutableDocument* doc3 = [[CBLMutableDocument alloc] initWithID: @"doc3"];
-    [doc3 setString: @"doc3" forKey: @"name"];
-    Assert([self.otherDB saveDocument: doc3 error: &error]);
-    
-    CBLMutableDocument* doc4 = [[CBLMutableDocument alloc] initWithID: @"doc4"];
-    [doc4 setString: @"doc4" forKey: @"name"];
-    Assert([self.otherDB saveDocument: doc4 error: &error]);
-    
-    // Push:
-    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
-    CBLReplicatorConfiguration* config =
-    [self configWithTarget: target type: kCBLReplicatorTypePushAndPull continuous: NO];
-    config.documentIDs = @[@"doc1", @"doc4"];
-    
-    [self run: config errorCode: 0 errorDomain: nil];
-    
-    AssertEqual(self.db.count, 3u);
-    AssertNotNil([self.db documentWithID: @"doc1"]);
-    AssertNotNil([self.db documentWithID: @"doc2"]);
-    AssertNotNil([self.db documentWithID: @"doc4"]);
-    AssertNil([self.db documentWithID: @"doc3"]);
-    
-    AssertEqual(self.otherDB.count, 3u);
-    AssertNotNil([self.otherDB documentWithID: @"doc1"]);
-    AssertNotNil([self.otherDB documentWithID: @"doc3"]);
-    AssertNotNil([self.otherDB documentWithID: @"doc4"]);
-    AssertNil([self.otherDB documentWithID: @"doc2"]);
+    AssertEqual(self.defaultCollection.count, 2u);
 }
 
 - (void) testDocumentReplicationEvent {
@@ -798,12 +500,12 @@
     CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: @"doc1"];
     [doc1 setString: @"Tiger" forKey: @"species"];
     [doc1 setString: @"Hobbes" forKey: @"pattern"];
-    Assert([self.db saveDocument: doc1 error: &error]);
+    Assert([self.defaultCollection saveDocument: doc1 error: &error]);
     
     CBLMutableDocument* doc2 = [[CBLMutableDocument alloc] initWithID: @"doc2"];
     [doc2 setString: @"Tiger" forKey: @"species"];
     [doc2 setString: @"Striped" forKey: @"pattern"];
-    Assert([self.db saveDocument: doc2 error: &error]);
+    Assert([self.defaultCollection saveDocument: doc2 error: &error]);
     
     // Push:
     id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
@@ -838,7 +540,7 @@
     CBLMutableDocument* doc3 = [[CBLMutableDocument alloc] initWithID: @"doc3"];
     [doc3 setString: @"Tiger" forKey: @"species"];
     [doc3 setString: @"Star" forKey: @"pattern"];
-    Assert([self.db saveDocument: doc3 error: &error]);
+    Assert([self.defaultCollection saveDocument: doc3 error: &error]);
     
     // Run the replicator again:
     [self runWithReplicator: replicator errorCode: 0 errorDomain: 0];
@@ -854,10 +556,10 @@
     CBLMutableDocument* doc4 = [[CBLMutableDocument alloc] initWithID: @"doc4"];
     [doc4 setString: @"Tiger" forKey: @"species"];
     [doc4 setString: @"WhiteStriped" forKey: @"pattern"];
-    Assert([self.db saveDocument: doc4 error: &error]);
+    Assert([self.defaultCollection saveDocument: doc4 error: &error]);
     
     // Remove document replication listener:
-    [replicator removeChangeListenerWithToken: token];
+    [token remove];
     
     // Run the replicator again:
     [self runWithReplicator: replicator errorCode: 0 errorDomain: 0];
@@ -884,19 +586,19 @@
     // --- 2. Start then stop after IDLE
     [r start];
     [self waitForExpectations: @[xc1] timeout: kExpTimeout];
-    [r removeChangeListenerWithToken: token1];
+    [token1 remove];
     
     // --- 3. Add some documents to the database
     NSError* error;
     CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: @"doc1"];
     [doc1 setString: @"Tiger" forKey: @"species"];
     [doc1 setString: @"Hobbes" forKey: @"pattern"];
-    Assert([self.db saveDocument: doc1 error: &error]);
+    Assert([self.defaultCollection saveDocument: doc1 error: &error]);
     
     CBLMutableDocument* doc2 = [[CBLMutableDocument alloc] initWithID: @"doc2"];
     [doc2 setString: @"Tiger" forKey: @"species"];
     [doc2 setString: @"Striped" forKey: @"pattern"];
-    Assert([self.db saveDocument: doc2 error: &error]);
+    Assert([self.defaultCollection saveDocument: doc2 error: &error]);
     
     // --- 4. Add document replication listener to the replicator
     NSMutableArray* array = [NSMutableArray array];
@@ -918,7 +620,7 @@
     }];
     [r start];
     [self waitForExpectations: @[xc2] timeout: kExpTimeout];
-    [r removeChangeListenerWithToken: token2];
+    [token2 remove];
     
     // --- 6. There should be some document replication events notified
     AssertEqual(array.count, 2u);
@@ -930,12 +632,12 @@
     CBLMutableDocument* doc1a = [[CBLMutableDocument alloc] initWithID: @"doc1"];
     [doc1a setString: @"Tiger" forKey: @"species"];
     [doc1a setString: @"Star" forKey: @"pattern"];
-    Assert([self.db saveDocument: doc1a error: &error]);
+    Assert([self.defaultCollection saveDocument: doc1a error: &error]);
     
     CBLMutableDocument* doc1b = [[CBLMutableDocument alloc] initWithID: @"doc1"];
     [doc1b setString: @"Tiger" forKey: @"species"];
     [doc1b setString: @"Striped" forKey: @"pattern"];
-    Assert([self.otherDB saveDocument: doc1b error: &error]);
+    Assert([self.otherDBDefaultCollection saveDocument: doc1b error: &error]);
     
     // Push:
     id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
@@ -967,7 +669,7 @@
     Assert((docs[0].flags & kCBLDocumentFlagsAccessRemoved) != kCBLDocumentFlagsAccessRemoved);
     
     // Remove document replication listener:
-    [replicator removeChangeListenerWithToken: token];
+    [token remove];
 }
 
 - (void) testDocumentReplicationEventWithPullConflict {
@@ -975,12 +677,12 @@
     CBLMutableDocument* doc1a = [[CBLMutableDocument alloc] initWithID: @"doc1"];
     [doc1a setString: @"Tiger" forKey: @"species"];
     [doc1a setString: @"Star" forKey: @"pattern"];
-    Assert([self.db saveDocument: doc1a error: &error]);
+    Assert([self.defaultCollection saveDocument: doc1a error: &error]);
     
     CBLMutableDocument* doc1b = [[CBLMutableDocument alloc] initWithID: @"doc1"];
     [doc1b setString: @"Tiger" forKey: @"species"];
     [doc1b setString: @"Striped" forKey: @"pattern"];
-    Assert([self.otherDB saveDocument: doc1b error: &error]);
+    Assert([self.otherDBDefaultCollection saveDocument: doc1b error: &error]);
     
     // Pull:
     id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
@@ -1007,7 +709,7 @@
     Assert((docs[0].flags & kCBLDocumentFlagsAccessRemoved) != kCBLDocumentFlagsAccessRemoved);
     
     // Remove document replication listener:
-    [replicator removeChangeListenerWithToken: token];
+    [token remove];
 }
 
 - (void) testDocumentReplicationEventWithDeletion {
@@ -1015,10 +717,10 @@
     CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: @"doc1"];
     [doc1 setString: @"Tiger" forKey: @"species"];
     [doc1 setString: @"Star" forKey: @"pattern"];
-    Assert([self.db saveDocument: doc1 error: &error]);
+    Assert([self.defaultCollection saveDocument: doc1 error: &error]);
     
     // Delete:
-    Assert([self.db deleteDocument: doc1 error: &error]);
+    Assert([self.defaultCollection deleteDocument: doc1 error: &error]);
     
     // Push:
     id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
@@ -1048,7 +750,7 @@
     Assert((docs[0].flags & kCBLDocumentFlagsAccessRemoved) != kCBLDocumentFlagsAccessRemoved);
     
     // Remove document replication listener:
-    [replicator removeChangeListenerWithToken: token];
+    [token remove];
 }
 
 - (void) testRemoveDocumentReplicationListener {
@@ -1056,7 +758,7 @@
     CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: @"doc1"];
     [doc1 setString: @"Tiger" forKey: @"species"];
     [doc1 setString: @"Star" forKey: @"pattern"];
-    Assert([self.db saveDocument: doc1 error: &error]);
+    Assert([self.defaultCollection saveDocument: doc1 error: &error]);
     
     XCTestExpectation* exp = [self expectationWithDescription: @"Document Replication - Inverted"];
     exp.inverted = YES;
@@ -1073,185 +775,20 @@
     [self waitForExpectations: @[exp] timeout: kExpTimeout];
 }
 
-- (void) testSingleShotPushFilter {
-    [self testPushFilter: NO];
-}
-
-- (void) testContinuousPushFilter {
-    [self testPushFilter: YES];
-}
-
-- (void) testPushFilter: (BOOL)isContinuous {
-    // Create documents:
-    NSError* error;
-    NSData* content = [@"I'm a tiger." dataUsingEncoding: NSUTF8StringEncoding];
-    CBLBlob* blob = [[CBLBlob alloc] initWithContentType:@"text/plain" data: content];
-    
-    CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: @"doc1"];
-    [doc1 setString: @"Tiger" forKey: @"species"];
-    [doc1 setString: @"Hobbes" forKey: @"pattern"];
-    [doc1 setBlob: blob forKey: @"photo"];
-    Assert([self.db saveDocument: doc1 error: &error]);
-    
-    CBLMutableDocument* doc2 = [[CBLMutableDocument alloc] initWithID: @"doc2"];
-    [doc2 setString: @"Tiger" forKey: @"species"];
-    [doc2 setString: @"Striped" forKey: @"pattern"];
-    [doc2 setBlob: blob forKey: @"photo"];
-    Assert([self.db saveDocument: doc2 error: &error]);
-    
-    CBLMutableDocument* doc3 = [[CBLMutableDocument alloc] initWithID: @"doc3"];
-    [doc3 setString: @"Tiger" forKey: @"species"];
-    [doc3 setString: @"Star" forKey: @"pattern"];
-    [doc3 setBlob: blob forKey: @"photo"];
-    Assert([self.db saveDocument: doc3 error: &error]);
-    Assert([self.db deleteDocument: doc3 error: &error]);
-    
-    // Create replicator with push filter:
-    NSMutableSet<NSString*>* docIds = [NSMutableSet set];
-    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
-    CBLReplicatorConfiguration* config = [self configWithTarget: target
-                                                           type: kCBLReplicatorTypePush
-                                                     continuous: isContinuous];
-    config.pushFilter = ^BOOL(CBLDocument* document, CBLDocumentFlags flags) {
-        // Check document ID:
-        AssertNotNil(document.id);
-        AssertNotNil(document.revisionID);
-        
-        // isDeleted:
-        BOOL isDeleted = (flags & kCBLDocumentFlagsDeleted) == kCBLDocumentFlagsDeleted;
-        
-        // Check deleted flag:
-        Assert([document.id isEqualToString: @"doc3"] ? isDeleted : !isDeleted);
-        if (!isDeleted) {
-            // Check content:
-            AssertNotNil([document valueForKey: @"pattern"]);
-            AssertEqualObjects([document valueForKey: @"species"], @"Tiger");
-            
-            // Check blob:
-            CBLBlob *photo = [document blobForKey: @"photo"];
-            AssertNotNil(photo);
-            AssertEqualObjects(photo.content, photo.content);
-        } else
-            AssertEqualObjects(document.toDictionary, @{});
-        
-        // Gather document ID:
-        [docIds addObject: document.id];
-        
-        // Reject doc2:
-        return [document.id isEqualToString: @"doc2"] ? NO : YES;
-    };
-    [self run: config errorCode: 0 errorDomain: nil];
-    
-    // Check documents passed to the filter:
-    AssertEqual(docIds.count, 3u);
-    Assert([docIds containsObject: @"doc1"]);
-    Assert([docIds containsObject: @"doc2"]);
-    Assert([docIds containsObject: @"doc3"]);
-    
-    // Check replicated documents:
-    AssertNotNil([self.otherDB documentWithID: @"doc1"]);
-    AssertNil([self.otherDB documentWithID: @"doc2"]);
-    AssertNil([self.otherDB documentWithID: @"doc3"]);
-}
-
-- (void) testPullFilter {
-    // Add a document to db database so that it can pull the deleted docs from:
-    NSError* error;
-    CBLMutableDocument* doc0 = [[CBLMutableDocument alloc] initWithID: @"doc0"];
-    [doc0 setString: @"Cat" forKey: @"species"];
-    Assert([self.db saveDocument: doc0 error: &error]);
-    
-    // Create documents to otherDB:
-    NSData* data = [self dataFromResource: @"image" ofType: @"jpg"];
-    CBLBlob* blob = [[CBLBlob alloc] initWithContentType: @"image/jpeg" data: data];
-    
-    CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: @"doc1"];
-    [doc1 setString: @"Tiger" forKey: @"species"];
-    [doc1 setString: @"Hobbes" forKey: @"pattern"];
-    [doc1 setBlob: blob forKey: @"photo"];
-    Assert([self.otherDB saveDocument: doc1 error: &error]);
-    
-    CBLMutableDocument* doc2 = [[CBLMutableDocument alloc] initWithID: @"doc2"];
-    [doc2 setString: @"Tiger" forKey: @"species"];
-    [doc2 setString: @"Striped" forKey: @"pattern"];
-    [doc2 setBlob: blob forKey: @"photo"];
-    Assert([self.otherDB saveDocument: doc2 error: &error]);
-    
-    CBLMutableDocument* doc3 = [[CBLMutableDocument alloc] initWithID: @"doc3"];
-    [doc3 setString: @"Tiger" forKey: @"species"];
-    [doc3 setString: @"Star" forKey: @"pattern"];
-    [doc2 setBlob: blob forKey: @"photo"];
-    Assert([self.otherDB saveDocument: doc3 error: &error]);
-    Assert([self.otherDB deleteDocument: doc3 error: &error]);
-    
-    // Create replicator with pull filter:
-    NSMutableSet<NSString*>* docIds = [NSMutableSet set];
-    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
-    CBLReplicatorConfiguration* config = [self configWithTarget: target
-                                                           type: kCBLReplicatorTypePull
-                                                     continuous: NO];
-    config.pullFilter = ^BOOL(CBLDocument* document, CBLDocumentFlags flags) {
-        // Check document ID:
-        AssertNotNil(document.id);
-        AssertNotNil(document.revisionID);
-        
-        // isDeleted:
-        BOOL isDeleted = (flags & kCBLDocumentFlagsDeleted) == kCBLDocumentFlagsDeleted;
-        
-        // Check deleted flag:
-        Assert([document.id isEqualToString: @"doc3"] ? isDeleted : !isDeleted);
-        if (!isDeleted) {
-            // Check content:
-            AssertNotNil([document valueForKey: @"pattern"]);
-            AssertEqualObjects([document valueForKey: @"species"], @"Tiger");
-            
-            // Check Blob:
-            CBLBlob *photo = [document blobForKey: @"photo"];
-            AssertNotNil(photo);
-            
-            // Note: Cannot access content because there is no actual blob file saved on disk yet.
-            // AssertEqualObjects(photo.content, photo.content);
-        } else
-            AssertEqualObjects(document.toDictionary, @{});
-        
-        // Gather document ID:
-        [docIds addObject: document.id];
-        
-        // Reject doc2:
-        return [document.id isEqualToString: @"doc2"] ? NO : YES;
-    };
-    
-    // Run the replicator:
-    [self run: config errorCode: 0 errorDomain: nil];
-    
-    // Check documents passed to the filter:
-    AssertEqual(docIds.count, 3u);
-    Assert([docIds containsObject: @"doc1"]);
-    Assert([docIds containsObject: @"doc2"]);
-    Assert([docIds containsObject: @"doc3"]);
-    
-    // Check replicated documents:
-    AssertNotNil([self.db documentWithID: @"doc1"]);
-    AssertNil([self.db documentWithID: @"doc2"]);
-    AssertNil([self.db documentWithID: @"doc3"]);
-}
-
 - (void) testPushAndForget {
     NSError* error;
     CBLMutableDocument* doc = [[CBLMutableDocument alloc] initWithID: @"doc"];
     [doc setString: @"Tiger" forKey: @"species"];
     [doc setString: @"Hobbes" forKey: @"pattern"];
-    Assert([self.db saveDocument: doc error: &error]);
+    Assert([self.defaultCollection saveDocument: doc error: &error]);
     
     XCTestExpectation* expectation = [self expectationWithDescription: @"Document expiry test"];
-    id docChangeToken = [self.db addDocumentChangeListenerWithID: doc.id
-                                                        listener: ^(CBLDocumentChange *change)
-                         {
-                             AssertEqualObjects(change.documentID, doc.id);
-                             if ([change.database documentWithID: change.documentID] == nil) {
-                                 [expectation fulfill];
-                             }
-                         }];
+    id docChangeToken = [self.defaultCollection addDocumentChangeListenerWithID: doc.id
+                                                                       listener: ^(CBLDocumentChange *change) {
+        NSError* err;
+        AssertEqualObjects(change.documentID, doc.id);
+        if ([change.collection documentWithID: change.documentID error: &err] == nil) [expectation fulfill];
+    }];
     
     // Push:
     id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
@@ -1263,18 +800,18 @@
         replicator = r;
         docReplToken = [r addDocumentReplicationListener: ^(CBLDocumentReplication *docReplication) {
             NSError* err;
-            Assert([self.db setDocumentExpirationWithID: doc.id
-                                             expiration: [NSDate date]
-                                                  error: &err]);
+            Assert([self.defaultCollection setDocumentExpirationWithID: doc.id
+                                                            expiration: [NSDate date]
+                                                                 error: &err]);
         }];
     }];
     
     [self waitForExpectations: @[expectation] timeout: kExpTimeout];
     
-    AssertEqual(self.db.count, 0u);
-    AssertEqual(self.otherDB.count, 1u);
-    [self.db removeChangeListenerWithToken: docChangeToken];
-    [replicator removeChangeListenerWithToken: docReplToken];
+    AssertEqual(self.defaultCollection.count, 0u);
+    AssertEqual(self.otherDBDefaultCollection.count, 1u);
+    [docChangeToken remove];
+    [docReplToken remove];
 }
 
 #pragma mark Removed Doc with Filter
@@ -1291,11 +828,11 @@
     NSError* error;
     CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: @"doc1"];
     [doc1 setString: @"pass" forKey: @"name"];
-    Assert([self.otherDB saveDocument: doc1 error: &error]);
+    Assert([self.otherDBDefaultCollection saveDocument: doc1 error: &error]);
     
     CBLMutableDocument* doc2 = [[CBLMutableDocument alloc] initWithID: @"pass"];
     [doc2 setString: @"pass" forKey: @"name"];
-    Assert([self.otherDB saveDocument: doc2 error: &error]);
+    Assert([self.otherDBDefaultCollection saveDocument: doc2 error: &error]);
     
     // replicator with pull filter
     NSMutableSet<NSString*>* docIds = [NSMutableSet set];
@@ -1321,13 +858,13 @@
     AssertEqual(docIds.count, 0u);
     
     // Update the `_removed` flag
-    doc1 = [[self.otherDB documentWithID: @"doc1"] toMutable];
+    doc1 = [[self.otherDBDefaultCollection documentWithID: @"doc1" error: &error] toMutable];
     [doc1 setData: @{@"_removed": @YES}];
-    Assert([self.otherDB saveDocument: doc1 error: &error]);
+    Assert([self.otherDBDefaultCollection saveDocument: doc1 error: &error]);
     
-    doc2 = [[self.otherDB documentWithID: @"pass"] toMutable];
+    doc2 = [[self.otherDBDefaultCollection documentWithID: @"pass" error: &error] toMutable];
     [doc2 setData: @{@"_removed": @YES}];
-    Assert([self.otherDB saveDocument: doc2 error: &error]);
+    Assert([self.otherDBDefaultCollection saveDocument: doc2 error: &error]);
     
     // pull replication again...
     [self run: config errorCode: 0 errorDomain: nil];
@@ -1335,18 +872,16 @@
     AssertEqual(docIds.count, 2u);
     
     // shouldn't delete the one with `docID != pass`
-    AssertNotNil([self.db documentWithID: @"doc1"]);
-    AssertNil([self.db documentWithID: @"pass"]);
+    AssertNotNil([self.defaultCollection documentWithID: @"doc1" error: nil]);
+    AssertNil([self.defaultCollection documentWithID: @"pass" error: nil]);
 }
 
 #pragma mark Deleted Doc with Filter
 
-// TODO: https://issues.couchbase.com/browse/CBL-2771
 - (void) testPushDeletedDocWithFilterSingleShot {
     [self testPushDeletedDocWithFilter: NO];
 }
 
-// TODO: https://issues.couchbase.com/browse/CBL-2771
 - (void) testPushDeletedDocWithFilterContinuous {
     [self testPushDeletedDocWithFilter: YES];
 }
@@ -1364,11 +899,11 @@
     NSError* error;
     CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: @"doc1"];
     [doc1 setString: @"pass" forKey: @"name"];
-    Assert([self.db saveDocument: doc1 error: &error]);
+    Assert([self.defaultCollection saveDocument: doc1 error: &error]);
     
     CBLMutableDocument* doc2 = [[CBLMutableDocument alloc] initWithID: @"pass"];
     [doc2 setString: @"pass" forKey: @"name"];
-    Assert([self.db saveDocument: doc2 error: &error]);
+    Assert([self.defaultCollection saveDocument: doc2 error: &error]);
     
     // Create replicator with push filter:
     NSMutableSet<NSString*>* docIds = [NSMutableSet set];
@@ -1395,11 +930,11 @@
     AssertEqual(docIds.count, 0u);
     
     // Check replicated documents:
-    AssertNotNil([self.otherDB documentWithID: @"doc1"]);
-    AssertNotNil([self.otherDB documentWithID: @"pass"]);
+    AssertNotNil([self.otherDBDefaultCollection documentWithID: @"doc1" error: &error]);
+    AssertNotNil([self.otherDBDefaultCollection documentWithID: @"pass" error: &error]);
     
-    Assert([self.db deleteDocument: doc1 error: &error]);
-    Assert([self.db deleteDocument: doc2 error: &error]);
+    Assert([self.defaultCollection deleteDocument: doc1 error: &error]);
+    Assert([self.defaultCollection deleteDocument: doc2 error: &error]);
     
     [self run: config errorCode: 0 errorDomain: nil];
     
@@ -1408,8 +943,8 @@
     Assert([docIds containsObject: @"pass"]);
     
     // shouldn't delete the one with `docID != pass`
-    AssertNotNil([self.otherDB documentWithID: @"doc1"]);
-    AssertNil([self.otherDB documentWithID: @"pass"]);
+    AssertNotNil([self.otherDBDefaultCollection documentWithID: @"doc1" error: &error]);
+    AssertNil([self.otherDBDefaultCollection documentWithID: @"pass" error: &error]);
 }
 
 - (void) testPullDeletedDocWithFilter: (BOOL)isContinuous {
@@ -1417,11 +952,11 @@
     NSError* error;
     CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: @"doc1"];
     [doc1 setString: @"pass" forKey: @"name"];
-    Assert([self.otherDB saveDocument: doc1 error: &error]);
+    Assert([self.otherDBDefaultCollection saveDocument: doc1 error: &error]);
     
     CBLMutableDocument* pass = [[CBLMutableDocument alloc] initWithID: @"pass"];
     [pass setString: @"pass" forKey: @"name"];
-    Assert([self.otherDB saveDocument: pass error: &error]);
+    Assert([self.otherDBDefaultCollection saveDocument: pass error: &error]);
     
     NSMutableSet<NSString*>* docIds = [NSMutableSet set];
     id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
@@ -1447,13 +982,13 @@
     AssertEqual(docIds.count, 0u);
     
     // should replicate all docs with `name = pass`
-    AssertNotNil([self.db documentWithID: @"doc1"]);
-    AssertNotNil([self.db documentWithID: @"pass"]);
-    AssertEqual(self.db.count, 2u);
-    AssertEqual(self.otherDB.count, 2u);
+    AssertNotNil([self.defaultCollection documentWithID: @"doc1" error: &error]);
+    AssertNotNil([self.defaultCollection documentWithID: @"pass" error: &error]);
+    AssertEqual(self.defaultCollection.count, 2u);
+    AssertEqual(self.otherDBDefaultCollection.count, 2u);
     
-    Assert([self.otherDB deleteDocument: doc1 error: &error]);
-    Assert([self.otherDB deleteDocument: pass error: &error]);
+    Assert([self.otherDBDefaultCollection deleteDocument: doc1 error: &error]);
+    Assert([self.otherDBDefaultCollection deleteDocument: pass error: &error]);
     
     [self run: config errorCode: 0 errorDomain: nil];
     
@@ -1463,10 +998,10 @@
     Assert([docIds containsObject: @"pass"]);
     
     // shouldn't delete the one with `docID != pass`
-    AssertNotNil([self.db documentWithID: @"doc1"]);
-    AssertNil([self.db documentWithID: @"pass"]);
-    AssertEqual(self.db.count, 1u);
-    AssertEqual(self.otherDB.count, 0u);
+    AssertNotNil([self.defaultCollection documentWithID: @"doc1" error: nil]);
+    AssertNil([self.defaultCollection documentWithID: @"pass" error: nil]);
+    AssertEqual(self.defaultCollection.count, 1u);
+    AssertEqual(self.otherDBDefaultCollection.count, 0u);
 }
 
 #pragma mark stop and restart the replication with filter
@@ -1476,7 +1011,7 @@
     NSError* error;
     CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: @"doc1"];
     [doc1 setString: @"pass" forKey: @"name"];
-    Assert([self.db saveDocument: doc1 error: &error]);
+    Assert([self.defaultCollection saveDocument: doc1 error: &error]);
     
     NSMutableSet<NSString*>* docIds = [NSMutableSet set];
     id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
@@ -1495,16 +1030,16 @@
     repl = [[CBLReplicator alloc] initWithConfig: config];
     [self runWithReplicator: repl errorCode: 0 errorDomain: nil];
     AssertEqual(docIds.count, 1u);
-    AssertEqual(self.db.count, 1u);
-    AssertEqual(self.otherDB.count, 1u);
+    AssertEqual(self.defaultCollection.count, 1u);
+    AssertEqual(self.otherDBDefaultCollection.count, 1u);
     
     CBLMutableDocument* doc2 = [[CBLMutableDocument alloc] initWithID: @"doc2"];
     [doc2 setString: @"pass" forKey: @"name"];
-    Assert([self.db saveDocument: doc2 error: &error]);
+    Assert([self.defaultCollection saveDocument: doc2 error: &error]);
     
     CBLMutableDocument* doc3 = [[CBLMutableDocument alloc] initWithID: @"doc3"];
     [doc3 setString: @"donotpass" forKey: @"name"];
-    Assert([self.db saveDocument: doc3 error: &error]);
+    Assert([self.defaultCollection saveDocument: doc3 error: &error]);
     
     [docIds removeAllObjects];
     [self runWithReplicator: repl errorCode: 0 errorDomain: nil];
@@ -1515,11 +1050,11 @@
     Assert([docIds containsObject: @"doc2"]);
     
     // shouldn't delete the one with `docID != pass`
-    AssertNotNil([self.otherDB documentWithID: @"doc1"]);
-    AssertNotNil([self.otherDB documentWithID: @"doc2"]);
-    AssertNil([self.otherDB documentWithID: @"doc3"]);
-    AssertEqual(self.db.count, 3u);
-    AssertEqual(self.otherDB.count, 2u);
+    AssertNotNil([self.otherDBDefaultCollection documentWithID: @"doc1" error: nil]);
+    AssertNotNil([self.otherDBDefaultCollection documentWithID: @"doc2" error: nil]);
+    AssertNil([self.otherDBDefaultCollection documentWithID: @"doc3" error: nil]);
+    AssertEqual(self.defaultCollection.count, 3u);
+    AssertEqual(self.otherDBDefaultCollection.count, 2u);
     
     // Cleanup:
     repl = nil;
@@ -1530,7 +1065,7 @@
     NSError* error;
     CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: @"doc1"];
     [doc1 setString: @"pass" forKey: @"name"];
-    Assert([self.otherDB saveDocument: doc1 error: &error]);
+    Assert([self.otherDBDefaultCollection saveDocument: doc1 error: &error]);
     
     NSMutableSet<NSString*>* docIds = [NSMutableSet set];
     id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
@@ -1550,16 +1085,16 @@
     repl = [[CBLReplicator alloc] initWithConfig: config];
     [self runWithReplicator: repl errorCode: 0 errorDomain: nil];
     AssertEqual(docIds.count, 1u);
-    AssertEqual(self.db.count, 1u);
-    AssertEqual(self.otherDB.count, 1u);
+    AssertEqual(self.defaultCollection.count, 1u);
+    AssertEqual(self.otherDBDefaultCollection.count, 1u);
     
     CBLMutableDocument* doc2 = [[CBLMutableDocument alloc] initWithID: @"doc2"];
     [doc2 setString: @"pass" forKey: @"name"];
-    Assert([self.otherDB saveDocument: doc2 error: &error]);
+    Assert([self.otherDBDefaultCollection saveDocument: doc2 error: &error]);
     
     CBLMutableDocument* doc3 = [[CBLMutableDocument alloc] initWithID: @"doc3"];
     [doc3 setString: @"donotpass" forKey: @"name"];
-    Assert([self.otherDB saveDocument: doc3 error: &error]);
+    Assert([self.otherDBDefaultCollection saveDocument: doc3 error: &error]);
     
     [docIds removeAllObjects];
     [self runWithReplicator: repl errorCode: 0 errorDomain: nil];
@@ -1570,11 +1105,11 @@
     Assert([docIds containsObject: @"doc2"]);
     
     // shouldn't delete the one with `docID != pass`
-    AssertNotNil([self.db documentWithID: @"doc1"]);
-    AssertNotNil([self.db documentWithID: @"doc2"]);
-    AssertNil([self.db documentWithID: @"doc3"]);
-    AssertEqual(self.otherDB.count, 3u);
-    AssertEqual(self.db.count, 2u);
+    AssertNotNil([self.defaultCollection documentWithID: @"doc1" error: nil]);
+    AssertNotNil([self.defaultCollection documentWithID: @"doc2" error: nil]);
+    AssertNil([self.defaultCollection documentWithID: @"doc3" error: nil]);
+    AssertEqual(self.otherDBDefaultCollection.count, 3u);
+    AssertEqual(self.defaultCollection.count, 2u);
     
     // Cleanup:
     repl = nil;
@@ -1585,11 +1120,11 @@
     NSError* error;
     CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: @"doc1"];
     [doc1 setString: @"Tiger" forKey: @"species"];
-    Assert([self.db saveDocument: doc1 error: &error]);
+    Assert([self.defaultCollection saveDocument: doc1 error: &error]);
     
     CBLMutableDocument* doc2 = [[CBLMutableDocument alloc] initWithID: @"doc2"];
     [doc2 setString: @"Stripes" forKey: @"pattern"];
-    Assert([self.otherDB saveDocument: doc2 error: &error]);
+    Assert([self.otherDBDefaultCollection saveDocument: doc2 error: &error]);
     
     // Create replicator with push filter:
     NSMutableSet<NSString*>* pushDocIds = [NSMutableSet set];

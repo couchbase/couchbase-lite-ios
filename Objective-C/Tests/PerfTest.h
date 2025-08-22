@@ -53,6 +53,8 @@ NS_ASSUME_NONNULL_BEGIN
 /** The database to work with. Starts out empty on every run. */
 @property (readonly, nonatomic) CBLDatabase* db;
 
+@property (readonly, nonatomic) CBLCollection* defaultCollection;
+
 /** Closes the database and reopens it. */
 - (void) reopenDB;
 

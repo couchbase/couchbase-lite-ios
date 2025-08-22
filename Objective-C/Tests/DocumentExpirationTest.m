@@ -28,34 +28,35 @@
 
 @implementation DocumentExpirationTest
 
-// TODO: Remove https://issues.couchbase.com/browse/CBL-3206
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-
 - (void) testGetExpirationBeforeSaveDocument {
+    NSError* error;
     CBLDocument* doc = [self createDocument: nil];
-    AssertEqual(self.db.count, 0u);
-    AssertNil([self.db getDocumentExpirationWithID: doc.id]);
+    AssertEqual(self.defaultCollection.count, 0u);
+    AssertNil([self.defaultCollection getDocumentExpirationWithID: doc.id error: &error]);
 }
 
 - (void) testGetExpirationBeforeSettingExpiration {
+    NSError* error;
     CBLDocument* doc = [self generateDocumentWithID: nil];
-    AssertEqual(self.db.count, 1u);
-    AssertNil([self.db getDocumentExpirationWithID: doc.id]);
+    AssertEqual(self.defaultCollection.count, 1u);
+    AssertNil([self.defaultCollection getDocumentExpirationWithID: doc.id error: &error]);
 }
 
 - (void) testSetAndGetExpiration {
+    NSError* error;
     // Create doc
     CBLDocument* doc = [self generateDocumentWithID: nil];
     
     // Set expiry
     NSDate* expiryDate = [NSDate dateWithTimeIntervalSinceNow: 3.0];
     NSError* err;
-    Assert([self.db setDocumentExpirationWithID: doc.id expiration: expiryDate error: &err]);
+    Assert([self.defaultCollection setDocumentExpirationWithID: doc.id
+                                                    expiration: expiryDate
+                                                         error: &err]);
     AssertNil(err);
     
     // Validate result
-    NSDate* expected = [self.db getDocumentExpirationWithID: doc.id];
+    NSDate* expected = [self.defaultCollection getDocumentExpirationWithID: doc.id error: &error];
     AssertNotNil(expected);
     
     NSTimeInterval delta = [expiryDate timeIntervalSinceDate: expected];
@@ -67,9 +68,9 @@
     [self expectError: CBLErrorDomain
                  code: CBLErrorNotFound
                    in: ^BOOL(NSError** err) {
-                       return [self.db setDocumentExpirationWithID: @"someNonExistingDocumentID"
-                                                        expiration: expiry
-                                                             error: err];
+                       return [self.defaultCollection setDocumentExpirationWithID: @"someNonExistingDocumentID"
+                                                                       expiration: expiry
+                                                                            error: err];
                    }];
 }
 
@@ -78,15 +79,15 @@
     
     NSError* err;
     CBLMutableDocument* doc = [self generateDocumentWithID: nil];
-    AssertEqual(self.db.count, 1u);
+    AssertEqual(self.defaultCollection.count, 1u);
     
     NSDate* expiryDateToPurge = [NSDate dateWithTimeIntervalSinceNow: 1.0];
-    Assert([self.db setDocumentExpirationWithID: doc.id
-                                     expiration: expiryDateToPurge
-                                          error: &err]);
+    Assert([self.defaultCollection setDocumentExpirationWithID: doc.id
+                                                    expiration: expiryDateToPurge
+                                                         error: &err]);
     
     // purge doc
-    Assert([self.db purgeDocument: doc error: &err]);
+    Assert([self.defaultCollection purgeDocument: doc error: &err]);
     AssertNil(err);
     
     // shouldn't crash due to timer fired
@@ -100,50 +101,53 @@
 }
 
 - (void) testDocumentPurgedAfterExpiration {
+    NSError* error;
     XCTestExpectation* expectation = [self expectationWithDescription: @"Document expiry test"];
     
     CBLDocument* doc = [self generateDocumentWithID: nil];
-    AssertNil([self.db getDocumentExpirationWithID: doc.id]);
-    AssertEqual(self.db.count, 1u);
+    AssertNil([self.defaultCollection getDocumentExpirationWithID: doc.id error: &error]);
+    AssertEqual(self.defaultCollection.count, 1u);
     
     // Setup document change notification
-    id token = [self.db addDocumentChangeListenerWithID: doc.id
-                                               listener: ^(CBLDocumentChange *change)
+    id token = [self.defaultCollection addDocumentChangeListenerWithID: doc.id
+                                                              listener: ^(CBLDocumentChange *change)
     {
+        NSError* err;
         AssertEqualObjects(change.documentID, doc.id);
-        if ([change.database documentWithID: change.documentID] == nil) {
+        if ([change.collection documentWithID: change.documentID error: &err] == nil) {
             [expectation fulfill];
         }
     }];
 
     // Set expiry
     NSDate* expiryDate = [NSDate dateWithTimeIntervalSinceNow: 1.0];
-    NSError* err;
-    Assert([self.db setDocumentExpirationWithID: doc.id expiration: expiryDate error: &err]);
-    AssertNil(err);
+    Assert([self.defaultCollection setDocumentExpirationWithID: doc.id expiration: expiryDate error: &error]);
+    AssertNil(error);
     
     // Wait for result
     [self waitForExpectationsWithTimeout: kExpTimeout handler: nil];
     
     // Remove listener
-    [self.db removeChangeListenerWithToken: token];
+    [token remove];
 }
 
 - (void) testDocumentNotShowUpInQueryAfterExpiration {
+    NSError* error;
     XCTestExpectation* expectation = [self expectationWithDescription: @"Document expiry test"];
     
     // Create doc
     CBLDocument* doc = [self generateDocumentWithID: nil];
-    AssertNil([self.db getDocumentExpirationWithID: doc.id]);
+    AssertNil([self.defaultCollection getDocumentExpirationWithID: doc.id error: &error]);
     
     // Setup document change notification
     __weak DocumentExpirationTest* weakSelf = self;
-    id token = [self.db addDocumentChangeListenerWithID: doc.id
-                                               listener: ^(CBLDocumentChange *change)
+    id token = [self.defaultCollection addDocumentChangeListenerWithID: doc.id
+                                                              listener: ^(CBLDocumentChange *change)
     {
+        NSError* err;
         DocumentExpirationTest* strongSelf = weakSelf;
         AssertEqualObjects(change.documentID, doc.id);
-        if ([change.database documentWithID: change.documentID] == nil) {
+        if ([change.collection documentWithID: change.documentID error: &err] == nil) {
             [strongSelf verifyQueryResultCount: 0 deletedCount: 0];
             [expectation fulfill];
         }
@@ -151,28 +155,27 @@
     
     // Set expiry
     NSDate* expiryDate = [NSDate dateWithTimeIntervalSinceNow: 1.0];
-    NSError* err;
-    Assert([self.db setDocumentExpirationWithID: doc.id expiration: expiryDate error: &err]);
-    AssertNil(err);
+    Assert([self.defaultCollection setDocumentExpirationWithID: doc.id expiration: expiryDate error: &error]);
+    AssertNil(error);
     
     // Wait for result
     [self waitForExpectationsWithTimeout: kExpTimeout handler: nil];
     
     // Remove listener
-    [self.db removeChangeListenerWithToken: token];
+    [token remove];
 }
 
 - (void) verifyQueryResultCount: (NSUInteger)count deletedCount: (NSUInteger)deletedCount {
     NSError* error;
     CBLQuery* q = [CBLQueryBuilder select: @[kDOCID]
-                                     from: [CBLQueryDataSource database: self.db]];
+                                     from: [CBLQueryDataSource collection: self.defaultCollection]];
     AssertNotNil(q);
     NSEnumerator* rs = [q execute: &error];
     AssertNil(error);
     AssertEqual([[rs allObjects] count], count);
     
     q = [CBLQueryBuilder select: @[kDOCID]
-                           from: [CBLQueryDataSource database: self.db]
+                           from: [CBLQueryDataSource collection: self.defaultCollection]
                           where: [CBLQueryMeta isDeleted]];
     AssertNotNil(q);
     rs = [q execute: &error];
@@ -181,17 +184,19 @@
 }
 
 - (void) testDocumentNotPurgedBeforeExpiration {
+    NSError* error;
     XCTestExpectation* expectation = [self expectationWithDescription: @"Document expiry test"];
     
     // Create doc
     CBLDocument* doc = [self generateDocumentWithID: nil];
-    AssertNil([self.db getDocumentExpirationWithID: doc.id]);
+    AssertNil([self.defaultCollection getDocumentExpirationWithID: doc.id error: &error]);
     
-    id token = [self.db addDocumentChangeListenerWithID: doc.id
-                                               listener: ^(CBLDocumentChange *change)
+    id token = [self.defaultCollection addDocumentChangeListenerWithID: doc.id
+                                                              listener: ^(CBLDocumentChange *change)
     {
+        NSError* err;
         AssertEqualObjects(change.documentID, doc.id);
-        if ([change.database documentWithID: change.documentID] == nil) {
+        if ([change.collection documentWithID: change.documentID error: &err] == nil) {
             [expectation fulfill];
         }
     }];
@@ -199,29 +204,28 @@
     // Set expiry
     NSTimeInterval begin = [[NSDate date] timeIntervalSince1970];
     NSDate* expiryDate = [NSDate dateWithTimeIntervalSince1970: begin + 2.0];
-    NSError* err;
-    Assert([self.db setDocumentExpirationWithID: doc.id expiration: expiryDate error: &err]);
-    AssertNil(err);
+    Assert([self.defaultCollection setDocumentExpirationWithID: doc.id expiration: expiryDate error: &error]);
+    AssertNil(error);
     
     // Wait for result
     [self waitForExpectationsWithTimeout: kExpTimeout handler: nil];
     
     // Remove listener
-    [self.db removeChangeListenerWithToken: token];
+    [token remove];
 }
 
 - (void) testSetExpirationAndThenCloseDatabase {
+    NSError* error;
     XCTestExpectation* expectation = [self expectationWithDescription: @"Document expiry test"];
     
     // Create doc
     CBLDocument* doc = [self generateDocumentWithID: nil];
-    AssertNil([self.db getDocumentExpirationWithID: doc.id]);
+    AssertNil([self.defaultCollection getDocumentExpirationWithID: doc.id error: &error]);
     
     // Set expiry
     NSDate* expiryDate = [NSDate dateWithTimeIntervalSinceNow: 1.0];
-    NSError* err;
-    Assert([self.db setDocumentExpirationWithID: doc.id expiration: expiryDate error: &err]);
-    AssertNil(err);
+    Assert([self.defaultCollection setDocumentExpirationWithID: doc.id expiration: expiryDate error: &error]);
+    AssertNil(error);
     
     // Close database
     [self closeDatabase: self.db];
@@ -237,98 +241,105 @@
 }
 
 - (void) testExpiredDocumentPurgedAfterReopenDatabase {
+    NSError* error;
     XCTestExpectation* expectation = [self expectationWithDescription: @"Document expiry test"];
     
     // Create doc
     CBLDocument* doc = [self generateDocumentWithID: nil];
-    AssertNil([self.db getDocumentExpirationWithID: doc.id]);
+    AssertNil([self.defaultCollection getDocumentExpirationWithID: doc.id error: &error]);
     
     // Set expiry
     NSDate* expiryDate = [NSDate dateWithTimeIntervalSinceNow: 2.0];
-    NSError* err;
-    Assert([self.db setDocumentExpirationWithID: doc.id expiration: expiryDate error: &err]);
-    AssertNil(err);
-    AssertNotNil([self.db documentWithID: doc.id]);
+    Assert([self.defaultCollection setDocumentExpirationWithID: doc.id expiration: expiryDate error: &error]);
+    AssertNil(error);
+    AssertNotNil([self.defaultCollection documentWithID: doc.id error: &error]);
     
     // Reopen database
     [self reopenDB];
     
     // Setup document change notification
-    id token = [self.db addDocumentChangeListenerWithID: doc.id
-                                               listener: ^(CBLDocumentChange *change)
+    id token = [self.defaultCollection addDocumentChangeListenerWithID: doc.id
+                                                              listener: ^(CBLDocumentChange *change)
     {
+        NSError* err;
         AssertEqualObjects(change.documentID, doc.id);
-        if ([change.database documentWithID: change.documentID] == nil) {
+        if ([change.collection documentWithID: change.documentID error: &err] == nil) {
             [expectation fulfill];
         }
     }];
     
-    AssertNotNil([self.db documentWithID: doc.id]);
+    AssertNotNil([self.defaultCollection documentWithID: doc.id error: &error]);
+    AssertNil(error);
     
     // Wait for result
     [self waitForExpectationsWithTimeout: kExpTimeout handler: nil];
     
     // Remove listener
-    [self.db removeChangeListenerWithToken: token];
+    [token remove];
 }
 
 - (void) testExpiredDocumentPurgedOnDifferentDBInstance {
+    NSError* error;
     XCTestExpectation* expectation = [self expectationWithDescription: @"Document expiry test"];
     
     // Store doc on default DB
     CBLDocument* doc = [self generateDocumentWithID: nil];
-    AssertNil([self.db getDocumentExpirationWithID: doc.id]);
+    AssertNil([self.defaultCollection getDocumentExpirationWithID: doc.id error: &error]);
     
     // Create otherDB instance with same name
     CBLDatabase* otherDB = [self openDBNamed: self.db.name error: nil];
+    CBLCollection* otherDBDefaultCollection = [otherDB defaultCollection: &error];
     Assert(otherDB != self.db);
     
     // Setup document change notification on otherDB
-    __weak CBLDatabase *weakOtherDB = otherDB;
-    id token = [otherDB addDocumentChangeListenerWithID: doc.id
-                                               listener: ^(CBLDocumentChange *change)
+    __weak CBLCollection* weakOtherDBDefaultCollection = otherDBDefaultCollection;
+    id token = [otherDBDefaultCollection addDocumentChangeListenerWithID: doc.id
+                                                                listener: ^(CBLDocumentChange *change)
     {
+        NSError* err;
         AssertEqualObjects(change.documentID, doc.id);
-        if ([weakOtherDB documentWithID: change.documentID] == nil) {
+        if ([weakOtherDBDefaultCollection documentWithID: change.documentID error: &err] == nil) {
             [expectation fulfill];
         }
     }];
     
     // Set expiry on db instance
     NSDate* expiryDate = [[NSDate date] dateByAddingTimeInterval: 1];
-    NSError* err;
-    Assert([self.db setDocumentExpirationWithID: doc.id expiration: expiryDate error: &err]);
-    AssertNil(err);
-    AssertNotNil([self.db documentWithID: doc.id]);
-    AssertNotNil([otherDB documentWithID: doc.id]);
+    Assert([self.defaultCollection setDocumentExpirationWithID: doc.id expiration: expiryDate error: &error]);
+    AssertNil(error);
+    AssertNotNil([self.defaultCollection documentWithID: doc.id error: &error]);
+    AssertNotNil([otherDBDefaultCollection documentWithID: doc.id error: &error]);
     
     // Wait for result
     [self waitForExpectationsWithTimeout: kExpTimeout handler: nil];
     
-    AssertNil([self.db documentWithID: doc.id]);
-    AssertNil([otherDB documentWithID: doc.id]);
+    AssertNil([self.defaultCollection documentWithID: doc.id error: &error]);
+    AssertNil([otherDBDefaultCollection documentWithID: doc.id error: &error]);
     
     // Remove listener
-    [otherDB removeChangeListenerWithToken: token];
+    [token remove];
     
     // Close otherDB
+    otherDBDefaultCollection = nil;
     Assert([otherDB close: nil]);
 }
 
 - (void) testOverrideExpirationWithFartherDate {
+    NSError* error;
     XCTestExpectation* expectation = [self expectationWithDescription: @"Document expiry test"];
     
     // Create doc
     CBLDocument* doc = [self generateDocumentWithID: nil];
-    AssertNil([self.db getDocumentExpirationWithID: doc.id]);
+    AssertNil([self.defaultCollection getDocumentExpirationWithID: doc.id error: &error]);
     
     // Setup document change notification
     __block NSTimeInterval purgeTime;
-    id token = [self.db addDocumentChangeListenerWithID: doc.id
-                                               listener: ^(CBLDocumentChange *change)
+    id token = [self.defaultCollection addDocumentChangeListenerWithID: doc.id
+                                                              listener: ^(CBLDocumentChange *change)
     {
+        NSError* err;
         AssertEqualObjects(change.documentID, doc.id);
-        if ([change.database documentWithID: change.documentID] == nil) {
+        if ([change.collection documentWithID: change.documentID error: &err] == nil) {
             purgeTime = [[NSDate date] timeIntervalSince1970];
             [expectation fulfill];
         }
@@ -337,14 +348,16 @@
     // Set expiry
     NSTimeInterval begin = [[NSDate date] timeIntervalSince1970];
     NSDate* expiryDate = [NSDate dateWithTimeIntervalSince1970: begin + 1.0];
-    NSError* err;
-    Assert([self.db setDocumentExpirationWithID: doc.id expiration: expiryDate error: &err]);
-    AssertNil(err);
+    Assert([self.defaultCollection setDocumentExpirationWithID: doc.id
+                                                    expiration: expiryDate
+                                                         error: &error]);
+    AssertNil(error);
     
     // Override
-    Assert([self.db setDocumentExpirationWithID: doc.id
-                                     expiration: [expiryDate dateByAddingTimeInterval: 1.0] error: &err]);
-    AssertNil(err);
+    Assert([self.defaultCollection setDocumentExpirationWithID: doc.id
+                                                    expiration: [expiryDate dateByAddingTimeInterval: 1.0]
+                                                         error: &error]);
+    AssertNil(error);
     
     // Wait for result
     [self waitForExpectationsWithTimeout: kExpTimeout handler: nil];
@@ -353,21 +366,25 @@
     Assert(purgeTime - begin >= 2.0);
     
     // Remove listener
-    [self.db removeChangeListenerWithToken: token];
+    [token remove];
 }
 
 - (void) testOverrideExpirationWithCloserDate {
+    NSError* error;
     XCTestExpectation* expectation = [self expectationWithDescription: @"Document expiry test"];
     
     // Create doc
     CBLDocument* doc = [self generateDocumentWithID: nil];
-    AssertNil([self.db getDocumentExpirationWithID: doc.id]);
+    AssertNil([self.defaultCollection getDocumentExpirationWithID: doc.id error: &error]);
     
     // Setup document change notification
     __block NSTimeInterval purgeTime;
-    id token = [self.db addDocumentChangeListenerWithID: doc.id listener: ^(CBLDocumentChange *change) {
+    id token = [self.defaultCollection addDocumentChangeListenerWithID: doc.id
+                                                              listener: ^(CBLDocumentChange *change)
+    {
+        NSError* err;
         AssertEqualObjects(change.documentID, doc.id);
-        if ([change.database documentWithID: change.documentID] == nil) {
+        if ([change.collection documentWithID: change.documentID error: &err] == nil) {
             [expectation fulfill];
             purgeTime = [[NSDate date] timeIntervalSince1970];
         }
@@ -376,14 +393,16 @@
     // Set expiry
     NSTimeInterval begin = [[NSDate date] timeIntervalSince1970];
     NSDate* expiryDate = [NSDate dateWithTimeIntervalSince1970: begin + 10.0];
-    NSError* err;
-    Assert([self.db setDocumentExpirationWithID: doc.id expiration: expiryDate error: &err]);
-    AssertNil(err);
+    Assert([self.defaultCollection setDocumentExpirationWithID: doc.id
+                                                    expiration: expiryDate
+                                                         error: &error]);
+    AssertNil(error);
     
     // Override
-    Assert([self.db setDocumentExpirationWithID: doc.id
-                                     expiration: [expiryDate dateByAddingTimeInterval: -9.0] error: &err]);
-    AssertNil(err);
+    Assert([self.defaultCollection setDocumentExpirationWithID: doc.id
+                                                    expiration: [expiryDate dateByAddingTimeInterval: -9.0]
+                                                         error: &error]);
+    AssertNil(error);
     
     // Wait for result
     [self waitForExpectationsWithTimeout: kExpTimeout handler: nil];
@@ -392,31 +411,36 @@
     Assert(purgeTime - begin < 3.0);
     
     // Remove listener
-    [self.db removeChangeListenerWithToken: token];
+    [token remove];
 }
 
 - (void) testRemoveExpirationDate {
+    NSError* error;
     XCTestExpectation* expectation = [self expectationWithDescription: @"Document expiry test"];
     
     // Create doc
     CBLDocument* doc = [self generateDocumentWithID: nil];
     
     // Set expiry
-    NSError* err;
     NSDate* expiryDate = [NSDate dateWithTimeIntervalSinceNow: 1.0];
-    Assert([self.db setDocumentExpirationWithID: doc.id expiration: expiryDate error: &err]);
-    AssertNil(err);
+    Assert([self.defaultCollection setDocumentExpirationWithID: doc.id
+                                                    expiration: expiryDate
+                                                         error: &error]);
+    AssertNil(error);
     
     // Remove expiry
-    Assert([self.db setDocumentExpirationWithID: doc.id expiration: nil error: &err]);
-    AssertNil(err);
+    Assert([self.defaultCollection setDocumentExpirationWithID: doc.id
+                                                    expiration: nil
+                                                         error: &error]);
+    AssertNil(error);
     
     // validate
     __weak DocumentExpirationTest* weakSelf = self;
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2 * NSEC_PER_SEC)),
                    dispatch_get_main_queue(), ^{
+                       NSError* err;
                        // should not be removed
-                       AssertNotNil([weakSelf.db documentWithID: doc.id]);
+                       AssertNotNil([weakSelf.defaultCollection documentWithID: doc.id error: &err]);
                        [expectation fulfill];
                    });
     
@@ -424,6 +448,7 @@
 }
 
 - (void) testSetExpirationThenDeletionAfterwards {
+    NSError* error;
     XCTestExpectation* expectation = [self expectationWithDescription: @"Document expiry test"];
     
     // Create doc
@@ -431,15 +456,15 @@
     
     // Setup document change notification
     __block int count = 0;
-    id token = [self.db addDocumentChangeListenerWithID: doc.id
-                                               listener: ^(CBLDocumentChange *change)
+    id token = [self.defaultCollection addDocumentChangeListenerWithID: doc.id
+                                                              listener: ^(CBLDocumentChange *change)
     {
+        NSError* err;
         count++;
         AssertEqualObjects(change.documentID, doc.id);
-        AssertNil([change.database documentWithID: change.documentID]);
+        AssertNil([change.collection documentWithID: change.documentID error: &err]);
         if (count == 2) {
-            CBLCollection* c = [self.db defaultCollection: nil];
-            CBLDocument* purgedDoc = [[CBLDocument alloc] initWithCollection: c
+            CBLDocument* purgedDoc = [[CBLDocument alloc] initWithCollection: self.defaultCollection
                                                                   documentID: doc.id
                                                               includeDeleted: YES
                                                                        error: nil];
@@ -450,20 +475,20 @@
     
     // Set expiry
     NSDate* expiryDate = [NSDate dateWithTimeIntervalSinceNow: 2.0];
-    NSError* err;
-    Assert([self.db setDocumentExpirationWithID: doc.id expiration: expiryDate error: &err]);
-    AssertNil(err);
+    Assert([self.defaultCollection setDocumentExpirationWithID: doc.id
+                                                    expiration: expiryDate
+                                                         error: &error]);
+    AssertNil(error);
     
     // Delete doc
-    Assert([self.db deleteDocument: doc error: &err]);
-    AssertNil(err);
-    AssertNil([self.db documentWithID: doc.id]);
+    Assert([self.defaultCollection deleteDocument: doc error: &error]);
+    AssertNil(error);
+    AssertNil([self.defaultCollection documentWithID: doc.id error: &error]);
     
-    CBLCollection* c = [self.db defaultCollection: nil];
-    CBLDocument* deletedDoc = [[CBLDocument alloc] initWithCollection: c
+    CBLDocument* deletedDoc = [[CBLDocument alloc] initWithCollection: self.defaultCollection
                                                            documentID: doc.id
                                                        includeDeleted: TRUE
-                                                                error: &err];
+                                                                error: &error];
     AssertNotNil(deletedDoc);
     
     // Wait for result
@@ -471,10 +496,11 @@
     AssertEqual(count, 2);
     
     // Remove listener
-    [self.db removeChangeListenerWithToken: token];
+    [token remove];
 }
 
 - (void) testSetExpirationOnDeletedDocument {
+    NSError* error;
     XCTestExpectation* expectation = [self expectationWithDescription: @"Document expiry test"];
     
     // Create doc
@@ -482,13 +508,15 @@
     
     // Setup document change notification
     __block int count = 0;
-    id token = [self.db addDocumentChangeListenerWithID: doc.id listener: ^(CBLDocumentChange *change) {
+    id token = [self.defaultCollection addDocumentChangeListenerWithID: doc.id
+                                                              listener: ^(CBLDocumentChange *change)
+    {
+        NSError* err;
         count++;
         AssertEqualObjects(change.documentID, doc.id);
-        AssertNil([change.database documentWithID: change.documentID]);
+        AssertNil([change.collection documentWithID: change.documentID error: &err]);
         if (count == 2) {
-            CBLCollection* c = [self.db defaultCollection: nil];
-            CBLDocument* purgedDoc = [[CBLDocument alloc] initWithCollection: c
+            CBLDocument* purgedDoc = [[CBLDocument alloc] initWithCollection: self.defaultCollection
                                                                   documentID: doc.id
                                                               includeDeleted: YES
                                                                        error: nil];
@@ -498,38 +526,41 @@
     }];
     
     // Delete doc
-    NSError* err;
-    Assert([self.db deleteDocument: doc error: &err]);
-    AssertNil(err);
-    AssertNil([self.db documentWithID: doc.id]);
+    Assert([self.defaultCollection deleteDocument: doc error: &error]);
+    AssertNil(error);
+    AssertNil([self.defaultCollection documentWithID: doc.id error: &error]);
     
     // Set expiry
     NSDate* expiryDate = [NSDate dateWithTimeIntervalSinceNow: 1.0];
-    Assert([self.db setDocumentExpirationWithID: doc.id expiration: expiryDate error: &err]);
-    AssertNil(err);
+    Assert([self.defaultCollection setDocumentExpirationWithID: doc.id
+                                                    expiration: expiryDate
+                                                         error: &error]);
+    AssertNil(error);
     
     // Wait for result
     [self waitForExpectationsWithTimeout: kExpTimeout handler: nil];
     AssertEqual(count, 2);
     
     // Remove listener
-    [self.db removeChangeListenerWithToken: token];
+    [token remove];
 }
 
 - (void) testPurgeImmediately {
+    NSError* error;
     XCTestExpectation* expectation = [self expectationWithDescription: @"Document expiry test"];
     
     // Create doc
     CBLDocument* doc = [self generateDocumentWithID: nil];
-    AssertNil([self.db getDocumentExpirationWithID: doc.id]);
+    AssertNil([self.defaultCollection getDocumentExpirationWithID: doc.id error: &error]);
     
     // Setup document change notification
     __block NSDate* purgeTime;
-    id token = [self.db addDocumentChangeListenerWithID: doc.id
-                                               listener: ^(CBLDocumentChange *change)
+    id token = [self.defaultCollection addDocumentChangeListenerWithID: doc.id
+                                                              listener: ^(CBLDocumentChange *change)
     {
+        NSError* err;
         AssertEqualObjects(change.documentID, doc.id);
-        if ([change.database documentWithID: change.documentID] == nil) {
+        if ([change.collection documentWithID: change.documentID error: &err] == nil) {
             purgeTime = [NSDate date];
             [expectation fulfill];
         }
@@ -537,9 +568,10 @@
     
     // Set expiry
     NSDate* begin = [NSDate date];
-    NSError* err;
-    Assert([self.db setDocumentExpirationWithID: doc.id expiration: begin error: &err]);
-    AssertNil(err);
+    Assert([self.defaultCollection setDocumentExpirationWithID: doc.id
+                                                    expiration: begin
+                                                         error: &error]);
+    AssertNil(error);
     
     // Wait for result
     [self waitForExpectationsWithTimeout: kExpTimeout handler: nil];
@@ -553,36 +585,7 @@
     Assert(delta < 2);
     
     // Remove listener
-    [self.db removeChangeListenerWithToken: token];
+    [token remove];
 }
-
-- (void) testWhetherDatabaseEventTrigged {
-    XCTestExpectation* expectation = [self expectationWithDescription: @"Document expiry test"];
-    
-    // Create doc
-    CBLDocument* doc = [self generateDocumentWithID: nil];
-    
-    id token = [self.db addChangeListener: ^(CBLDatabaseChange* change) {
-        AssertEqual(change.documentIDs.count, 1u);
-        NSString* documentID = change.documentIDs.firstObject;
-        AssertEqualObjects(documentID, doc.id);
-        [expectation fulfill];
-    }];
-    AssertNil([self.db getDocumentExpirationWithID: doc.id]);
-    
-    // Set expiry
-    NSDate* begin = [NSDate dateWithTimeIntervalSinceNow: 1];
-    NSError* error;
-    Assert([self.db setDocumentExpirationWithID: doc.id expiration: begin error: &error]);
-    AssertNil(error);
-    
-    // Wait for result
-    [self waitForExpectationsWithTimeout: kExpTimeout handler: nil];
-    
-    // Remove listener
-    [self.db removeChangeListenerWithToken: token];
-}
-
-#pragma clang diagnostic pop
 
 @end

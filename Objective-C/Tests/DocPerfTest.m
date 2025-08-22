@@ -22,10 +22,6 @@
 
 @implementation DocPerfTest
 
-// TODO: Remove https://issues.couchbase.com/browse/CBL-3206
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-
 - (void) test {
     const unsigned revs = 10000;
     NSLog(@"--- Creating %u revisions ---", revs);
@@ -44,14 +40,12 @@
             @autoreleasepool {
                 [doc setValue: @(i) forKey: @"count"];
                 NSError *error2;
-                [self.db saveDocument: doc error: &error2];
+                [self.defaultCollection saveDocument: doc error: &error2];
                 Assert(doc, @"Save failed: %@", error2);
             }
         }
     }];
     Assert(ok);
 }
-
-#pragma clang diagnostic pop
 
 @end

@@ -27,10 +27,7 @@
 
 - (void) testGetNonExistingDoc {
     NSError* error = nil;
-    CBLCollection* col = [self.db defaultCollection: &error];
-    AssertNil(error);
-    
-    CBLDocument* doc = [col documentWithID: @"nonExisting" error: &error];
+    CBLDocument* doc = [self.defaultCollection documentWithID: @"nonExisting" error: &error];
     AssertNil(error);
     AssertNil(doc);
 }
@@ -39,22 +36,20 @@
 
 - (void) testDefaultCollectionExists {
     NSError* error = nil;
-    CBLCollection* col = [self.db defaultCollection: &error];
-    AssertNotNil(col, @"default collection shouldn't be empty");
-    AssertEqualObjects(col.name, kCBLDefaultCollectionName);
+    AssertEqualObjects(self.defaultCollection.name, kCBLDefaultCollectionName);
     AssertNil(error);
     
     NSArray* cols = [self.db collections: nil error: &error];
-    Assert([cols containsObject: col]);
+    Assert([cols containsObject: self.defaultCollection]);
     AssertNil(error);
     
-    CBLScope* scope = col.scope;
+    CBLScope* scope = self.defaultCollection.scope;
     AssertNotNil(scope, @"default scope shouldn't be empty");
     AssertEqualObjects(scope.name, kCBLDefaultScopeName);
     
     CBLCollection* col1 = [self.db collectionWithName: kCBLDefaultCollectionName
                                                 scope: nil error: &error];
-    AssertEqualObjects(col, col1);
+    AssertEqualObjects(self.defaultCollection, col1);
     AssertNil(error);
     
     scope = col1.scope;
@@ -90,13 +85,11 @@
     }];
     
     NSError* error = nil;
-    CBLCollection* col = [self.db defaultCollection: &error];
-    AssertNotNil(col);
-    AssertEqualObjects(col.name, kCBLDefaultCollectionName);
-    AssertEqualObjects(col.scope.name, kCBLDefaultScopeName);
+    AssertEqualObjects(self.defaultCollection.name, kCBLDefaultCollectionName);
+    AssertEqualObjects(self.defaultCollection.scope.name, kCBLDefaultScopeName);
     
     // try to create the default collection
-    col = [self.db createCollectionWithName: kCBLDefaultCollectionName scope: nil error: &error];
+    CBLCollection* col = [self.db createCollectionWithName: kCBLDefaultCollectionName scope: nil error: &error];
     AssertNotNil(col);
     AssertEqualObjects(col.name, kCBLDefaultCollectionName);
     AssertEqualObjects(col.scope.name, kCBLDefaultScopeName);
@@ -470,9 +463,7 @@
     NSError* error;
     
     // 3.1 TestGetFullNameFromDefaultCollection
-    CBLCollection* col1 = [self.db defaultCollection: &error];
-    AssertNotNil(col1);
-    AssertEqualObjects(col1.fullName, @"_default._default");
+    AssertEqualObjects(self.defaultCollection.fullName, @"_default._default");
     
     // 3.2 TestGetFullNameFromNewCollectionInDefaultScope
     CBLCollection* col2 = [self.db createCollectionWithName: @"colA" scope: nil error: &error];

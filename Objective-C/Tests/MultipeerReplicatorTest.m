@@ -344,8 +344,6 @@ typedef void (^MultipeerCollectionConfigureBlock)(CBLMultipeerCollectionConfigur
  */
 - (void) testConfiguration {
     // Create the configuration:
-    CBLCollection* collection = [self.db defaultCollection: nil];
-    
     CBLTLSIdentity* identity = [self createIdentity];
     
     CBLMultipeerCertificateAuthenticator* auth = [[CBLMultipeerCertificateAuthenticator alloc] initWithBlock:
@@ -354,7 +352,7 @@ typedef void (^MultipeerCollectionConfigureBlock)(CBLMultipeerCollectionConfigur
     }];
     
     CBLMultipeerCollectionConfiguration* collConfig =
-    [[CBLMultipeerCollectionConfiguration alloc] initWithCollection: collection];
+    [[CBLMultipeerCollectionConfiguration alloc] initWithCollection: self.defaultCollection];
     
     collConfig.documentIDs = @[@"doc1"];
     
@@ -410,8 +408,6 @@ typedef void (^MultipeerCollectionConfigureBlock)(CBLMultipeerCollectionConfigur
 - (void) testConfigurationValidation {
     self.disableObjectLeakCheck = YES;
     
-    CBLCollection* collection = [self.db defaultCollection: nil];
-    
     CBLTLSIdentity* identity = [self createIdentity];
     
     CBLMultipeerCertificateAuthenticator* auth = [[CBLMultipeerCertificateAuthenticator alloc] initWithBlock:
@@ -420,7 +416,7 @@ typedef void (^MultipeerCollectionConfigureBlock)(CBLMultipeerCollectionConfigur
     }];
     
     CBLMultipeerCollectionConfiguration* collConfig =
-    [[CBLMultipeerCollectionConfiguration alloc] initWithCollection: collection];
+    [[CBLMultipeerCollectionConfiguration alloc] initWithCollection: self.defaultCollection];
     
     // Create the configuration with an empty peerGroupID:
     [self expectException: @"NSInvalidArgumentException" in: ^{
@@ -611,15 +607,13 @@ typedef void (^MultipeerCollectionConfigureBlock)(CBLMultipeerCollectionConfigur
  12. Stop both replicators and wait until the replicators are inactive.
  */
 - (void) testBasicReplication {
-    CBLCollection* collection1 = [self.db defaultCollection: nil];
     CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: @"doc1"];
     [doc1 setString: @"hello" forKey: @"greeting"];
-    [self saveDocument: doc1 collection: collection1];
+    [self saveDocument: doc1 collection: self.defaultCollection];
     
-    CBLCollection* collection2 = [self.otherDB defaultCollection: nil];
     CBLMutableDocument* doc2 = [[CBLMutableDocument alloc] initWithID: @"doc2"];
     [doc2 setString: @"hi" forKey: @"greeting"];
-    [self saveDocument: doc2 collection: collection2];
+    [self saveDocument: doc2 collection: self.otherDBDefaultCollection];
     
     CBLMultipeerReplicator *repl1, *repl2;
     
@@ -632,16 +626,16 @@ typedef void (^MultipeerCollectionConfigureBlock)(CBLMultipeerCollectionConfigur
     [self waitForReplicatorStatus: repl1 peerID: repl2.peerID activityLevel: kCBLReplicatorIdle];
     [self waitForReplicatorStatus: repl2 peerID: repl1.peerID activityLevel: kCBLReplicatorIdle];
     
-    CBLDocument* checkDoc1a = [collection1 documentWithID: @"doc1" error: nil];
+    CBLDocument* checkDoc1a = [self.defaultCollection documentWithID: @"doc1" error: nil];
     AssertNotNil(checkDoc1a);
     
-    CBLDocument* checkDoc2a = [collection1 documentWithID: @"doc2" error: nil];
+    CBLDocument* checkDoc2a = [self.defaultCollection documentWithID: @"doc2" error: nil];
     AssertNotNil(checkDoc2a);
     
-    CBLDocument* checkDoc1b = [collection2 documentWithID: @"doc1" error: nil];
+    CBLDocument* checkDoc1b = [self.otherDBDefaultCollection documentWithID: @"doc1" error: nil];
     AssertNotNil(checkDoc1b);
     
-    CBLDocument* checkDoc2b = [collection2 documentWithID: @"doc2" error: nil];
+    CBLDocument* checkDoc2b = [self.otherDBDefaultCollection documentWithID: @"doc2" error: nil];
     AssertNotNil(checkDoc2b);
     
     [self stopMultipeerReplicator: repl1];
@@ -1030,10 +1024,9 @@ typedef void (^MultipeerCollectionConfigureBlock)(CBLMultipeerCollectionConfigur
     [self startMultipeerReplicator: repl2];
     
     // Save a doc in one peer:
-    CBLCollection* collection1 = [self.db defaultCollection: nil];
     CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: @"doc1"];
     [doc1 setString: @"hello" forKey: @"greeting"];
-    [self saveDocument: doc1 collection: collection1];
+    [self saveDocument: doc1 collection: self.defaultCollection];
     
     [self waitForReplicatorStatus: repl1 peerID: repl2.peerID activityLevel: kCBLReplicatorIdle];
     [self waitForReplicatorStatus: repl2 peerID: repl1.peerID activityLevel: kCBLReplicatorIdle];
@@ -1084,10 +1077,9 @@ typedef void (^MultipeerCollectionConfigureBlock)(CBLMultipeerCollectionConfigur
     [self startMultipeerReplicator: repl2];
     
     // Save a doc in peer #1:
-    CBLCollection* collection1 = [self.db defaultCollection: nil];
     CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: @"doc1"];
     [doc1 setString: @"hello" forKey: @"greeting"];
-    [self saveDocument: doc1 collection: collection1];
+    [self saveDocument: doc1 collection: self.defaultCollection];
     
     // Wait until the replicator is IDLE
     [self waitForReplicatorStatus: repl1 peerID: repl2.peerID activityLevel: kCBLReplicatorIdle];
@@ -1100,18 +1092,16 @@ typedef void (^MultipeerCollectionConfigureBlock)(CBLMultipeerCollectionConfigur
     [self stopMultipeerReplicator: repl2];
     
     // Update the doc in both peers but saving on the otherDB twice:
-    collection1 = [self.db defaultCollection: nil];
-    doc1 = [[collection1 documentWithID: @"doc1" error: nil] toMutable];
+    doc1 = [[self.defaultCollection documentWithID: @"doc1" error: nil] toMutable];
     [doc1 setString: @"hi" forKey: @"greeting"];
-    [self saveDocument:doc1 collection: collection1];
+    [self saveDocument:doc1 collection: self.defaultCollection];
     
-    CBLCollection* collection2 = [self.otherDB defaultCollection: nil];
-    CBLMutableDocument* doc2 = [[collection2 documentWithID: @"doc1" error: nil] toMutable];
+    CBLMutableDocument* doc2 = [[self.otherDBDefaultCollection documentWithID: @"doc1" error: nil] toMutable];
     [doc2 setString: @"hey" forKey: @"greeting"];
-    [self saveDocument:doc2 collection: collection2];
+    [self saveDocument:doc2 collection: self.otherDBDefaultCollection];
     
     [doc2 setString: @"howdy" forKey: @"greeting"];
-    [self saveDocument:doc2 collection: collection2];
+    [self saveDocument:doc2 collection: self.otherDBDefaultCollection];
     
     // Restart both peers:
     
@@ -1132,10 +1122,10 @@ typedef void (^MultipeerCollectionConfigureBlock)(CBLMultipeerCollectionConfigur
     [self waitForReplicatorStatus: repl2 peerID: repl1.peerID activityLevel: kCBLReplicatorIdle];
     
     // Check the doc on both peers:
-    CBLDocument* checkDoc1 = [collection1 documentWithID: @"doc1" error: nil];
+    CBLDocument* checkDoc1 = [self.defaultCollection documentWithID: @"doc1" error: nil];
     Assert(verifyBlock(checkDoc1));
     
-    CBLDocument* checkDoc2 = [collection2 documentWithID: @"doc1" error: nil];
+    CBLDocument* checkDoc2 = [self.otherDBDefaultCollection documentWithID: @"doc1" error: nil];
     Assert(verifyBlock(checkDoc2));
     
     [self stopMultipeerReplicator: repl1];
@@ -1296,33 +1286,31 @@ typedef void (^MultipeerCollectionConfigureBlock)(CBLMultipeerCollectionConfigur
     [self startMultipeerReplicator: repl2];
     
     // Save 3 docs in peer #1:
-    CBLCollection* collection1 = [self.db defaultCollection: nil];
     CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: @"doc1"];
     [doc1 setString: @"hello" forKey: @"greeting"];
-    [self saveDocument: doc1 collection: collection1];
+    [self saveDocument: doc1 collection: self.defaultCollection];
     
     CBLMutableDocument* doc2 = [[CBLMutableDocument alloc] initWithID: @"doc2"];
     [doc2 setString: @"hi" forKey: @"greeting"];
-    [self saveDocument: doc2 collection: collection1];
+    [self saveDocument: doc2 collection: self.defaultCollection];
     
     CBLMutableDocument* doc3 = [[CBLMutableDocument alloc] initWithID: @"doc3"];
     [doc3 setString: @"howdy" forKey: @"greeting"];
-    [self saveDocument: doc3 collection: collection1];
+    [self saveDocument: doc3 collection: self.defaultCollection];
     
     // Wait until the replicator is IDLE
     [self waitForReplicatorStatus: repl1 peerID: repl2.peerID activityLevel: kCBLReplicatorIdle];
     [self waitForReplicatorStatus: repl2 peerID: repl1.peerID activityLevel: kCBLReplicatorIdle];
     
     // Check that only doc1 and doc3 are pushed to Peer #2
-    CBLCollection* collection2 = [self.otherDB defaultCollection: nil];
-    CBLDocument* checkDoc1 = [collection2 documentWithID: @"doc1" error: nil];
+    CBLDocument* checkDoc1 = [self.otherDBDefaultCollection documentWithID: @"doc1" error: nil];
     AssertNotNil(checkDoc1);
     AssertEqualObjects([checkDoc1 stringForKey: @"greeting"], @"hello");
     
-    CBLDocument* checkDoc2 = [collection2 documentWithID: @"doc2" error: nil];
+    CBLDocument* checkDoc2 = [self.otherDBDefaultCollection documentWithID: @"doc2" error: nil];
     AssertNil(checkDoc2);
     
-    CBLDocument* checkDoc3 = [collection2 documentWithID: @"doc3" error: nil];
+    CBLDocument* checkDoc3 = [self.otherDBDefaultCollection documentWithID: @"doc3" error: nil];
     AssertNotNil(checkDoc3);
     AssertEqualObjects([checkDoc3 stringForKey: @"greeting"], @"howdy");
     
@@ -1385,43 +1373,41 @@ typedef void (^MultipeerCollectionConfigureBlock)(CBLMultipeerCollectionConfigur
     [self startMultipeerReplicator: repl2];
     
     // Save doc1 and doc2 in peer #1:
-    CBLCollection* collection1 = [self.db defaultCollection: nil];
     CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: @"doc1"];
     [doc1 setString: @"hello" forKey: @"greeting"];
-    [self saveDocument: doc1 collection: collection1];
+    [self saveDocument: doc1 collection: self.defaultCollection];
     
     CBLMutableDocument* doc2 = [[CBLMutableDocument alloc] initWithID: @"doc2"];
     [doc2 setString: @"hi" forKey: @"greeting"];
-    [self saveDocument: doc2 collection: collection1];
+    [self saveDocument: doc2 collection: self.defaultCollection];
     
     // Save doc3 and doc4 in peer #2:
-    CBLCollection* collection2 = [self.otherDB defaultCollection: nil];
     CBLMutableDocument* doc3 = [[CBLMutableDocument alloc] initWithID: @"doc3"];
     [doc3 setString: @"howdy" forKey: @"greeting"];
-    [self saveDocument: doc3 collection: collection2];
+    [self saveDocument: doc3 collection: self.otherDBDefaultCollection];
     
     CBLMutableDocument* doc4 = [[CBLMutableDocument alloc] initWithID: @"doc4"];
     [doc4 setString: @"hey" forKey: @"greeting"];
-    [self saveDocument: doc4 collection: collection2];
+    [self saveDocument: doc4 collection: self.otherDBDefaultCollection];
     
     // Wait until the replicator is IDLE:
     [self waitForReplicatorStatus: repl1 peerID: repl2.peerID activityLevel: kCBLReplicatorIdle];
     [self waitForReplicatorStatus: repl2 peerID: repl1.peerID activityLevel: kCBLReplicatorIdle];
     
     // Check that only doc4 but not doc3 are pulled to peer #1:
-    CBLDocument* checkDoc4 = [collection1 documentWithID: @"doc4" error: nil];
+    CBLDocument* checkDoc4 = [self.defaultCollection documentWithID: @"doc4" error: nil];
     AssertNotNil(checkDoc4);
     AssertEqualObjects([checkDoc4 stringForKey: @"greeting"], @"hey");
     
-    CBLDocument* checkDoc3 = [collection1 documentWithID: @"doc3" error: nil];
+    CBLDocument* checkDoc3 = [self.defaultCollection documentWithID: @"doc3" error: nil];
     AssertNil(checkDoc3);
     
     // Check that only doc1 but not doc2 are pushed to peer #2:
-    CBLDocument* checkDoc1 = [collection2 documentWithID: @"doc1" error: nil];
+    CBLDocument* checkDoc1 = [self.otherDBDefaultCollection documentWithID: @"doc1" error: nil];
     AssertNotNil(checkDoc1);
     AssertEqualObjects([checkDoc1 stringForKey: @"greeting"], @"hello");
     
-    CBLDocument* checkDoc2 = [collection2 documentWithID: @"doc2" error: nil];
+    CBLDocument* checkDoc2 = [self.otherDBDefaultCollection documentWithID: @"doc2" error: nil];
     AssertNil(checkDoc2);
     
     [self stopMultipeerReplicator: repl1];
