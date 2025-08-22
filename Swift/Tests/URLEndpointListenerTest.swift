@@ -325,6 +325,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
     
     // MARK: -- Tests
     
+    #if COUCHBASE_ENTERPRISE
     func testPort() throws {
         if !self.keyChainAccessAllowed { return }
         
@@ -1387,6 +1388,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
         }
     }
 
+    #endif
 }
 
 extension URLEndpointListener {

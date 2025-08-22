@@ -242,6 +242,8 @@
 
 @implementation VectorSearchTest_Main
 
+#ifdef COUCHBASE_ENTERPRISE
+
 /**
  * 1. TestVectorIndexConfigurationDefaultValue
  * Description
@@ -1418,5 +1420,7 @@
     */
     AssertEqual(config.encoding.hash, 31872);
 }
+
+#endif
 
 @end

@@ -70,6 +70,7 @@ class VectorSearchTest_Lazy : VectorSearchTest {
         return nil
     }
     
+    #if COUCHBASE_ENTERPRISE
     /// 1. TestIsLazyDefaultValue
     ///
     /// Description
@@ -826,4 +827,6 @@ class VectorSearchTest_Lazy : VectorSearchTest {
             updater.skipVector(at: 1)
         }
     }
+    
+    #endif
 }

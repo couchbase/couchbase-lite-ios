@@ -248,6 +248,7 @@
     }];
 }
 
+#ifdef COUCHBASE_ENTERPRISE
 - (void) testCreateGetDeleteServerIdentity {
     XCTSkipUnless(self.keyChainAccessAllowed);
     
@@ -666,5 +667,7 @@
     AssertNil(identity);
     AssertNil(error);
 }
+
+#endif
 
 @end

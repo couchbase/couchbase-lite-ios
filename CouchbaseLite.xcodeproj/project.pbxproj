@@ -1866,6 +1866,9 @@
 		AE5803F92B9B969D001A1BE3 /* CouchbaseLiteVectorSearch.xcframework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 40086B152B7EDDD400DA6770 /* CouchbaseLiteVectorSearch.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		AE5803FA2B9B96BF001A1BE3 /* CouchbaseLiteVectorSearch.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 40086B152B7EDDD400DA6770 /* CouchbaseLiteVectorSearch.xcframework */; };
 		AE5803FB2B9B96BF001A1BE3 /* CouchbaseLiteVectorSearch.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 40086B152B7EDDD400DA6770 /* CouchbaseLiteVectorSearch.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		AE5CA64E2E590AF1003A9E89 /* DateTimeQueryFunctionTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AC83BC721C026D100792098 /* DateTimeQueryFunctionTest.m */; };
+		AE5CA6502E590B79003A9E89 /* AuthenticatorTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1ADA05382240218F0068F745 /* AuthenticatorTest.m */; };
+		AE5CA6512E590BFC003A9E89 /* MiscCppTest.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1A4FE769225ED344009D5F43 /* MiscCppTest.mm */; };
 		AE5F25582CAC310700AAB7F4 /* UnnestArrayIndexTest.m in Sources */ = {isa = PBXBuildFile; fileRef = AE5F25492CAC30DC00AAB7F4 /* UnnestArrayIndexTest.m */; };
 		AE5F25592CAC310800AAB7F4 /* UnnestArrayIndexTest.m in Sources */ = {isa = PBXBuildFile; fileRef = AE5F25492CAC30DC00AAB7F4 /* UnnestArrayIndexTest.m */; };
 		AE5F255A2CAC310900AAB7F4 /* UnnestArrayIndexTest.m in Sources */ = {isa = PBXBuildFile; fileRef = AE5F25492CAC30DC00AAB7F4 /* UnnestArrayIndexTest.m */; };
@@ -7312,12 +7315,14 @@
 				40600A422DD6B6A500E696B7 /* MultipeerReplicatorTest.m in Sources */,
 				9343F13C207D61EC00F19A89 /* DatabaseTest.m in Sources */,
 				1ABA63B028813A8C005835E7 /* ReplicatorTest+Collection.m in Sources */,
+				AE5CA64E2E590AF1003A9E89 /* DateTimeQueryFunctionTest.m in Sources */,
 				AEAFDD992D15EC3B00BA5C9C /* LogTestOld.m in Sources */,
 				40AA72962C28938E007FB1E0 /* VectorSearchTest.m in Sources */,
 				1AA6744A227924120018CC6D /* QueryTest+Meta.m in Sources */,
 				AE006DE42B7BB22000884E2B /* CBLWordEmbeddingModel.m in Sources */,
 				1A621D7A2887DCFD0017F905 /* QueryTest+Collection.m in Sources */,
 				93EB25CC21CDD12A0006FB88 /* PredictiveQueryTest.m in Sources */,
+				AE5CA6512E590BFC003A9E89 /* MiscCppTest.mm in Sources */,
 				1AF555D422948BD90077DF6D /* QueryTest+Main.m in Sources */,
 				40AA729D2C28B1A3007FB1E0 /* VectorSearchTest+Lazy.m in Sources */,
 				9343F13D207D61EC00F19A89 /* MigrationTest.m in Sources */,
@@ -7341,6 +7346,7 @@
 				9343F146207D61EC00F19A89 /* QueryTest.m in Sources */,
 				AEFEED772D4A8D82008AF4C2 /* PartialIndexTest.m in Sources */,
 				1A4160D82283694B0061A567 /* ReplicatorTest+CustomConflict.m in Sources */,
+				AE5CA6502E590B79003A9E89 /* AuthenticatorTest.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

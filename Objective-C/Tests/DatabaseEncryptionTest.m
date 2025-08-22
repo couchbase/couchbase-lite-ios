@@ -55,6 +55,7 @@
     _seekrit = nil;
 }
 
+#ifdef COUCHBASE_ENTERPRISE
 - (void) testUnEncryptedDatabase {
     NSError* error;
     _seekrit = [self openSeekritWithPassword: nil error: &error];
@@ -263,6 +264,8 @@
         AssertEqual([r integerAtIndex: 0], i++);
     }
 }
+
+#endif
 
 #pragma clang diagnostic pop
 

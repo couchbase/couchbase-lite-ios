@@ -190,7 +190,7 @@ class VectorSearchTest: CBLTestCase {
 /// Version: 2.1.0
 ///
 class VectorSearchTest_Main: VectorSearchTest {
-    
+    #if COUCHBASE_ENTERPRISE
     /// 1. TestVectorIndexConfigurationDefaultValue
     /// Description
     ///     Test that the VectorIndexConfiguration has all default values returned as expected.
@@ -1243,5 +1243,5 @@ class VectorSearchTest_Main: VectorSearchTest {
         XCTAssert(numResultsFor5Probes > numResultsFor1Probes)
     }
     
+    #endif
 }
-

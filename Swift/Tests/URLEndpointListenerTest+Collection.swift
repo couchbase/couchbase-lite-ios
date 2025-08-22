@@ -29,6 +29,7 @@ class URLEndpointListenerTest_Collection: URLEndpointListenerTest {
         try super.tearDownWithError()
     }
     
+    #if COUCHBASE_ENTERPRISE
     func testCollectionsSingleShotPushPullReplication() throws {
         if !self.keyChainAccessAllowed { return }
         
@@ -114,4 +115,6 @@ class URLEndpointListenerTest_Collection: URLEndpointListenerTest {
     }
     
     // Note: testCreateListenerConfigWithEmptyCollection can't be tested due to fatalError
+    
+    #endif
 }

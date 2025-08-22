@@ -250,6 +250,7 @@
 
 #pragma mark - Tests
 
+#ifdef COUCHBASE_ENTERPRISE
 - (void) testDefaultProperties {
     Config* config = [[Config alloc] initWithDatabase: self.otherDB];
     
@@ -1477,17 +1478,8 @@
     [self validateActiveReplicatorAndURLEndpointListeners: YES];
 }
 
-#pragma clang diagnostic pop
+#endif
 
-- (void) testCollections {
-    NSError* error = nil;
-    CBLCollection* collection = [self.db createCollectionWithName: @"collection1"
-                                                      scope: @"scope1"
-                                                      error: &error];
-    Config* config = [[Config alloc] initWithCollections: @[collection]];
-    AssertEqual(config.collections.count, 1);
-    CBLCollection* c = (CBLCollection*)config.collections.firstObject;
-    AssertEqualObjects(c.name, @"collection1");
-}
+#pragma clang diagnostic pop
 
 @end

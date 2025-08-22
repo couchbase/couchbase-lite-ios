@@ -204,6 +204,7 @@ class TLSIdentityTest: CBLTestCase {
         }
     }
     
+    #if COUCHBASE_ENTERPRISE
     func testCreateGetDeleteServerIdentity() throws {
         try XCTSkipUnless(keyChainAccessAllowed)
         
@@ -527,4 +528,6 @@ class TLSIdentityTest: CBLTestCase {
         checkIdentity = try TLSIdentity.identity(withLabel: self.serverCertLabel)
         XCTAssertNil(checkIdentity)
     }
+    
+    #endif
 }

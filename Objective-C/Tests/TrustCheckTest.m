@@ -55,6 +55,7 @@
     return certArray;
 }
 
+#ifdef COUCHBASE_ENTERPRISE
 - (void) testTrustCheckWithBasicPolicy {
     [CBLTrustCheck setAnchorCerts: [self getAnchorCerts] onlyThese: NO];
     
@@ -274,5 +275,7 @@
     CFRelease(secCert2);
     CFRelease(secCert3);
 }
+
+#endif
 
 @end

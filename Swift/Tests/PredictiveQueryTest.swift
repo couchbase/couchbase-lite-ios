@@ -36,6 +36,7 @@ class PredictiveQueryTest: CBLTestCase {
         return doc
     }
     
+    #if COUCHBASE_ENTERPRISE
     func testRegisterAndUnregisterModel() throws {
         createDocument(withNumbers: [1, 2, 3, 4, 5])
         
@@ -978,6 +979,7 @@ class PredictiveQueryTest: CBLTestCase {
         }
         XCTAssertEqual(Int(rows), tests.count);
     }
+    #endif
 }
 
 // MARK: Models
@@ -1085,5 +1087,4 @@ class TextModel: TestPredictiveModel {
         output.setInt(sc, forKey: "sc")
         return output
     }
-    
 }

@@ -85,6 +85,8 @@
     return results;
 }
 
+#ifdef COUCHBASE_ENTERPRISE
+
 /**
  * 1. TestIsLazyDefaultValue
  * Description
@@ -1283,5 +1285,7 @@
         [updater skipVectorAtIndex: 0];
     }];
 }
+
+#endif
 
 @end
