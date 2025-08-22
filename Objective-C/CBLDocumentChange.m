@@ -24,7 +24,7 @@
 
 @implementation CBLDocumentChange
 
-@synthesize documentID=_documentID, collection=_collection, database=_database;
+@synthesize documentID=_documentID, collection=_collection;
 
 - (nullable instancetype) initWithCollection: (CBLCollection*)collection
                                   documentID: (NSString*)documentID
@@ -32,7 +32,6 @@
 {
     self = [super init];
     if (self) {
-        _database = collection.database;;
         _collection = collection;
         _documentID = documentID;
     }

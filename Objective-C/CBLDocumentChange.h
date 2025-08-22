@@ -27,10 +27,6 @@
 /** The collection. */
 @property (readonly, nonatomic) CBLCollection* collection;
 
-/** The database. */
-@property (readonly, nonatomic) CBLDatabase* database
-__deprecated_msg("Use collection instead.");
-
 /** The ID  of the document that changed. */
 @property (readonly, nonatomic) NSString* documentID;
 
