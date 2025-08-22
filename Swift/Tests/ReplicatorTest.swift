@@ -628,7 +628,7 @@ class ReplicatorTest_Main: ReplicatorTest {
                 }
         }
         XCTAssertEqual(self.defaultCollection!.count, 1)
-        XCTAssertEqual(otherDB_defaultCollection!.count, 0)
+        XCTAssertEqual(self.otherDB_defaultCollection!.count, 0)
         
         // Push:
         let target = DatabaseEndpoint(database: otherDB!)

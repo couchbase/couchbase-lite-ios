@@ -144,7 +144,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
     func validateMultipleReplicationsTo(_ listener: URLEndpointListener, type: ReplicatorType) throws {
         let exp1 = expectation(description: "replicator#1 stop")
         let exp2 = expectation(description: "replicator#2 stop")
-        let count = listener.config.database.count
+        let count = listener.config.collections.first!.count
         
         // open DBs
         try deleteDB(name: "db1")
@@ -198,13 +198,13 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
         
         // pushAndPull might cause race, so only checking push
         if type == .push {
-            XCTAssertEqual(listener.config.database.count, count + 2);
+            XCTAssertEqual(listener.config.collections.first!.count, count + 2);
         }
         
         // pushAndPull might cause race, so only checking pull
         if type == .pull {
-            XCTAssertEqual(db1.count, count + 1); // existing docs + pulls one doc from db#2
-            XCTAssertEqual(db2.count, count + 1); // existing docs + pulls one doc from db#1
+            XCTAssertEqual(db1_defaultCollection.count, count + 1); // existing docs + pulls one doc from db#2
+            XCTAssertEqual(db2_defaultCollection.count, count + 1); // existing docs + pulls one doc from db#1
         }
         
         repl1.removeChangeListener(withToken: token1)
