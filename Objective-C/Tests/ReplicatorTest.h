@@ -40,9 +40,6 @@ NS_ASSUME_NONNULL_BEGIN
     CBLReplicator* repl;
 }
 
-- (void) saveDocument: (CBLMutableDocument*)document
-           toDatabase: (CBLDatabase*)database;
-
 #pragma mark - Endpoint
 
 /** Returns an endpoint for a Sync Gateway test database, or nil if SG tests are not enabled.

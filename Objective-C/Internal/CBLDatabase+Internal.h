@@ -25,7 +25,6 @@
 #import "CBLCookieStore.h"
 #import "CBLDatabase.h"
 #import "CBLDatabaseConfiguration.h"
-#import "CBLDatabaseChange.h"
 #import "CBLMutableDocument.h"
 #import "CBLDocumentChange.h"
 #import "CBLReplicator.h"
@@ -47,7 +46,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 /// CBLDatabase:
 
-@interface CBLDatabase () <CBLLockable, CBLRemovableListenerToken, CBLCookieStore>
+@interface CBLDatabase () <CBLLockable, CBLCookieStore>
 
 @property (readonly, nonatomic, nullable) C4Database* c4db;
 @property (readonly, nonatomic) dispatch_queue_t dispatchQueue;
@@ -124,20 +123,5 @@ NS_ASSUME_NONNULL_BEGIN
                                        error: (NSError**)error;
 
 @end
-
-
-// CBLDatabaseChange:
-
-@interface CBLDatabaseChange ()
-
-/** check whether the changes are from the current database object or not. */
-@property (readonly, nonatomic) BOOL isExternal;
-
-- (instancetype) initWithDatabase: (CBLDatabase*)database
-                      documentIDs: (NSArray*)documentIDs
-                       isExternal: (BOOL)isExternal;
-
-@end
-
 
 NS_ASSUME_NONNULL_END

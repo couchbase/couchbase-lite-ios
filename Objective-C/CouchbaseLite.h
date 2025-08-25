@@ -41,7 +41,6 @@ FOUNDATION_EXPORT const unsigned char CouchbaseLiteVersionString[];
 #import <CouchbaseLite/CBLConsoleLogSink.h>
 #import <CouchbaseLite/CBLCustomLogSink.h>
 #import <CouchbaseLite/CBLDatabase.h>
-#import <CouchbaseLite/CBLDatabaseChange.h>
 #import <CouchbaseLite/CBLDatabaseConfiguration.h>
 #import <CouchbaseLite/CBLDictionary.h>
 #import <CouchbaseLite/CBLDictionaryFragment.h>

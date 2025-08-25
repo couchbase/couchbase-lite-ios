@@ -428,8 +428,7 @@ public final class Collection: CollectionChangeObservable, Indexable, Equatable,
                 Log.log(domain: .database, level: .warning, message: "Unable to notify changes as the collection object was released")
                 return
             }
-            listener(DocumentChange(database: self.database,
-                                    documentID: change.documentID,
+            listener(DocumentChange(documentID: change.documentID,
                                     collection: self))
         }
         return ListenerToken(token)

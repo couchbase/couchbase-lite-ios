@@ -104,7 +104,7 @@ class ArrayTest: CBLTestCase {
         mDoc.setValue(mArray2, forKey: "array")
         try saveDocument(mDoc)
         
-        let doc = self.db.document(withID: "doc1")!
+        let doc = try self.defaultCollection!.document(id: "doc1")!
         let array = doc.array(forKey: "array")!
         XCTAssert(array.toArray() == (["Scott", "Daniel"]))
         
@@ -254,9 +254,9 @@ class ArrayTest: CBLTestCase {
         let mArray = try MutableArrayObject(json: json)
         let mDoc = MutableDocument(id: "doc")
         mDoc.setArray(mArray, forKey: "array")
-        try self.db.saveDocument(mDoc)
+        try self.defaultCollection!.save(document: mDoc)
         
-        let doc = self.db.document(withID: "doc")
+        let doc = try self.defaultCollection!.document(id: "doc")
         guard let array = doc?.array(forKey: "array") else {
             XCTFail("Array not found in doc")
             return
@@ -281,10 +281,10 @@ class ArrayTest: CBLTestCase {
         expectException(exception: .internalInconsistencyException) {
             print("\(blob!.content?.count ?? 0)")
         }
-        try self.db.saveDocument(mDoc)
+        try self.defaultCollection!.save(document: mDoc)
         
         // after the save, it should return the content
-        let doc = self.db.document(withID: "doc")
+        let doc = try self.defaultCollection!.document(id: "doc")
         blob = doc?.blob(forKey: "origin")
         XCTAssertNotNil(blob?.content)
     }

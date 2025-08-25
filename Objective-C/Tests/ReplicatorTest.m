@@ -91,16 +91,6 @@
     [super tearDown];
 }
 
-- (void) saveDocument: (CBLMutableDocument*)document toDatabase:(CBLDatabase*)database {
-    NSError* error;
-    Assert([database saveDocument: document error: &error], @"Saving error: %@", error);
-    
-    CBLDocument* savedDoc = [database documentWithID: document.id];
-    AssertNotNil(savedDoc);
-    AssertEqualObjects(savedDoc.id, document.id);
-    AssertEqualObjects([savedDoc toDictionary], [document toDictionary]);
-}
-
 #pragma mark - Endpoint
 
 - (CBLURLEndpoint*) remoteEndpointWithName: (NSString*)dbName secure: (BOOL)secure {
@@ -250,11 +240,7 @@
                                       serverCert: (nullable SecCertificateRef)serverCert
                                      maxAttempts: (NSInteger)maxAttempts /* for default, set -1 */ {
     NSError* error;
-    CBLCollection* collection = [self.db defaultCollection: &error];
-    AssertNotNil(collection);
-    AssertNil(error);
-    
-    CBLReplicatorConfiguration* c = [self configWithCollections: @[collection]
+    CBLReplicatorConfiguration* c = [self configWithCollections: @[self.defaultCollection]
                                                          target: target
                                                            type: type
                                                      continuous: continuous];
@@ -461,7 +447,7 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady {
     @finally {
         if (replicator.status.activity != kCBLReplicatorStopped)
             [replicator stop];
-        [replicator removeChangeListenerWithToken: token];
+        [token remove];
     }
     
     // Workaround:
@@ -502,7 +488,7 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady {
     token = [replicator addChangeListener:^(CBLReplicatorChange * _Nonnull change) {
         if(change.status.progress.completed >= progress && change.status.activity == kCBLReplicatorIdle) {
             [x fulfill];
-            [wReplicator removeChangeListenerWithToken:token];
+            [token remove];
         }
     }];
     
@@ -516,7 +502,7 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady {
     token = [replicator addChangeListener:^(CBLReplicatorChange * _Nonnull change) {
         if(change.status.activity == kCBLReplicatorStopped) {
             [x fulfill];
-            [wReplicator removeChangeListenerWithToken:token];
+            [token remove];
         }
     }];
     

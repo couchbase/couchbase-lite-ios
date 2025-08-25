@@ -154,9 +154,9 @@
                                    @"street": @"1 Main street",
                                    @"city": @"Mountain View",
                                    @"state": @"CA"}};
-    [self saveDocument: [self createDocument: @"doc1" data: dict]];
+    [self saveDocument: [self createDocument: @"doc1" data: dict] collection: self.defaultCollection];
     
-    CBLDocumentFragment* doc = _db[@"doc1"];
+    CBLDocumentFragment* doc = self.defaultCollection[@"doc1"];
     AssertNotNil(doc);
     Assert(doc.exists);
     AssertNotNil(doc.document);

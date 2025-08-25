@@ -28,10 +28,6 @@
 
 @implementation ConcurrentTest
 
-// TODO: Remove https://issues.couchbase.com/browse/CBL-3206
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-
 - (void) setProperties: (id <CBLMutableDictionary>)dictionary
                 custom: (nullable NSDictionary*)custom
 {
@@ -71,7 +67,7 @@
     NSMutableArray* docs = [NSMutableArray arrayWithCapacity: nDocs];
     for (NSUInteger i = 0; i < nDocs; i++) {
         CBLMutableDocument* doc = [self createDoc];
-        if (![self.db saveDocument: doc error: error])
+        if (![self.defaultCollection saveDocument: doc error: error])
             return nil;
         [docs addObject: doc];
     }
@@ -83,7 +79,7 @@
              error: (NSError**)error
 {
     [self setProperties: doc custom: custom];
-    return [self.db saveDocument: doc error: error];
+    return [self.defaultCollection saveDocument: doc error: error];
 }
 
 - (BOOL) updateDocIDs: (NSArray*)docIds
@@ -93,7 +89,7 @@
 {
     for (NSUInteger r = 0; r < rounds; r++) {
         for (NSString* docId in docIds) {
-            CBLMutableDocument* doc = [[self.db documentWithID: docId] toMutable];
+            CBLMutableDocument* doc = [[self.defaultCollection documentWithID: docId error: error] toMutable];
             [self updateDoc: doc custom: custom error: error];
         }
     }
@@ -103,7 +99,7 @@
 - (void) verifyWhere: (nullable CBLQueryExpression*)expr
                 test: (void (^)(uint64_t n, CBLQueryResult *row))block {
     CBLQuery* q = [CBLQueryBuilder select: @[[CBLQuerySelectResult expression: [CBLQueryMeta id]]]
-                                     from: [CBLQueryDataSource database: self.db]
+                                     from: [CBLQueryDataSource collection: self.defaultCollection]
                                     where: expr];
     NSError* error;
     NSEnumerator* e = [q execute: &error];
@@ -150,7 +146,7 @@
                @"Error creating docs: %@", error);
     }];
     
-    AssertEqual(self.db.count, kNDocs * kNConcurrents);
+    AssertEqual(self.defaultCollection.count, kNDocs * kNConcurrents);
 }
 
 - (void) testConcurrentReadDocs {
@@ -168,7 +164,8 @@
         for (NSUInteger r = 0; r < kNRounds; r++) {
             for (NSString* docId in docIds) {
                 @autoreleasepool {
-                    CBLDocument* doc = [self.db documentWithID: docId];
+                    NSError* error;
+                    CBLDocument* doc = [self.defaultCollection documentWithID: docId error: &error];
                     Assert(doc != nil);
                 }
             }
@@ -190,7 +187,8 @@
     [self concurrentRuns: kNConcurrents waitUntilDone: YES withBlock: ^(NSUInteger rIndex) {
         for (NSUInteger r = 0; r < kNRounds; r++) {
             for (NSString* docId in docIds) {
-                CBLMutableDocument* mDoc = [[self.db documentWithID: docId] toMutable];
+                NSError* error;
+                CBLMutableDocument* mDoc = [[self.defaultCollection documentWithID: docId error: &error] toMutable];
                 Assert(mDoc != nil);
             }
         }
@@ -237,11 +235,11 @@
     [self concurrentRuns: kNConcurrents waitUntilDone: YES withBlock: ^(NSUInteger rIndex) {
         for (CBLDocument* doc in docs) {
             NSError* error;
-            Assert([self.db deleteDocument: doc error: &error], @"Error when delete: %@", error);
+            Assert([self.defaultCollection deleteDocument: doc error: &error], @"Error when delete: %@", error);
         }
     }];
     
-    AssertEqual(self.db.count, 0u);
+    AssertEqual(self.defaultCollection.count, 0u);
 }
 
 - (void) testConcurrentInBatch {
@@ -257,7 +255,7 @@
         }];
     }];
     
-    AssertEqual(self.db.count, kNDocs * kNConcurrents);
+    AssertEqual(self.defaultCollection.count, kNDocs * kNConcurrents);
 }
 
 - (void) testConcurrentPurgeDocs {
@@ -269,13 +267,13 @@
     [self concurrentRuns: kNConcurrents waitUntilDone: YES withBlock: ^(NSUInteger rIndex) {
         for (CBLDocument* doc in docs) {
             NSError* error;
-            if (![self.db purgeDocument: doc error: &error]) {
+            if (![self.defaultCollection purgeDocument: doc error: &error]) {
                 AssertEqualObjects(error.domain, CBLErrorDomain);
                 AssertEqual(error.code, CBLErrorNotFound);
             }
         }
     }];
-    AssertEqual(self.db.count, 0u);
+    AssertEqual(self.defaultCollection.count, 0u);
 }
 
 - (void) testConcurrentCompact {
@@ -292,32 +290,16 @@
     }];
 }
 
-- (void) testDatabaseChange {
-    XCTestExpectation* exp1 = [self expectationWithDescription: @"Create"];
-    XCTestExpectation* exp2 = [self expectationWithDescription: @"Change"];
-    [self.db addChangeListener: ^(CBLDatabaseChange *change) {
-        [self waitForExpectations: @[exp1] timeout: kExpTimeout]; // Test deadlock
-        [exp2 fulfill];
-    }];
-    
-    [self concurrentRuns: 1 waitUntilDone: NO withBlock: ^(NSUInteger rIndex) {
-        [self->_db saveDocument: [[CBLMutableDocument alloc] initWithID: @"doc1"]  error: nil];
-        [exp1 fulfill];
-    }];
-    
-    [self waitForExpectations: @[exp2] timeout: kExpTimeout]; // Test deadlock
-}
-
 - (void) testDocumentChange {
     XCTestExpectation* exp1 = [self expectationWithDescription: @"Create"];
     XCTestExpectation* exp2 = [self expectationWithDescription: @"Change"];
-    [self.db addDocumentChangeListenerWithID: @"doc1" listener: ^(CBLDocumentChange *change) {
+    [self.defaultCollection addDocumentChangeListenerWithID: @"doc1" listener: ^(CBLDocumentChange *change) {
         [self waitForExpectations: @[exp1] timeout: kExpTimeout]; // Test deadlock
         [exp2 fulfill];
     }];
     
     [self concurrentRuns: 1 waitUntilDone: NO withBlock: ^(NSUInteger rIndex) {
-        [self->_db saveDocument: [[CBLMutableDocument alloc] initWithID: @"doc1"]  error: nil];
+        [self.defaultCollection saveDocument: [[CBLMutableDocument alloc] initWithID: @"doc1"]  error: nil];
         [exp1 fulfill];
     }];
     
@@ -352,9 +334,7 @@
         }
         
     }];
-    AssertEqual(self.db.count, allObjects.count);
+    AssertEqual(self.defaultCollection.count, allObjects.count);
 }
-
-#pragma clang diagnostic pop
 
 @end

@@ -77,6 +77,7 @@ class PredictiveQueryWithCoreMLTest: CBLTestCase {
         try saveDocument(doc)
     }
 
+    #if COUCHBASE_ENTERPRISE
     func testMarsHabitatPricerModel() throws {
         let model = try self.model(name: "Mars/MarsHabitatPricer")!
         Database.prediction.registerModel(model, withName: "MarsHabitatPricer")
@@ -269,4 +270,5 @@ class PredictiveQueryWithCoreMLTest: CBLTestCase {
         Database.prediction.unregisterModel(withName: "MobileNet")
     }
     
+    #endif
 }

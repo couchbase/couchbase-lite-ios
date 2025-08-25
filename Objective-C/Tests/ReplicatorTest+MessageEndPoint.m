@@ -42,7 +42,7 @@
     token = [listener addChangeListener:^(CBLMessageEndpointListenerChange* change) {
         if(change.status.activity == kCBLReplicatorIdle) {
             [x fulfill];
-            [wListener removeChangeListenerWithToken:token];
+            [token remove];
         }
     }];
     
@@ -56,7 +56,7 @@
     token = [listener addChangeListener: ^(CBLMessageEndpointListenerChange * change) {
         if(change.status.activity == kCBLReplicatorStopped) {
             [x fulfill];
-            [wListener removeChangeListenerWithToken:token];
+            [token remove];
         }
     }];
     return x;
@@ -74,8 +74,8 @@
     CBLTestErrorLogic* errorLogic = [[CBLTestErrorLogic alloc] initAtLocation: location
                                                             withRecoveryCount: recoveryCount];
     CBLMessageEndpointListenerConfiguration* config =
-        [[CBLMessageEndpointListenerConfiguration alloc] initWithDatabase: self.otherDB
-                                                             protocolType:protocolType];
+        [[CBLMessageEndpointListenerConfiguration alloc] initWithCollections: @[self.otherDBDefaultCollection]
+                                                                protocolType: protocolType];
     CBLMessageEndpointListener* listener = [[CBLMessageEndpointListener alloc] initWithConfig: config];
     if (outListener)
         *outListener = listener;
@@ -88,15 +88,17 @@
                                                                     target: server
                                                               protocolType: protocolType
                                                                   delegate: _delegate];
-    CBLReplicatorConfiguration* replConfig = [[CBLReplicatorConfiguration alloc] initWithDatabase:_db target:endpoint];
+    CBLReplicatorConfiguration* replConfig = [[CBLReplicatorConfiguration alloc] initWithCollections: @[[[CBLCollectionConfiguration alloc] initWithCollection: self.defaultCollection]]
+                                                                                              target:endpoint];
     replConfig.replicatorType = kCBLReplicatorTypePush;
     return replConfig;
 }
 
 - (void) runTestWithType: (CBLReplicatorType)replicatorType protocol: (CBLProtocolType)protocol {
+    NSError* error;
     // Listener:
-    CBLMessageEndpointListenerConfiguration* config = [[CBLMessageEndpointListenerConfiguration alloc] initWithDatabase: self.otherDB
-                                                                                                           protocolType: protocol];
+    CBLMessageEndpointListenerConfiguration* config = [[CBLMessageEndpointListenerConfiguration alloc] initWithCollections: @[self.otherDBDefaultCollection]
+                                                                                                              protocolType: protocol];
     CBLMessageEndpointListener* listener = [[CBLMessageEndpointListener alloc] initWithConfig: config];
     XCTestExpectation* listenerStop = [self waitForListenerStopped: listener];
     
@@ -108,53 +110,54 @@
                                                                   target: server
                                                             protocolType: protocol
                                                                 delegate: delegate];
-    CBLReplicatorConfiguration* replConfig = [[CBLReplicatorConfiguration alloc] initWithDatabase: _db target: target];
+    CBLReplicatorConfiguration* replConfig = [[CBLReplicatorConfiguration alloc] initWithCollections: @[[[CBLCollectionConfiguration alloc] initWithCollection: self.defaultCollection]]
+                                                                                              target: target];
     replConfig.replicatorType = replicatorType;
     replConfig.continuous = YES;
     
     CBLReplicator* replicator = [[CBLReplicator alloc] initWithConfig: replConfig];
     [replicator start];
     
-    CBLDatabase* firstSource = nil;
-    CBLDatabase* secondSource = nil;
-    CBLDatabase* firstTarget = nil;
-    CBLDatabase* secondTarget = nil;
+    CBLCollection* firstSource = nil;
+    CBLCollection* secondSource = nil;
+    CBLCollection* firstTarget = nil;
+    CBLCollection* secondTarget = nil;
     
     if(replicatorType == kCBLReplicatorTypePush) {
-        firstSource = self.db;
-        secondSource = self.db;
-        firstTarget = self.otherDB;
-        secondTarget = self.otherDB;
+        firstSource = self.defaultCollection;
+        secondSource = self.defaultCollection;
+        firstTarget = self.otherDBDefaultCollection;
+        secondTarget = self.otherDBDefaultCollection;
     } else if(replicatorType == kCBLReplicatorTypePull) {
-        firstSource = self.otherDB;
-        secondSource = self.otherDB;
-        firstTarget = self.db;
-        secondTarget = self.db;
+        firstSource = self.otherDBDefaultCollection;
+        secondSource = self.otherDBDefaultCollection;
+        firstTarget = self.defaultCollection;
+        secondTarget = self.defaultCollection;
     } else {
-        firstSource = self.db;
-        secondSource = self.otherDB;
-        firstTarget = self.otherDB;
-        secondTarget = self.db;
+        firstSource = self.defaultCollection;
+        secondSource = self.otherDBDefaultCollection;
+        firstTarget = self.otherDBDefaultCollection;
+        secondTarget = self.defaultCollection;
     }
     
     XCTestExpectation* x = [self waitForReplicatorIdle: replicator withProgressAtLeast: 0];
     CBLMutableDocument* mdoc = [CBLMutableDocument documentWithID: @"doc1"];
     [mdoc setString: @"db" forKey: @"name"];
     [mdoc setInteger: 1 forKey: @"version"];
-    [self saveDocument:mdoc toDatabase: firstSource];
+    [self saveDocument: mdoc collection: firstSource];
     [self waitForExpectations: @[x] timeout: kExpTimeout];
     
     uint64_t previousCompleted = replicator.status.progress.completed;
     AssertEqual(firstTarget.count, 1UL);
     
     x = [self waitForReplicatorIdle: replicator withProgressAtLeast: previousCompleted];
-    mdoc = [[secondSource documentWithID: @"doc1"] toMutable];
+    mdoc = [[secondSource documentWithID: @"doc1" error: &error] toMutable];
     [mdoc setInteger: 2 forKey: @"version"];
-    [self saveDocument: mdoc toDatabase: secondSource];
+    [self saveDocument: mdoc collection: secondSource];
     [self waitForExpectations: @[x] timeout: kExpTimeout];
     
     x = [self waitForReplicatorStopped: replicator];
-    CBLDocument* savedDoc = [secondTarget documentWithID: @"doc1"];
+    CBLDocument* savedDoc = [secondTarget documentWithID: @"doc1" error: &error];
     AssertEqual([savedDoc integerForKey: @"version"], 2);
     [replicator stop];
     [self waitForExpectations: @[x] timeout: kExpTimeout];
@@ -167,7 +170,7 @@
     NSError* error = nil;
     CBLMutableDocument* mdoc = [CBLMutableDocument documentWithID: @"livesindb"];
     [mdoc setString: @"db" forKey: @"name"];
-    [_db saveDocument: mdoc error: &error];
+    [self.defaultCollection saveDocument: mdoc error: &error];
     AssertNil(error);
     
     XCTestExpectation* listenerStop;
@@ -271,11 +274,11 @@
 - (void) testCloseListener {
     CBLMutableDocument* doc = [CBLMutableDocument documentWithID: @"doc1"];
     [doc setString: @"Smokey" forKey: @"name"];
-    [self saveDocument: doc];
+    [self saveDocument: doc collection: self.defaultCollection];
     
     CBLMessageEndpointListenerConfiguration* config =
-        [[CBLMessageEndpointListenerConfiguration alloc] initWithDatabase: self.otherDB
-                                                             protocolType: kCBLProtocolTypeMessageStream];
+        [[CBLMessageEndpointListenerConfiguration alloc] initWithCollections: @[self.otherDBDefaultCollection]
+                                                                protocolType: kCBLProtocolTypeMessageStream];
     CBLMessageEndpointListener* listener = [[CBLMessageEndpointListener alloc] initWithConfig: config];
     
     CBLMockServerConnection* serverConnection1 = [[CBLMockServerConnection alloc] initWithListener: listener
@@ -289,16 +292,16 @@
                                                                   target: serverConnection1
                                                             protocolType: kCBLProtocolTypeMessageStream
                                                                 delegate: delegate];
-    CBLReplicatorConfiguration* replConfig = [[CBLReplicatorConfiguration alloc] initWithDatabase: _db
-                                                                                           target: target];
+    CBLReplicatorConfiguration* replConfig = [[CBLReplicatorConfiguration alloc] initWithCollections: @[[[CBLCollectionConfiguration alloc] initWithCollection: self.defaultCollection]]
+                                                                                              target: target];
     replConfig.continuous = YES;
     MockConnectionFactory* delegate2 = [[MockConnectionFactory alloc] initWithErrorLogic: errorLogic];
     CBLMessageEndpoint* target2 = [[CBLMessageEndpoint alloc] initWithUID: [self clientID]
                                                                    target: serverConnection2
                                                              protocolType: kCBLProtocolTypeMessageStream
                                                                  delegate: delegate2];
-    CBLReplicatorConfiguration* replConfig2 = [[CBLReplicatorConfiguration alloc] initWithDatabase: _db
-                                                                                            target: target2];
+    CBLReplicatorConfiguration* replConfig2 = [[CBLReplicatorConfiguration alloc] initWithCollections: @[[[CBLCollectionConfiguration alloc] initWithCollection: self.defaultCollection]]
+                                                                                               target: target2];
     replConfig2.continuous = YES;
     CBLReplicator* replicator = [[CBLReplicator alloc] initWithConfig: replConfig];
     CBLReplicator* replicator2 = [[CBLReplicator alloc] initWithConfig: replConfig2];
@@ -327,7 +330,7 @@
     
     [listener closeAll];
     [self waitForExpectations: @[listenerStop1, listenerStop2] timeout: kExpTimeout];
-    [listener removeChangeListenerWithToken: listenerToken];
+    [listenerToken remove];
     [self waitForExpectations: @[stop1, stop2] timeout: kExpTimeout];
     AssertNotNil(replicator.status.error);
     AssertNotNil(replicator2.status.error);

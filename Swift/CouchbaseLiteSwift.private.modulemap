@@ -34,7 +34,6 @@ framework module CouchbaseLiteSwift_Private {
     header "CBLConsoleLogSink.h"
     header "CBLCustomLogSink.h"
     header "CBLDatabase.h"
-    header "CBLDatabaseChange.h"
     header "CBLDatabaseConfiguration.h"
     header "CBLDictionary.h"
     header "CBLDictionaryFragment.h"

@@ -31,10 +31,6 @@
     CBLConsoleLogSink* _consoleBackup;
 }
 
-// TODO: Remove https://issues.couchbase.com/browse/CBL-3206
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-
 - (void) setUp {
     [super setUp];
     NSString* folderName = [NSString stringWithFormat: @"LogTestLogs_%d", arc4random()];
@@ -342,11 +338,11 @@
     CBLMutableDocument* document = [self createDocument: @"doc1"];
     [document setString: hebrew forKey: @"hebrew"];
     NSError* error;
-    [self.db saveDocument: document error: &error];
+    [self.defaultCollection saveDocument: document error: &error];
     AssertNil(error);
     
     CBLQuery* q = [CBLQueryBuilder select: @[[CBLQuerySelectResult all]]
-                                     from: [CBLQueryDataSource database: self.db]];
+                                     from: [CBLQueryDataSource collection: self.defaultCollection]];
     AssertNotNil(q);
     NSEnumerator* rs = [q execute:&error];
     AssertNil(error);
@@ -379,6 +375,9 @@
     
     CBLLogSinks.custom = nil;
 }
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 
 - (void) testUseBothApi {
     CBLTestCustomLogSink* logSink = [[CBLTestCustomLogSink alloc] init];

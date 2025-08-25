@@ -26,43 +26,15 @@
 
 @implementation NotificationTest
 
-// TODO: Remove https://issues.couchbase.com/browse/CBL-3206
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-
-- (void) testDatabaseChange {
-    XCTestExpectation* x = [self expectationWithDescription:@"change"];
-    id token = [self.db addChangeListener: ^(CBLDatabaseChange* change) {
-        AssertEqual(change.documentIDs.count, 10ul);
-        [x fulfill];
-    }];
-    AssertNotNil(token);
-    
-    __block NSError* error;
-    bool ok = [self.db inBatch: &error usingBlock: ^{
-        for (unsigned i = 0; i < 10; i++) {
-            CBLMutableDocument* doc = [[CBLMutableDocument alloc] initWithID: [NSString stringWithFormat: @"doc-%u", i]];
-            [doc setValue: @"demo" forKey: @"type"];
-            Assert([_db saveDocument: doc error: &error], @"Error saving: %@", error);
-        }
-    }];
-    Assert(ok);
-    
-    [self waitForExpectationsWithTimeout: kExpTimeout handler: NULL];
-    
-    // Remove listener:
-    [self.db removeChangeListenerWithToken: token];
-}
-
 - (void) testDocumentChange {
     // Create doc1 and doc2
     CBLMutableDocument *doc1 = [self createDocument: @"doc1"];
     [doc1 setValue: @"Scott" forKey: @"name"];
-    [self saveDocument: doc1];
+    [self saveDocument: doc1 collection: self.defaultCollection];
     
     CBLMutableDocument *doc2 = [self createDocument: @"doc2"];
     [doc2 setValue: @"Daniel" forKey: @"name"];
-    [self saveDocument: doc2];
+    [self saveDocument: doc2 collection: self.defaultCollection];
     
     // Expectation:
     XCTestExpectation* x = [self expectationWithDescription: @"document change"];
@@ -75,35 +47,35 @@
             [x fulfill];
     };
     
-    id listener1 = [_db addDocumentChangeListenerWithID: @"doc1" listener: block];
-    id listener2 = [_db addDocumentChangeListenerWithID: @"doc2" listener: block];
-    id listener3 = [_db addDocumentChangeListenerWithID: @"doc3" listener: block];
+    id listener1 = [self.defaultCollection addDocumentChangeListenerWithID: @"doc1" listener: block];
+    id listener2 = [self.defaultCollection addDocumentChangeListenerWithID: @"doc2" listener: block];
+    id listener3 = [self.defaultCollection addDocumentChangeListenerWithID: @"doc3" listener: block];
     
     // Update doc1
     [doc1 setValue: @"Scott Tiger" forKey: @"name"];
-    [self saveDocument: doc1];
+    [self saveDocument: doc1 collection: self.defaultCollection];
     
     // Delete doc2
     NSError *error;
-    Assert([_db deleteDocument: doc2 error: &error], @"Error deleting: %@", error);
+    Assert([self.defaultCollection deleteDocument: doc2 error: &error], @"Error deleting: %@", error);
     
     // Create doc3
     CBLMutableDocument *doc3 = [self createDocument: @"doc3"];
     [doc3 setValue: @"Jack" forKey: @"name"];
-    [self saveDocument: doc3];
+    [self saveDocument: doc3 collection: self.defaultCollection];
     
     [self waitForExpectationsWithTimeout: kExpTimeout handler: NULL];
     
     // Remove listeners:
-    [_db removeChangeListenerWithToken:listener1];
-    [_db removeChangeListenerWithToken:listener2];
-    [_db removeChangeListenerWithToken:listener3];
+    [listener1 remove];
+    [listener2 remove];
+    [listener3 remove];
 }
 
 - (void) testAddSameChangeListeners {
     CBLMutableDocument* doc1 = [self createDocument: @"doc1"];
     [doc1 setValue: @"Scott" forKey: @"name"];
-    [self saveDocument: doc1];
+    [self saveDocument: doc1 collection: self.defaultCollection];
     
     // Add change listeners:
     XCTestExpectation* x = [self expectationWithDescription: @"document change"];
@@ -112,13 +84,13 @@
         count++;
     };
    
-    id listener1 = [_db addDocumentChangeListenerWithID: @"doc1" listener: block];
-    id listener2 = [_db addDocumentChangeListenerWithID: @"doc1" listener: block];
-    id listener3 = [_db addDocumentChangeListenerWithID: @"doc1" listener: block];
+    id listener1 = [self.defaultCollection addDocumentChangeListenerWithID: @"doc1" listener: block];
+    id listener2 = [self.defaultCollection addDocumentChangeListenerWithID: @"doc1" listener: block];
+    id listener3 = [self.defaultCollection addDocumentChangeListenerWithID: @"doc1" listener: block];
     
     // Update doc1:
     [doc1 setValue: @"Scott Tiger" forKey: @"name"];
-    [self saveDocument: doc1];
+    [self saveDocument: doc1 collection: self.defaultCollection];
     
     // Let's wait for 0.5 second to make sure that no more changes fired:
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)),
@@ -130,15 +102,15 @@
     [self waitForExpectationsWithTimeout: kExpTimeout handler: NULL];
     
     // Remove listeners:
-    [_db removeChangeListenerWithToken:listener1];
-    [_db removeChangeListenerWithToken:listener2];
-    [_db removeChangeListenerWithToken:listener3];
+    [listener1 remove];
+    [listener2 remove];
+    [listener3 remove];
 }
 
 - (void) testRemoveDocumentChangeListener {
     CBLMutableDocument *doc1 = [self createDocument: @"doc1"];
     [doc1 setValue: @"Scott" forKey: @"name"];
-    [self saveDocument: doc1];
+    [self saveDocument: doc1 collection: self.defaultCollection];
     
     // Add change listener:
     XCTestExpectation* x1 = [self expectationWithDescription: @"document change"];
@@ -146,21 +118,21 @@
         [x1 fulfill];
     };
     
-    id listener1 = [_db addDocumentChangeListenerWithID: @"doc1" listener: block];
+    id listener1 = [self.defaultCollection addDocumentChangeListenerWithID: @"doc1" listener: block];
     AssertNotNil(listener1);
     
     // Update doc1:
     [doc1 setValue: @"Scott Tiger" forKey: @"name"];
-    [self saveDocument: doc1];
+    [self saveDocument: doc1 collection: self.defaultCollection];
     
     [self waitForExpectationsWithTimeout: kExpTimeout handler: NULL];
     
     // Remove change listener:
-    [_db removeChangeListenerWithToken:listener1];
+    [listener1 remove];
     
     // Update doc1 again:
     [doc1 setValue: @"Scott Tiger" forKey: @"name"];
-    [self saveDocument: doc1];
+    [self saveDocument: doc1 collection: self.defaultCollection];
     
     // Let's wait for 0.5 seconds:
     XCTestExpectation *x2 = [self expectationWithDescription: @"No Changes"];
@@ -171,9 +143,7 @@
     [self waitForExpectationsWithTimeout: kExpTimeout handler: NULL];
     
     // Remove again:
-    [_db removeChangeListenerWithToken:listener1];
+    [listener1 remove];
 }
-
-#pragma clang diagnostic pop
 
 @end

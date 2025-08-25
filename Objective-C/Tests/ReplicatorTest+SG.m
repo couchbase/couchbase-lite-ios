@@ -69,8 +69,8 @@
     CBLBlob* blob = [[CBLBlob alloc] initWithContentType: @"image/jpeg"
                                                     data: data];
     [doc1 setBlob: blob forKey: @"blob"];
-    Assert([self.db saveDocument: doc1 error: &error]);
-    AssertEqual(self.db.count, 1u);
+    Assert([self.defaultCollection saveDocument: doc1 error: &error]);
+    AssertEqual(self.defaultCollection.count, 1u);
     
     [self eraseRemoteEndpoint: target];
     id config = [self configWithTarget: target type : kCBLReplicatorTypePush continuous: NO];
@@ -148,7 +148,7 @@
     
     [r start];
     [self waitForExpectations: @[x1, x2] timeout: kExpTimeout];
-    [repl removeChangeListenerWithToken: token];
+    [token remove];
     r = nil;
 }
 
@@ -160,7 +160,7 @@
     NSError* error;
     CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID:@"doc1"];
     [doc1 setValue: @"Tiger" forKey: @"species"];
-    Assert([self.db saveDocument: doc1 error: &error]);
+    Assert([self.defaultCollection saveDocument: doc1 error: &error]);
     
     [self eraseRemoteEndpoint: target];
     
@@ -182,8 +182,8 @@
     Log(@"----> Conflicting server revision is %@", json[@"rev"]);
     
     // Delete local doc:
-    Assert([self.db deleteDocument: doc1 error: &error]);
-    AssertNil([self.db documentWithID: doc1.id]);
+    Assert([self.defaultCollection deleteDocument: doc1 error: &error]);
+    AssertNil([self.defaultCollection documentWithID: doc1.id error: &error]);
     
     // Start pull replicator:
     Log(@"-------- Starting pull replication to pick up conflict --------");
@@ -191,7 +191,8 @@
     [self run: config errorCode: 0 errorDomain: nil];
     
     // Verify local doc should be nil:
-    AssertNil([self.db documentWithID: doc1.id]);
+    AssertNil([self.defaultCollection documentWithID: doc1.id error: &error]);
+    AssertNil(error);
 }
 
 - (void) testPushAndPullBigBodyDocument_SG {
@@ -207,7 +208,7 @@
     }
     
     NSError* error;
-    Assert([self.db saveDocument: doc error: &error], @"Save Error: %@", error);
+    Assert([self.defaultCollection saveDocument: doc error: &error], @"Save Error: %@", error);
     
     // Erase remote data:
     [self eraseRemoteEndpoint: target];
@@ -236,29 +237,29 @@
     NSString* value = @"some random text";
     CBLMutableDocument *doc = [[CBLMutableDocument alloc] init];
     [doc setString: value forKey: propertyKey];
-    Assert([self.db saveDocument: doc error: &error], @"Save Error: %@", error);
-    AssertEqual(self.db.count, 1u);
+    Assert([self.defaultCollection saveDocument: doc error: &error], @"Save Error: %@", error);
+    AssertEqual(self.defaultCollection.count, 1u);
     
     // Setup document change notification
     XCTestExpectation* expectation = [self expectationWithDescription: @"Document expiry test"];
-    id token = [self.db addDocumentChangeListenerWithID: doc.id
-                                               listener: ^(CBLDocumentChange *change)
+    id token = [self.defaultCollection addDocumentChangeListenerWithID: doc.id
+                                                              listener: ^(CBLDocumentChange *change)
                 {
+                    NSError* err;
                     AssertEqualObjects(change.documentID, doc.id);
-                    if ([change.database documentWithID: change.documentID] == nil) {
+                    if ([change.collection documentWithID: change.documentID error: &err] == nil) {
                         [expectation fulfill];
                     }
                 }];
     
     // Set expiry
     NSDate* expiryDate = [NSDate dateWithTimeIntervalSinceNow: 1.0];
-    NSError* err;
-    Assert([self.db setDocumentExpirationWithID: doc.id expiration: expiryDate error: &err]);
-    AssertNil(err);
+    Assert([self.defaultCollection setDocumentExpirationWithID: doc.id expiration: expiryDate error: &error]);
+    AssertNil(error);
     
     // Wait for the document get expired.
     [self waitForExpectations: @[expectation] timeout: kExpTimeout];
-    [self.db removeChangeListenerWithToken: token];
+    [token remove];
     
     // Erase remote data:
     [self eraseRemoteEndpoint: target];
@@ -269,7 +270,7 @@
     [self run: config errorCode: 0 errorDomain: nil];
     
     // Clean database:
-    AssertEqual(self.db.count, 0u);
+    AssertEqual(self.defaultCollection.count, 0u);
     
     // PULL from SG:
     Log(@"-------- Starting pull replication --------");
@@ -277,8 +278,8 @@
     [self run: config errorCode: 0 errorDomain: nil];
     
     // should not be replicated
-    AssertEqual(self.db.count, 0u);
-    CBLDocument* savedDoc = [self.db documentWithID: doc.id];
+    AssertEqual(self.defaultCollection.count, 0u);
+    CBLDocument* savedDoc = [self.defaultCollection documentWithID: doc.id error: &error];
     AssertNil([savedDoc stringForKey: propertyKey]);
 }
 

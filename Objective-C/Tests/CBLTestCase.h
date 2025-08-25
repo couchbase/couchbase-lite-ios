@@ -86,8 +86,14 @@ extern const NSTimeInterval kExpTimeout;
 /** Opened when setting up each test case. */
 @property (readonly, nonatomic) CBLDatabase* db;
 
+/** Default collection for db. */
+@property (readonly, nonatomic) CBLCollection* defaultCollection;
+
 /** Need to explicitly open by calling -openOtherDB method. */
 @property (readonly, nonatomic, nullable) CBLDatabase* otherDB;
+
+/** Default collection for otherDB */
+@property (readonly, nonatomic) CBLCollection* otherDBDefaultCollection;
 
 /** Directory that keeps the test databases */
 @property (readonly, nonatomic) NSString* directory;
@@ -144,16 +150,13 @@ extern const NSTimeInterval kExpTimeout;
 /** Create a simple document with the given document ID and save */
 - (CBLMutableDocument*) generateDocumentWithID: (nullable NSString*)documentID;
 
-/** Save a document in the database. */
-- (void) saveDocument: (CBLMutableDocument*)document;
+/** Save document in the specified collection. */
+- (void) saveDocument: (CBLMutableDocument*)document collection: (CBLCollection*)col;
 
-/** Save a document in the database. The eval block
+/** Save a document in the default collection. The eval block
     will be called three times, before save, after save with the given document
     object and after save with a new document objct getting from the database. */
 - (void) saveDocument: (CBLMutableDocument*)doc eval: (void(^)(CBLDocument*))block;
-
-/** Save document in the specified collection. */
-- (void) saveDocument:(CBLMutableDocument *)document collection: (nullable CBLCollection*)col;
 
 - (void) createDocNumbered: (nullable CBLCollection*)col start: (NSInteger)start num: (NSInteger)num;
 
@@ -169,7 +172,7 @@ extern const NSTimeInterval kExpTimeout;
 /** Generates a random string with the given length. */
 - (NSString*) randomStringWithLength: (NSUInteger)length;
 
-/** Loads the database with documents read from a multiline JSON string.
+/** Loads the default collection with documents read from a multiline JSON string.
     Each line of the string should be a complete JSON object, which will become a document.
  The document IDs will be of the form "doc-#" where "#" is the line number, starting at 1. */
 - (void) loadJSONString: (NSString*)contents named: (NSString*)resourceName;
@@ -178,7 +181,7 @@ extern const NSTimeInterval kExpTimeout;
  using -loadJSONString:named:.*/
 - (void) loadJSONResource: (NSString*)resourceName toCollection: (CBLCollection*)collection;
 
-/** Loads the database with documents read from a JSON resource file in the test bundle,
+/** Loads the default collection with documents read from a JSON resource file in the test bundle,
  using -loadJSONString:named:.*/
 - (void) loadJSONResource: (NSString*)resourceName;
 

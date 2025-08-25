@@ -46,7 +46,7 @@
         NSString* docId = [NSString stringWithFormat: kDocIdFormat, i];
         CBLMutableDocument* doc = [self createDocument: docId];
         [doc setString: kCreateActionValue forKey: kActionKey];
-        [self saveDocument: doc];
+        [self saveDocument: doc collection: self.defaultCollection];
         [docIds addObject: docId];
     }
     return [NSSet setWithSet: docIds];
@@ -62,12 +62,10 @@
     }
     CBLReplicator* replicator = [[CBLReplicator alloc] initWithConfig: config];
     
-    NSError* err = nil;
-    CBLCollection* defaultCollection = [self.db defaultCollection: &err];
-    AssertNotNil(defaultCollection);
+    NSError* err;
     
     // Check document pendings:
-    NSSet* pendingIds = [replicator pendingDocumentIDsForCollection: defaultCollection error: &err];
+    NSSet* pendingIds = [replicator pendingDocumentIDsForCollection: self.defaultCollection error: &err];
     AssertNotNil(pendingIds);
     AssertEqual(pendingIds.count, pushOnlyDocIds.count == 0 ? docIds.count : pushOnlyDocIds.count);
     
@@ -75,7 +73,7 @@
         Boolean willBePush = pushOnlyDocIds.count == 0 || [pushOnlyDocIds containsObject: docId];
         if (willBePush) {
             Assert([pendingIds containsObject: docId]);
-            Assert([replicator isDocumentPending: docId collection: defaultCollection error: &err]);
+            Assert([replicator isDocumentPending: docId collection: self.defaultCollection error: &err]);
             AssertNil(err);
         }
     }
@@ -84,12 +82,12 @@
     [self runWithReplicator: replicator errorCode: 0 errorDomain: nil];
     
     // Check document pending:
-    pendingIds = [replicator pendingDocumentIDsForCollection: defaultCollection error: &err];
+    pendingIds = [replicator pendingDocumentIDsForCollection: self.defaultCollection error: &err];
     AssertNotNil(pendingIds);
     AssertEqual(pendingIds.count, 0);
     
     for (NSString* docId in docIds) {
-        Assert(![replicator isDocumentPending: docId collection: defaultCollection error: &err]);
+        Assert(![replicator isDocumentPending: docId collection: self.defaultCollection error: &err]);
         AssertNil(err);
     }
 }
@@ -114,6 +112,7 @@
 }
 
 - (void) testPendingDocIDsWithUpdate {
+    NSError* error;
     [self createDocs];
     
     id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
@@ -123,9 +122,9 @@
     // Update all docs:
     NSSet* updatedDocIds = [NSSet setWithObjects: @"doc-1", @"doc-2", nil];
     for (NSString* docId in updatedDocIds) {
-        CBLMutableDocument* doc = [[self.db documentWithID: docId] toMutable];
+        CBLMutableDocument* doc = [[self.defaultCollection documentWithID: docId error: &error] toMutable];
         [doc setString: kUpdateActionValue forKey: kActionKey];
-        [self saveDocument: doc];
+        [self saveDocument: doc collection: self.defaultCollection];
     }
 
     [self validatePendingDocumentIDs: updatedDocIds pushOnlyDocIds: nil];
@@ -142,8 +141,8 @@
     NSSet* updatedDocIds = [NSSet setWithObjects: @"doc-1", @"doc-2", nil];
     for (NSString* docId in updatedDocIds) {
         NSError* err = nil;
-        CBLDocument* doc = [self.db documentWithID: docId];
-        [self.db deleteDocument: doc error: &err];
+        CBLDocument* doc = [self.defaultCollection documentWithID: docId error: &err];
+        [self.defaultCollection deleteDocument: doc error: &err];
         AssertNil(err);
     }
     [self validatePendingDocumentIDs: updatedDocIds pushOnlyDocIds: nil];
@@ -154,8 +153,8 @@
 
     // Purge a doc:
     NSError* err = nil;
-    CBLDocument* doc = [self.db documentWithID: @"doc-3"];
-    [self.db purgeDocument: doc error: &err];
+    CBLDocument* doc = [self.defaultCollection documentWithID: @"doc-3" error: &err];
+    [self.defaultCollection purgeDocument: doc error: &err];
     AssertNil(err);
 
     NSMutableSet* updatedDocIds = [NSMutableSet setWithSet: docIds];

@@ -27,10 +27,6 @@
 
 @implementation DictionaryTest
 
-// TODO: Remove https://issues.couchbase.com/browse/CBL-3206
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-
 - (void) testCreateDictionary {
     CBLMutableDictionary* address = [[CBLMutableDictionary alloc] init];
     AssertEqual(address.count, 0u);
@@ -332,6 +328,7 @@
 }
 
 - (void) testToMutable {
+    NSError* error;
     CBLMutableDictionary* mDict1 = [[CBLMutableDictionary alloc] init];
     [mDict1 setValue: @"Scott" forKey: @"name"];
     
@@ -343,9 +340,9 @@
     
     CBLMutableDocument* mDoc = [self createDocument: @"doc1"];
     [mDoc setValue: mDict2 forKey: @"dict"];
-    [self saveDocument: mDoc];
+    [self saveDocument: mDoc collection: self.defaultCollection];
     
-    CBLDocument* doc = [self.db documentWithID: @"doc1"];
+    CBLDocument* doc = [self.defaultCollection documentWithID: @"doc1" error: &error];
     CBLDictionary* dict = [doc dictionaryForKey: @"dict"];
     AssertEqualObjects([dict valueForKey: @"name"], @"Daniel");
     
@@ -358,14 +355,14 @@
 #pragma mark - toJSON
 
 - (void) testDictionaryToJSON {
-    NSError* err;
+    NSError* error;
     NSString* json = [self getRickAndMortyJSON];
-    CBLMutableDictionary* mDict = [[CBLMutableDictionary alloc] initWithJSON: json error: &err];
+    CBLMutableDictionary* mDict = [[CBLMutableDictionary alloc] initWithJSON: json error: &error];
     CBLMutableDocument* mDoc = [self createDocument: @"doc"];
     [mDoc setValue: mDict forKey: @"dict"];
     
-    [self saveDocument: mDoc];
-    CBLDocument* doc = [self.db documentWithID: @"doc"];
+    [self saveDocument: mDoc collection: self.defaultCollection];
+    CBLDocument* doc = [self.defaultCollection documentWithID: @"doc" error: &error];
     CBLDictionary* dict = [doc dictionaryForKey: @"dict"];
     NSDictionary* jsonDict = [[dict toJSON] toJSONObj];
     AssertEqualObjects(jsonDict, [json toJSONObj]);
@@ -385,9 +382,9 @@
         [mDict toJSON];
     }];
     [mDoc setValue: mDict forKey: @"dict"];
-    [self saveDocument: mDoc];
+    [self saveDocument: mDoc collection: self.defaultCollection];
     
-    doc = [self.db documentWithID: @"doc"];
+    doc = [self.defaultCollection documentWithID: @"doc" error: &error];
     dict = [doc dictionaryForKey: @"dict"];
     NSMutableDictionary* appendedDict = [NSMutableDictionary dictionaryWithDictionary: [json toJSONObj]];
     appendedDict[@"newKeyAppended"] = @"newValueAppended";
@@ -402,7 +399,5 @@
         [mDict toJSON];
     }];
 }
-
-#pragma clang diagnostic pop
 
 @end

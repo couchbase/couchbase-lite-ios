@@ -72,7 +72,7 @@
         AssertEqual(sequence1, [expectedSeqs[(NSUInteger)(n-1)] integerValue]);
         
         AssertEqualObjects(revID1,  revID2);
-        AssertEqualObjects(revID1,  [self.db documentWithID: id1].revisionID);
+        AssertEqualObjects(revID1,  [self.defaultCollection documentWithID: id1 error: nil].revisionID);
         
         AssertEqual(number, [expectedNumbers[(NSUInteger)(n-1)] integerValue]);
     }];
@@ -97,7 +97,7 @@
     NSError* error;
     CBLMutableDocument* documentToSave = [[CBLMutableDocument alloc] init];
     [documentToSave setValue: @"string" forKey: @"string"];
-    Assert([self.db saveDocument: documentToSave error: &error], @"Error when creating a document: %@", error);
+    Assert([self.defaultCollection saveDocument: documentToSave error: &error], @"Error when creating a document: %@", error);
     AssertNil(error);
     
     // get no-of-deleted docs & make sure its empty
@@ -113,7 +113,7 @@
     q = nil;
     
     // delete the doc
-    [self.db deleteDocument:documentToSave error:&error];
+    [self.defaultCollection deleteDocument:documentToSave error:&error];
     AssertNil(error);
     
     // get no-of-deleted docs & make sure its NOT empty
@@ -140,7 +140,7 @@
             [doc setValue: [NSString stringWithFormat:@"%0.0f-%lu", timeInterval, (unsigned long)i]
                    forKey: @"timestamp"];
             [docs addObject:doc];
-            [self.db saveDocument:doc error:&saveDocError];
+            [self.defaultCollection saveDocument:doc error:&saveDocError];
             AssertNil(saveDocError, @"%@", saveDocError);
         }
     }];
@@ -163,7 +163,7 @@
         for (NSUInteger i = 0; i < docs.count; i++) {
             NSError* saveDocError;
             CBLDocument* doc = [docs objectAtIndex:i];
-            [self.db deleteDocument:doc error:&saveDocError];
+            [self.defaultCollection deleteDocument:doc error:&saveDocError];
             AssertNil(saveDocError, @"%@", saveDocError);
         }
     }];
@@ -195,19 +195,19 @@
     AssertEqual([[rs allObjects] count], 0u);
 }
 
-// TODO: https://issues.couchbase.com/browse/CBL-2454
-- (void) _testExpiryLessThanDate {
+// https://issues.couchbase.com/browse/CBL-2454
+- (void) testExpiryLessThanDate {
     NSError* error;
     CBLMutableDocument* doc = [[CBLMutableDocument alloc] init];
     NSString* docID = doc.id;
     [doc setValue: @"string" forKey: @"string"];
-    Assert([self.db saveDocument: doc error: &error], @"Error when creating a document: %@", error);
+    Assert([self.defaultCollection saveDocument: doc error: &error], @"Error when creating a document: %@", error);
     AssertNil(error);
     
     NSTimeInterval expiryTime = 120;
     NSDate* expiryDate = [NSDate dateWithTimeIntervalSinceNow: expiryTime];
     NSError* err;
-    Assert([self.db setDocumentExpirationWithID: docID expiration: expiryDate error: &err]);
+    Assert([self.defaultCollection setDocumentExpirationWithID: docID expiration: expiryDate error: &err]);
     AssertNil(error);
     
     NSTimeInterval future = [expiryDate dateByAddingTimeInterval: 1].timeIntervalSince1970 * 1000;
@@ -227,12 +227,12 @@
     CBLMutableDocument* doc = [[CBLMutableDocument alloc] init];
     NSString* docID = doc.id;
     [doc setValue: @"someValue" forKey: @"someKey"];
-    Assert([self.db saveDocument: doc error: &error], @"Error when creating a document: %@", error);
+    Assert([self.defaultCollection saveDocument: doc error: &error], @"Error when creating a document: %@", error);
     AssertNil(error);
     
     NSTimeInterval expiryTime = 120;
     NSDate* expiryDate = [NSDate dateWithTimeIntervalSinceNow: expiryTime];
-    Assert([self.db setDocumentExpirationWithID: docID expiration: expiryDate error: &error]);
+    Assert([self.defaultCollection setDocumentExpirationWithID: docID expiration: expiryDate error: &error]);
     AssertNil(error);
     
     NSTimeInterval earlier = [expiryDate dateByAddingTimeInterval: -1].timeIntervalSince1970 * 1000;
@@ -247,18 +247,18 @@
     AssertEqual([[rs allObjects] count], 0u);
 }
 
-// TODO: https://issues.couchbase.com/browse/CBL-2454
-- (void) _testExpiryGreaterThanDate {
+// https://issues.couchbase.com/browse/CBL-2454
+- (void) testExpiryGreaterThanDate {
     NSError* error;
     CBLMutableDocument* doc = [[CBLMutableDocument alloc] init];
     NSString* docID = doc.id;
     [doc setValue: @"someValue" forKey: @"someKey"];
-    Assert([self.db saveDocument: doc error: &error], @"Error when creating a document: %@", error);
+    Assert([self.defaultCollection saveDocument: doc error: &error], @"Error when creating a document: %@", error);
     AssertNil(error);
     
     NSTimeInterval expiryTime = 120;
     NSDate* expiryDate = [NSDate dateWithTimeIntervalSinceNow: expiryTime];
-    Assert([self.db setDocumentExpirationWithID: docID expiration: expiryDate error: &error]);
+    Assert([self.defaultCollection setDocumentExpirationWithID: docID expiration: expiryDate error: &error]);
     AssertNil(error);
     
     NSTimeInterval earlier =  [expiryDate dateByAddingTimeInterval: -180].timeIntervalSince1970 * 1000;
@@ -278,12 +278,12 @@
     CBLMutableDocument* doc = [[CBLMutableDocument alloc] init];
     NSString* docID = doc.id;
     [doc setValue: @"someValue" forKey: @"someKey"];
-    Assert([self.db saveDocument: doc error: &error], @"Error when creating a document: %@", error);
+    Assert([self.defaultCollection saveDocument: doc error: &error], @"Error when creating a document: %@", error);
     AssertNil(error);
     
     NSTimeInterval expiryTime = 120;
     NSDate* expiryDate = [NSDate dateWithTimeIntervalSinceNow: expiryTime];
-    Assert([self.db setDocumentExpirationWithID: docID expiration: expiryDate error: &error]);
+    Assert([self.defaultCollection setDocumentExpirationWithID: docID expiration: expiryDate error: &error]);
     AssertNil(error);
     
     NSTimeInterval future = expiryDate.timeIntervalSince1970 * 1000;
@@ -302,7 +302,7 @@
     // Create doc:
     NSError* error;
     CBLMutableDocument* doc = [[CBLMutableDocument alloc] init];
-    Assert([self.db saveDocument: doc error: &error], @"Error when saving a document: %@", error);
+    Assert([self.defaultCollection saveDocument: doc error: &error], @"Error when saving a document: %@", error);
     AssertNil(error);
     
     CBLQuery* q = [CBLQueryBuilder select: @[kREVID]
@@ -316,7 +316,7 @@
     
     // Update doc:
     [doc setValue: @"bar" forKey: @"foo"];
-    Assert([self.db saveDocument: doc error: &error], @"Error when updating a document: %@", error);
+    Assert([self.defaultCollection saveDocument: doc error: &error], @"Error when updating a document: %@", error);
     AssertNil(error);
     
     [self verifyQuery: q randomAccess: NO test: ^(uint64_t n, CBLQueryResult* r) {
@@ -334,7 +334,7 @@
     }];
     
     // Delete doc:
-    Assert([self.db deleteDocument: doc error: &error], @"Error when deleting a document: %@", error);
+    Assert([self.defaultCollection deleteDocument: doc error: &error], @"Error when deleting a document: %@", error);
     AssertNil(error);
     
     q = [CBLQueryBuilder select: @[kREVID]

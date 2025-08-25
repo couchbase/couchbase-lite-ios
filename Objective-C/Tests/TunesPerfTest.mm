@@ -174,7 +174,7 @@ static constexpr auto kInterTestSleep = milliseconds(0);
                 CBLMutableDocument* doc = [CBLMutableDocument documentWithID: documentID];
                 [doc setData: props];
                 NSError* error;
-                if (![self.db saveDocument: doc error: &error])
+                if (![self.defaultCollection saveDocument: doc error: &error])
                     Assert(NO, @"Couldn't save doc: %@", error);
             }
         }
@@ -190,8 +190,9 @@ static constexpr auto kInterTestSleep = milliseconds(0);
 
 
 - (void) loadOneDocument {
+    NSError* error;
     NSString* docID = [_tracks[4321] valueForKey: @"Persistent ID"];
-    CBLDocument* doc = [self.db documentWithID: docID];
+    CBLDocument* doc = [self.defaultCollection documentWithID: docID error: &error];
     __unused NSDictionary* properties = [doc toDictionary];
 }
 
@@ -212,11 +213,12 @@ static constexpr auto kInterTestSleep = milliseconds(0);
     BOOL ok = [self.db inBatch: NULL usingBlock: ^{
         for (CBLQueryResult* r in [self queryAllDocuments]) {
             @autoreleasepool {
+                NSError* error;
                 NSString* docID = [r stringAtIndex:0];
-                CBLMutableDocument* doc = [[self.db documentWithID: docID] toMutable];
+                CBLMutableDocument* doc = [[self.defaultCollection documentWithID: docID error: &error] toMutable];
                 NSInteger playCount = [doc integerForKey: @"Play Count"];
                 [doc setValue: @(playCount + 1) forKey: @"Play Count"];
-                Assert([self.db saveDocument: doc error: NULL], @"Save failed");
+                Assert([self.defaultCollection saveDocument: doc error: &error], @"Save failed");
                 count++;
             }
         }
@@ -238,12 +240,13 @@ static constexpr auto kInterTestSleep = milliseconds(0);
     BOOL ok = [self.db inBatch: NULL usingBlock: ^{
         for (CBLQueryResult* r in [self queryAllDocuments]) {
             @autoreleasepool {
+                NSError* error;
                 NSString* docID = [r stringAtIndex:0];
-                CBLMutableDocument* doc = [[self.db documentWithID: docID] toMutable];
+                CBLMutableDocument* doc = [[self.defaultCollection documentWithID: docID error: &error] toMutable];
                 NSString* artist = [doc stringForKey: @"Artist"];
                 if ([artist hasPrefix: @"The "]) {
                     [doc setValue: [artist substringFromIndex: 4] forKey: @"Artist"];
-                    Assert([self.db saveDocument: doc error: NULL], @"Save failed");
+                    Assert([self.defaultCollection saveDocument: doc error: &error], @"Save failed");
                     count++;
                 }
             }
@@ -311,7 +314,7 @@ static constexpr auto kInterTestSleep = milliseconds(0);
         auto comp = [CBLQueryExpression property: @"Compilation"];
         CBLIndex* index = [CBLIndexBuilder valueIndexWithItems: @[[CBLValueIndexItem expression: artist],
                                                                      [CBLValueIndexItem expression: comp]]];
-        Assert(([self.db createIndex: index withName: @"byArtist" error: NULL]));
+        Assert(([self.defaultCollection createIndex: index name: @"byArtist" error: NULL]));
         __unused double t = _indexArtistsBench.stop();
         VerboseLog(1, @"Indexed artists in %.06f sec", t);
     }
@@ -365,7 +368,7 @@ static constexpr auto kInterTestSleep = milliseconds(0);
         NSError *error;
         _indexFTSBench.start();
         CBLIndex* index = [CBLIndexBuilder fullTextIndexWithItems: @[[CBLFullTextIndexItem property: @"Name"]]];
-        Assert(([self.db createIndex: index withName: @"name" error: &error]),
+        Assert(([self.defaultCollection createIndex: index name: @"name" error: &error]),
                @"Full-text indexing failed: %@", error);
         _indexFTSBench.stop();
         [self pause];

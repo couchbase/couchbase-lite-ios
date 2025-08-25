@@ -124,7 +124,7 @@
     NSString* key = @"dateString";
     CBLMutableDocument* doc = [self createDocument];
     [doc setValue: input forKey: key];
-    [self saveDocument: doc];
+    [self saveDocument: doc collection: self.defaultCollection];
     AssertNil(error);
     
     // convert
@@ -139,7 +139,7 @@
     // validate
     AssertEqual([result longLongAtIndex: 0], [millis doubleValue]);
     
-    Assert([self.db purgeDocumentWithID: doc.id error: &error]);
+    Assert([self.defaultCollection purgeDocumentWithID: doc.id error: &error]);
     AssertNil(error);
 }
 
@@ -148,7 +148,7 @@
     NSString* key = @"dateString";
     CBLMutableDocument* doc = [self createDocument];
     [doc setValue: input forKey: key];
-    [self saveDocument: doc];
+    [self saveDocument: doc collection: self.defaultCollection];
     AssertNil(error);
     
     // convert
@@ -163,7 +163,7 @@
     // validate
     AssertEqualObjects([result stringAtIndex: 0], date);
     
-    Assert([self.db purgeDocumentWithID: doc.id error: &error]);
+    Assert([self.defaultCollection purgeDocumentWithID: doc.id error: &error]);
     AssertNil(error);
 }
 
@@ -172,7 +172,7 @@
     NSString* key = @"dateString";
     CBLMutableDocument* doc = [self createDocument];
     [doc setDouble: [input doubleValue] forKey: key];
-    [self saveDocument: doc];
+    [self saveDocument: doc collection: self.defaultCollection];
     AssertNil(error);
     
     // convert
@@ -187,7 +187,7 @@
     // validate
     AssertEqualObjects([result dateAtIndex: 0], date);
     
-    Assert([self.db purgeDocumentWithID: doc.id error: &error]);
+    Assert([self.defaultCollection purgeDocumentWithID: doc.id error: &error]);
     AssertNil(error);
 }
 
@@ -196,7 +196,7 @@
     NSString* key = @"dateString";
     CBLMutableDocument* doc = [self createDocument];
     [doc setDouble: [input doubleValue] forKey: key];
-    [self saveDocument: doc];
+    [self saveDocument: doc collection: self.defaultCollection];
     AssertNil(error);
     
     // convert
@@ -211,7 +211,7 @@
     // validate
     AssertEqualObjects([result stringAtIndex: 0], utcString);
     
-    Assert([self.db purgeDocumentWithID: doc.id error: &error]);
+    Assert([self.defaultCollection purgeDocumentWithID: doc.id error: &error]);
     AssertNil(error);
 }
 

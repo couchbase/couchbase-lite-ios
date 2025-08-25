@@ -37,12 +37,11 @@
 
 - (void) testQueryDefaultCollection {
     NSError* error = nil;
-    CBLCollection* defaultCollection = [self.db defaultCollection: &error];
     AssertNil(error);
     
-    [self loadJSONResource: @"names_100" toCollection: defaultCollection];
+    [self loadJSONResource: @"names_100" toCollection: self.defaultCollection];
     
-    [self testQueryCollection: defaultCollection
+    [self testQueryCollection: self.defaultCollection
                       queries: @[@"SELECT name.first FROM _ ORDER BY name.first LIMIT 1",
                                  @"SELECT name.first FROM _default ORDER BY name.first limit 1",
                                  @"SELECT name.first FROM testdb ORDER BY name.first limit 1"]];
@@ -153,13 +152,12 @@
 
 - (void) testQueryBuilderWithDefaultCollectionAsDataSource {
      NSError* error = nil;
-     CBLCollection* defaultCollection = [self.db defaultCollection: &error];
      AssertNil(error);
 
-     [self loadJSONResource: @"names_100" toCollection: defaultCollection];
+     [self loadJSONResource: @"names_100" toCollection: self.defaultCollection];
 
      CBLQuery* q = [CBLQueryBuilder select: @[[CBLQuerySelectResult property: @"name.first"]]
-                                      from: [CBLQueryDataSource collection: defaultCollection]
+                                      from: [CBLQueryDataSource collection: self.defaultCollection]
                                      where: nil
                                    groupBy: nil
                                     having: nil
@@ -199,8 +197,6 @@
     NSError* error = nil;
     CBLCollection* flowersCol = [self.db createCollectionWithName: @"flowers" scope: @"test" error: &error];
     AssertNotNil(flowersCol);
-    CBLCollection* defaultCol = [self.db defaultCollection: &error];
-    AssertNotNil(defaultCol);
     
     CBLMutableDocument* mdoc1 = [self createDocument: @"c1"];
     [mdoc1 setString: @"c1" forKey: @"cid"];
@@ -210,7 +206,7 @@
     CBLMutableDocument* mdoc2 = [self createDocument: @"c1"];
     [mdoc2 setString: @"c1" forKey: @"cid"];
     [mdoc2 setString: @"rose" forKey: @"name"];
-    [self saveDocument: mdoc2 collection: defaultCol];
+    [self saveDocument: mdoc2 collection: self.defaultCollection];
     
     NSArray<NSString*>* froms = @[
         self.db.name,
@@ -241,9 +237,7 @@
 
 - (void) testFtsWithFtsIndexDefaultCollection {
     NSError* error = nil;
-    CBLCollection* defaultCol = [self.db defaultCollection: &error];
-    AssertNotNil(defaultCol);
-    [self loadJSONResource: @"names_100" toCollection: defaultCol];
+    [self loadJSONResource: @"names_100" toCollection: self.defaultCollection];
     
     CBLMutableDictionary* dict1 = [[CBLMutableDictionary alloc] init];
     [dict1 setValue: @"Jasper" forKey: @"first"];
@@ -255,7 +249,7 @@
     
     CBLFullTextIndexConfiguration* config = [[CBLFullTextIndexConfiguration alloc] initWithExpression: @[@"name.first"]
                                                                                         ignoreAccents: NO language: nil];
-    Assert([defaultCol createIndexWithName:@"index" config:config error: &error]);
+    Assert([self.defaultCollection createIndexWithName:@"index" config:config error: &error]);
 
     NSArray<NSString*>* indexs = @[
         @"index",
@@ -409,8 +403,6 @@
     
     CBLCollection* flowersCol = [self.db createCollectionWithName: @"flowers" scope: @"test" error: &error];
     AssertNotNil(flowersCol);
-    CBLCollection* defaultCol = [self.db defaultCollection: &error];
-    AssertNotNil(defaultCol);
     
     CBLMutableDocument* mdoc1 = [self createDocument: @"c1"];
     [mdoc1 setString: @"c1" forKey: @"cid"];
@@ -420,10 +412,10 @@
     CBLMutableDocument* mdoc2 = [self createDocument: @"c1"];
     [mdoc2 setString: @"c1" forKey: @"cid"];
     [mdoc2 setString: @"rose" forKey: @"name"];
-    [self saveDocument: mdoc2 collection: defaultCol];
+    [self saveDocument: mdoc2 collection: self.defaultCollection];
     
     NSArray<CBLQueryDataSource*>* froms = @[
-        [CBLQueryDataSource collection: defaultCol],
+        [CBLQueryDataSource collection: self.defaultCollection],
         [CBLQueryDataSource collection: flowersCol],
         [CBLQueryDataSource collection: flowersCol as: @"f"]
     ];

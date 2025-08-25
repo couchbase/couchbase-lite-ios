@@ -33,7 +33,6 @@
 .objc_class_name_CBLConsoleLogSink
 .objc_class_name_CBLCustomLogSink
 .objc_class_name_CBLDatabase
-.objc_class_name_CBLDatabaseChange
 .objc_class_name_CBLDatabaseConfiguration
 .objc_class_name_CBLDictionary
 .objc_class_name_CBLDocument

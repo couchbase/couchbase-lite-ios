@@ -400,7 +400,7 @@
     CBLMutableDocument* document = [self createDocument: @"doc1"];
     [document setString: hebrew forKey: @"hebrew"];
     NSError* error;
-    [self.db saveDocument: document error: &error];
+    [self.defaultCollection saveDocument: document error: &error];
     AssertNil(error);
     
     CBLQuery* q = [CBLQueryBuilder select: @[[CBLQuerySelectResult all]]

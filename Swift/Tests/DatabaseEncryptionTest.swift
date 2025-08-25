@@ -38,6 +38,7 @@ class DatabaseEncryptionTest: CBLTestCase {
         return try Database(name: "seekrit", config: config)
     }
     
+    #if COUCHBASE_ENTERPRISE
     func testUnEncryptedDatabase() throws {
         seekrit = try openSeekrit(password: nil)
         
@@ -207,4 +208,5 @@ class DatabaseEncryptionTest: CBLTestCase {
         }
     }
     
+    #endif
 }

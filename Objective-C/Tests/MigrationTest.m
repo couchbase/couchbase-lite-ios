@@ -25,10 +25,6 @@
 
 @implementation MigrationTest
 
-// TODO: Remove https://issues.couchbase.com/browse/CBL-3206
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-
 - (void)testMigration {
     NSFileManager *manager = [NSFileManager defaultManager];
     NSString* copiedPath = [self.directory stringByAppendingPathComponent: @"iosdb.cblite2"];
@@ -46,7 +42,7 @@
     --gC4ExpectExceptions;
     Assert(database);
     
-    CBLDocument* doc1 = [database documentWithID: @"doc1"];
+    CBLDocument* doc1 = [[database defaultCollection: &error] documentWithID: @"doc1" error: &error];
     Assert(doc1);
     AssertEqualObjects([doc1 stringForKey: @"type"], @"doc");
     
@@ -60,7 +56,5 @@
     
     Assert([database delete: &error], @"Couldn't delete database");
 }
-
-#pragma clang diagnostic pop
 
 @end

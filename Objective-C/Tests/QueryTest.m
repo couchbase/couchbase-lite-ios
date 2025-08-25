@@ -32,7 +32,7 @@
     CBLMutableDocument* doc = [[CBLMutableDocument alloc] initWithID: docID];
     [doc setValue: @(i) forKey: @"number1"];
     [doc setValue: @(num-i) forKey: @"number2"];
-    [self saveDocument: doc];
+    [self saveDocument: doc collection: self.defaultCollection];
     return doc;
 }
 
@@ -64,7 +64,7 @@
     [doc1 setDouble: 3.4 forKey: @"gpa"];
     [doc1 setBoolean: YES forKey: @"isFullTime"];
     [doc1 setDate: twoWeeksBack forKey: @"startDate"];
-    Assert([_db saveDocument: doc1 error: &error], @"Error when creating a document: %@", error);
+    Assert([self.defaultCollection saveDocument: doc1 error: &error], @"Error when creating a document: %@", error);
     
     CBLMutableDocument* doc2 = [[CBLMutableDocument alloc] init];
     [doc2 setString: @"Bob" forKey: @"name"];
@@ -76,7 +76,7 @@
     [doc2 setDouble: 3.23 forKey: @"gpa"];
     [doc2 setBoolean: YES forKey: @"isFullTime"];
     [doc2 setDate: [twoWeeksBack dateByAddingTimeInterval: aDayInterval] forKey: @"startDate"];
-    Assert([_db saveDocument: doc2 error: &error], @"Error when creating a document: %@", error);
+    Assert([self.defaultCollection saveDocument: doc2 error: &error], @"Error when creating a document: %@", error);
     
     CBLMutableDocument* doc3 = [[CBLMutableDocument alloc] init];
     [doc3 setString: @"Alice" forKey: @"name"];
@@ -88,7 +88,7 @@
     [doc3 setDouble: 3.30 forKey: @"gpa"];
     [doc3 setBoolean: YES forKey: @"isFullTime"];
     [doc3 setDate: twoWeeksBack forKey: @"startDate"];
-    Assert([_db saveDocument: doc3 error: &error], @"Error when creating a document: %@", error);
+    Assert([self.defaultCollection saveDocument: doc3 error: &error], @"Error when creating a document: %@", error);
     
     CBLMutableDocument* doc4 = [[CBLMutableDocument alloc] init];
     [doc4 setString: @"Peter" forKey: @"name"];
@@ -100,7 +100,7 @@
     [doc4 setDouble: 4.01 forKey: @"gpa"];
     [doc4 setBoolean: YES forKey: @"isFullTime"];
     [doc4 setDate: twoWeeksBack forKey: @"startDate"];
-    Assert([_db saveDocument: doc4 error: &error], @"Error when creating a document: %@", error);
+    Assert([self.defaultCollection saveDocument: doc4 error: &error], @"Error when creating a document: %@", error);
     
     CBLMutableDocument* doc5 = [[CBLMutableDocument alloc] init];
     [doc1 setString: @"Sheryl" forKey: @"name"];
@@ -112,7 +112,7 @@
     [doc5 setDouble: 3.52 forKey: @"gpa"];
     [doc5 setBoolean: YES forKey: @"isFullTime"];
     [doc5 setDate: [twoWeeksBack dateByAddingTimeInterval: 2 * aDayInterval] forKey: @"startDate"];
-    Assert([_db saveDocument: doc5 error: &error], @"Error when creating a document: %@", error);
+    Assert([self.defaultCollection saveDocument: doc5 error: &error], @"Error when creating a document: %@", error);
     
     CBLMutableDocument* doc6 = [[CBLMutableDocument alloc] init];
     [doc6 setString: @"Tom" forKey: @"name"];
@@ -124,7 +124,7 @@
     [doc6 setDouble: 4.02 forKey: @"gpa"];
     [doc6 setBoolean: NO forKey: @"isFullTime"];
     [doc6 setDate: [twoWeeksBack dateByAddingTimeInterval: 2 * aDayInterval] forKey: @"startDate"];
-    Assert([_db saveDocument: doc6 error: &error], @"Error when creating a document: %@", error);
+    Assert([self.defaultCollection saveDocument: doc6 error: &error], @"Error when creating a document: %@", error);
     
     CBLMutableDocument* doc7 = [[CBLMutableDocument alloc] init];
     [doc7 setString: @"Casper" forKey: @"name"];
@@ -136,7 +136,7 @@
     [doc7 setDouble: 4.02 forKey: @"gpa"];
     [doc7 setBoolean: YES forKey: @"isFullTime"];
     [doc7 setDate: twoWeeksBack forKey: @"startDate"];
-    Assert([_db saveDocument: doc7 error: &error], @"Error when creating a document: %@", error);
+    Assert([self.defaultCollection saveDocument: doc7 error: &error], @"Error when creating a document: %@", error);
     
     CBLMutableDocument* doc8 = [[CBLMutableDocument alloc] init];
     [doc8 setString: @"Casper" forKey: @"name"];
@@ -148,7 +148,7 @@
     [doc8 setDouble: 4.02 forKey: @"gpa"];
     [doc8 setBoolean: YES forKey: @"isFullTime"];
     [doc8 setDate: [twoWeeksBack dateByAddingTimeInterval: 1 * aDayInterval] forKey: @"startDate"];
-    Assert([_db saveDocument: doc8 error: &error], @"Error when creating a document: %@", error);
+    Assert([self.defaultCollection saveDocument: doc8 error: &error], @"Error when creating a document: %@", error);
 }
 
 - (void) runTestWithNumbers: (NSArray*)numbers cases: (NSArray*)cases {
@@ -162,7 +162,8 @@
         uint64_t rows = [self verifyQuery: q randomAccess: NO
                                      test: ^(uint64_t n, CBLQueryResult *r)
         {
-            CBLDocument* doc = [self.db documentWithID: [r valueAtIndex: 0]];
+            NSError* error;
+            CBLDocument* doc = [self.defaultCollection documentWithID: [r valueAtIndex: 0] error: &error];
             id dict = [doc toDictionary];
             Assert([result containsObject: dict]);
             [result removeObject: dict];

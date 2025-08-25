@@ -74,16 +74,6 @@ typedef enum {
     NSString* _name;
     CBLDatabaseConfiguration* _config;
     
-    C4DatabaseObserver* _dbObs;
-
-// TODO: Remove https://issues.couchbase.com/browse/CBL-3206
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-    CBLChangeNotifier<CBLDatabaseChange*>* _dbChangeNotifier;
-#pragma clang diagnostic pop
-
-    NSMutableDictionary<NSString*,CBLDocumentChangeNotifier*>* _docChangeNotifiers;
-    
     BOOL _shellMode;
     dispatch_source_t _docExpiryTimer;
     
@@ -191,7 +181,6 @@ static const C4DatabaseConfig2 kDBConfig = {
 
 - (void) dealloc {
     if (!_shellMode) {
-        [self freeC4Observer];
         [self freeC4DB];
     }
 }
@@ -206,80 +195,8 @@ static const C4DatabaseConfig2 kDBConfig = {
     }
 }
 
-- (uint64_t) count {
-    return [self defaultCollection: nil].count;
-}
-
 - (CBLDatabaseConfiguration*) config {
     return _config;
-}
-
-#pragma mark - GET EXISTING DOCUMENT
-
-- (nullable CBLDocument*) documentWithID: (NSString*)documentID {
-    return [self withDefaultCollectionForObjectAndError: nil block: ^id(CBLCollection* collection, NSError** err) {
-        return [[self defaultCollectionOrThrow] documentWithID: documentID error: err];
-    }];
-}
-
-#pragma mark - SUBSCRIPTION
-
-- (CBLDocumentFragment*) objectForKeyedSubscript: (NSString*)documentID {
-    id result = [self withDefaultCollectionForObjectAndError: nil block: ^id(CBLCollection* collection, NSError** err) {
-        return [collection objectForKeyedSubscript: documentID];
-    }];
-    assert(result != nil);
-    return result;
-}
-
-#pragma mark - SAVE
-
-- (BOOL) saveDocument: (CBLMutableDocument*)document error:(NSError**)error {
-    return [self saveDocument: document
-           concurrencyControl: kCBLConcurrencyControlLastWriteWins
-                        error: error];
-}
-
-- (BOOL) saveDocument: (CBLMutableDocument*)document
-   concurrencyControl: (CBLConcurrencyControl)concurrencyControl
-                error: (NSError**)error {
-    return [self withDefaultCollectionAndError: error block: ^BOOL(CBLCollection* collection, NSError** err) {
-        return [collection saveDocument: document concurrencyControl: concurrencyControl error: err];
-    }];
-}
-
-- (BOOL) saveDocument: (CBLMutableDocument*)document
-      conflictHandler: (BOOL (^)(CBLMutableDocument*, CBLDocument* nullable))conflictHandler
-                error: (NSError**)error {
-    return [self withDefaultCollectionAndError: error block: ^BOOL(CBLCollection* collection, NSError** err) {
-        return [collection saveDocument: document conflictHandler: conflictHandler error: err];
-    }];
-}
-
-- (BOOL) deleteDocument: (CBLDocument*)document error: (NSError**)error {
-    return [self deleteDocument: document
-             concurrencyControl: kCBLConcurrencyControlLastWriteWins
-                          error: error];
-}
-
-- (BOOL) deleteDocument: (CBLDocument*)document
-     concurrencyControl: (CBLConcurrencyControl)concurrencyControl
-                  error: (NSError**)error {
-    return [self withDefaultCollectionAndError: error block: ^BOOL(CBLCollection* collection, NSError** err) {
-        return [collection deleteDocument: document concurrencyControl: concurrencyControl error: err];
-    }];
-}
-
-- (BOOL) purgeDocument: (CBLDocument*)document error: (NSError**)error {
-    return [self withDefaultCollectionAndError: error block: ^BOOL(CBLCollection* collection, NSError** err) {
-        return [collection purgeDocument: document error: err];
-    }];
-}
-
-- (BOOL) purgeDocumentWithID: (NSString*)documentID error: (NSError**)error {
-    return [self withDefaultCollectionAndError: error block: ^BOOL(CBLCollection* collection, NSError** err) {
-        return [collection purgeDocumentWithID: documentID error: err];
-    }];
 }
 
 #pragma mark - Blob Save/Get
@@ -346,8 +263,6 @@ static const C4DatabaseConfig2 kDBConfig = {
             return convertError(transaction.error(), outError);
     }
     
-    [self postDatabaseChanged];
-    
     return YES;
 }
 
@@ -389,8 +304,6 @@ static const C4DatabaseConfig2 kDBConfig = {
             return convertError(transaction.error(), outError);
     }
     
-    [self postDatabaseChanged];
-    
     return YES;
 }
 
@@ -430,9 +343,6 @@ static const C4DatabaseConfig2 kDBConfig = {
     CBL_LOCK(_mutex) {
         if ([self isClosed])
             return YES;
-        
-        // Free C4Observer:
-        [self freeC4Observer];
         
         // Close database:
         BOOL success = YES;
@@ -532,89 +442,6 @@ static const C4DatabaseConfig2 kDBConfig = {
 
 + (CBLLog*) log {
     return [CBLLog sharedInstance];
-}
-
-#pragma mark - DOCUMENT CHANGES
-
-- (id<CBLListenerToken>) addChangeListener: (void (^)(CBLDatabaseChange*))listener {
-    return [self addChangeListenerWithQueue: nil listener: listener];
-}
-
-- (id<CBLListenerToken>) addChangeListenerWithQueue: (nullable dispatch_queue_t)queue
-                                           listener: (void (^)(CBLDatabaseChange*))listener {
-    return [[self defaultCollectionOrThrow] addChangeListener:^(CBLCollectionChange *change) {
-        CBLDatabaseChange* dbChange = [[CBLDatabaseChange alloc] initWithDatabase: change.collection.database
-                                                                      documentIDs: change.documentIDs
-                                                                       isExternal: change.isExternal];
-        listener(dbChange);
-    }];
-}
-
-- (id<CBLListenerToken>) addDocumentChangeListenerWithID: (NSString*)id
-                                                listener: (void (^)(CBLDocumentChange*))listener
-{
-    return [self addDocumentChangeListenerWithID: id queue: nil listener: listener];
-}
-
-- (id<CBLListenerToken>) addDocumentChangeListenerWithID: (NSString*)identifier
-                                                   queue: (nullable dispatch_queue_t)queue
-                                                listener: (void (^)(CBLDocumentChange*))listener {
-    return [[self defaultCollectionOrThrow] addDocumentChangeListenerWithID: identifier
-                                                                      queue: queue
-                                                                   listener: listener];
-}
-
-- (void) removeChangeListenerWithToken: (id<CBLListenerToken>)token {
-    return [[self defaultCollectionOrThrow] removeToken: token];
-}
-
-#pragma mark - Index:
-
-- (NSArray<NSString*>*) indexes {
-    id result = [self withDefaultCollectionForObjectAndError: nil block: ^id(CBLCollection* collection, NSError** err) {
-        return [collection indexes: err];
-    }];
-    assert(result != nil);
-    return result;
-}
-
-- (BOOL) createIndex: (CBLIndex*)index withName: (NSString*)name error: (NSError**)error {
-    return [self withDefaultCollectionAndError: error block: ^BOOL(CBLCollection* collection, NSError** err) {
-        return [collection createIndex: index name: name error: err];
-    }];
-}
-
-- (BOOL) createIndexWithConfig: (CBLIndexConfiguration*)config
-                          name: (NSString*)name error: (NSError**)error {
-    return [self createIndex: name withConfig: config error: error];
-}
-
-- (BOOL) createIndex: (NSString*)name withConfig: (id<CBLIndexSpec>)config error: (NSError**)error {
-    return [self withDefaultCollectionAndError: error block: ^BOOL(CBLCollection* collection, NSError** err) {
-        return [collection createIndexWithName: name config: config error: err];
-    }];
-}
-
-- (BOOL) deleteIndexForName: (NSString*)name error: (NSError**)error {
-    return [self withDefaultCollectionAndError: error block: ^BOOL(CBLCollection* collection, NSError** err) {
-        return [collection deleteIndexWithName: name error: err];
-    }];
-}
-
-#pragma mark - DOCUMENT EXPIRATION
-
-- (BOOL) setDocumentExpirationWithID: (NSString*)documentID
-                          expiration: (nullable NSDate*)date
-                               error: (NSError**)error {
-    return [self withDefaultCollectionAndError: error block: ^BOOL(CBLCollection* collection, NSError** err) {
-        return [collection setDocumentExpirationWithID: documentID expiration: date error: err];
-    }];
-}
-
-- (nullable NSDate*) getDocumentExpirationWithID: (NSString*)documentID {
-    return [self withDefaultCollectionForObjectAndError: nil block: ^id(CBLCollection* collection, NSError** err) {
-        return [collection getDocumentExpirationWithID: documentID error: err];
-    }];
 }
 
 #pragma mark - Query
@@ -1074,70 +901,6 @@ static C4DatabaseConfig2 c4DatabaseConfig2 (CBLDatabaseConfiguration *config) {
         c4config.encryptionKey = [CBLDatabase c4EncryptionKey: config.encryptionKey];
 #endif
     return c4config;
-}
-
-#pragma mark delegate(CBLRemovableListenerToken)
-
-- (void) removeToken: (id)token {
-    [[self defaultCollectionOrThrow] removeToken: token];
-}
-
-- (void) postDatabaseChanged {
-    CBL_LOCK(_mutex) {
-        if (!_dbObs || !_c4db)
-            return;
-        
-        const uint32_t kMaxChanges = 100u;
-        C4DatabaseChange changes[kMaxChanges];
-        bool external = false;
-        C4CollectionObservation obs = {};
-        NSMutableArray* docIDs = [NSMutableArray new];
-        do {
-            // Read changes in batches of kMaxChanges:
-            obs = c4dbobs_getChanges(_dbObs, changes, kMaxChanges);
-            if (obs.numChanges == 0 || external != obs.external || docIDs.count > 1000) {
-                if(docIDs.count > 0) {
-// TODO: Remove https://issues.couchbase.com/browse/CBL-3206
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-
-                    [_dbChangeNotifier postChange:
-                        [[CBLDatabaseChange alloc] initWithDatabase: self
-                                                        documentIDs: docIDs
-                                                         isExternal: external]];
-#pragma clang diagnostic pop
-                    docIDs = [NSMutableArray new];
-                }
-            }
-            
-            external = obs.external;
-            for(uint32_t i = 0; i < obs.numChanges; i++) {
-                NSString *docID =slice2string(changes[i].docID);
-                [docIDs addObject: docID];
-            }
-            c4dbobs_releaseChanges(changes, obs.numChanges);
-        } while(obs.numChanges > 0);
-    }
-}
-
-- (void) removeDocumentChangeListenerWithToken: (CBLChangeListenerToken*)token {
-    CBL_LOCK(_mutex) {
-        NSString* documentID = (NSString*)token.context;
-        CBLDocumentChangeNotifier* notifier = _docChangeNotifiers[documentID];
-        if (notifier && [notifier removeChangeListenerWithToken: token] == 0) {
-            [notifier stop];
-            [_docChangeNotifiers removeObjectForKey:documentID];
-        }
-    }
-}
-
-- (void) freeC4Observer {
-    c4dbobs_free(_dbObs);
-    _dbObs = nullptr;
-    _dbChangeNotifier = nil;
-
-    [_docChangeNotifiers.allValues makeObjectsPerformSelector: @selector(stop)];
-    _docChangeNotifiers = nil;
 }
 
 - (void) freeC4DB {

@@ -119,10 +119,10 @@
     // Save:
     CBLMutableDocument* doc = [self createDocument: @"doc1"];
     [doc setValue: array forKey: @"array"];
-    [self saveDocument: doc];
+    [self saveDocument: doc collection: self.defaultCollection];
     
     // Update:
-    doc = [[self.db documentWithID: doc.id] toMutable];
+    doc = [[self.defaultCollection documentWithID: doc.id error: nil] toMutable];
     array = [doc arrayForKey: @"array"];
     data = @[@"4", @"5", @"6"];
     [array setData: data];
@@ -172,10 +172,10 @@
     // Save:
     CBLMutableDocument* doc = [self createDocument: @"doc1"];
     [doc setValue: array forKey: @"array"];
-    [self saveDocument: doc];
+    [self saveDocument: doc collection: self.defaultCollection];
     
     // Get an existing array:
-    doc = [[self.db documentWithID: doc.id] toMutable];
+    doc = [[self.defaultCollection documentWithID: doc.id error: nil] toMutable];
     array = [doc arrayForKey: @"array"];
     AssertNotNil(array);
     
@@ -291,9 +291,9 @@
     
     CBLMutableDocument* doc = [self createDocument: @"doc1"];
     [doc setValue: array forKey: @"array"];
-    [self saveDocument: doc];
+    [self saveDocument: doc collection: self.defaultCollection];
     
-    doc = [[self.db documentWithID: doc.id] toMutable];
+    doc = [[self.defaultCollection documentWithID: doc.id error: nil] toMutable];
     array = [doc arrayForKey: @"array"];
 
     // Get test data:
@@ -418,9 +418,9 @@
 - (void) testInsertObjectToExistingArray {
     CBLMutableDocument* doc = [self createDocument: @"doc1"];
     [doc setValue: [[CBLMutableArray alloc] init] forKey: @"array"];
-    [self saveDocument: doc];
+    [self saveDocument: doc collection: self.defaultCollection];
     
-    doc = [[self.db documentWithID: doc.id] toMutable];
+    doc = [[self.defaultCollection documentWithID: doc.id error: nil] toMutable];
     CBLMutableArray* array = [doc arrayForKey: @"array"];
     [array insertValue:@"a" atIndex: 0];
     [self saveDocument: doc eval: ^(CBLDocument* d) {
@@ -429,7 +429,7 @@
         AssertEqualObjects([a valueAtIndex: 0], @"a");
     }];
     
-    doc = [[self.db documentWithID: doc.id] toMutable];
+    doc = [[self.defaultCollection documentWithID: doc.id error: nil] toMutable];
     array = [doc arrayForKey: @"array"];
     [array insertValue:@"c" atIndex: 0];
     [self saveDocument: doc eval: ^(CBLDocument* d) {
@@ -439,7 +439,7 @@
         AssertEqualObjects([a valueAtIndex: 1], @"a");
     }];
     
-    doc = [[self.db documentWithID: doc.id] toMutable];
+    doc = [[self.defaultCollection documentWithID: doc.id error: nil] toMutable];
     array = [doc arrayForKey: @"array"];
     [array insertValue:@"d" atIndex: 1];
     [self saveDocument: doc eval: ^(CBLDocument* d) {
@@ -450,7 +450,7 @@
         AssertEqualObjects([a valueAtIndex: 2], @"a");
     }];
     
-    doc = [[self.db documentWithID: doc.id] toMutable];
+    doc = [[self.defaultCollection documentWithID: doc.id error: nil] toMutable];
     array = [doc arrayForKey: @"array"];
     [array insertValue:@"e" atIndex: 2];
     [self saveDocument: doc eval: ^(CBLDocument* d) {
@@ -462,7 +462,7 @@
         AssertEqualObjects([a valueAtIndex: 3], @"a");
     }];
     
-    doc = [[self.db documentWithID: doc.id] toMutable];
+    doc = [[self.defaultCollection documentWithID: doc.id error: nil] toMutable];
     array = [doc arrayForKey: @"array"];
     [array insertValue:@"f" atIndex: 4];
     [self saveDocument: doc eval: ^(CBLDocument* d) {
@@ -551,9 +551,9 @@
     
     CBLMutableDocument* doc = [self createDocument: @"doc1"];
     [doc setValue: array forKey: @"array"];
-    [self saveDocument: doc];
+    [self saveDocument: doc collection: self.defaultCollection];
     
-    doc = [[self.db documentWithID: doc.id] toMutable];
+    doc = [[self.defaultCollection documentWithID: doc.id error: nil] toMutable];
     array = [doc arrayForKey: @"array"];
     
     for (NSInteger i = array.count - 1; i >= 0; i--) {
@@ -1041,9 +1041,9 @@
     
     CBLMutableDocument* mDoc = [self createDocument: @"doc1"];
     [mDoc setValue: mArray2 forKey: @"array"];
-    [self saveDocument: mDoc];
+    [self saveDocument: mDoc collection: self.defaultCollection];
     
-    CBLDocument* doc = [self.db documentWithID: @"doc1"];
+    CBLDocument* doc = [self.defaultCollection documentWithID: @"doc1" error: nil];
     CBLArray* array = [doc arrayForKey: @"array"];
     AssertEqualObjects([array toArray], (@[@"Scott", @"Daniel"]));
     
@@ -1065,7 +1065,7 @@
     
     CBLMutableDocument* doc = [self createDocument: @"doc"];
     [doc setArray: mArray forKey: @"array"];
-    [self saveDocument: doc];
+    [self saveDocument: doc collection: self.defaultCollection];
     
     mArray = [doc arrayForKey: @"array"];
     [self expectException: @"NSInternalInconsistencyException" in: ^{
@@ -1080,9 +1080,9 @@
     CBLMutableArray* array = [[CBLMutableArray alloc] initWithJSON: json error: &error];
     CBLMutableDocument* doc = [self createDocument: @"doc"];
     [doc setValue: array forKey: @"array"];
-    [self saveDocument: doc];
+    [self saveDocument: doc collection: self.defaultCollection];
     
-    CBLDocument* retrivedDoc = [self.db documentWithID: @"doc"];
+    CBLDocument* retrivedDoc = [self.defaultCollection documentWithID: @"doc" error: nil];
     CBLArray* a = [retrivedDoc arrayForKey: @"array"];
     AssertEqual(a.count, 2);
     AssertEqualObjects([[a toJSON] toJSONObj], [json toJSONObj]);
@@ -1098,10 +1098,10 @@
     [self expectException: @"NSInternalInconsistencyException" in: ^{
         NSLog(@">> to access the content %@", blob.content);
     }];
-    [self.db saveDocument: mDoc error: &err];
+    [self.defaultCollection saveDocument: mDoc error: &err];
 
     // after the save, it should return the content
-    CBLDocument* doc = [self.db documentWithID: @"doc"];
+    CBLDocument* doc = [self.defaultCollection documentWithID: @"doc" error: nil];
     blob = [doc blobForKey: @"origin"];
     AssertNotNil(blob.content);
 }
