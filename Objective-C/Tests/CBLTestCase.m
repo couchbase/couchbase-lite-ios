@@ -35,9 +35,6 @@ const NSTimeInterval kExpTimeout = 20.0;
     int _c4ObjectCount;
 }
 
-@dynamic defaultCollection;
-@dynamic otherDBDefaultCollection;
-
 @synthesize db=_db, otherDB=_otherDB, disableObjectLeakCheck=_disableObjectLeakCheck;
 
 // TODO: Remove https://issues.couchbase.com/browse/CBL-3206
