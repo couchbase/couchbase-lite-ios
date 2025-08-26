@@ -31,7 +31,6 @@
 
 // Helper method to save n number of docs
 - (NSArray*) createDocs: (int)n {
-    NSError* error;
     NSMutableArray* docs = [NSMutableArray arrayWithCapacity: n];
     for(int i = 0; i < n; i++){
         CBLMutableDocument* doc = [self createDocument: [NSString stringWithFormat: @"doc_%03d", i]];
@@ -244,7 +243,6 @@
 }
 
 - (void) testCloseWithActiveLiveQueries {
-    NSError* error;
     XCTestExpectation* change1 = [self expectationWithDescription: @"changes 1"];
     XCTestExpectation* change2 = [self expectationWithDescription: @"changes 2"];
     
@@ -269,7 +267,6 @@
 #ifdef COUCHBASE_ENTERPRISE
 
 - (void) testCloseWithActiveReplicators {
-    NSError* error;
     [self openOtherDB];
     
     CBLDatabaseEndpoint* target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
@@ -304,7 +301,6 @@
 
 - (void) testCloseWithActiveLiveQueriesAndReplicators {
     // Live Queries:
-    NSError* error;
     
     XCTestExpectation* change1 = [self expectationWithDescription: @"changes 1"];
     XCTestExpectation* change2 = [self expectationWithDescription: @"changes 2"];
@@ -472,7 +468,6 @@
 }
 
 - (void) testDeleteWithActiveLiveQueries {
-    NSError* error;
     XCTestExpectation* change1 = [self expectationWithDescription: @"changes 1"];
     XCTestExpectation* change2 = [self expectationWithDescription: @"changes 2"];
     
@@ -497,7 +492,6 @@
 #ifdef COUCHBASE_ENTERPRISE
 
 - (void) testDeleteWithActiveReplicators {
-    NSError* error;
     [self openOtherDB];
     
     CBLDatabaseEndpoint* target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
@@ -531,7 +525,6 @@
 }
 
 - (void) testDeleteWithActiveLiveQueriesAndReplicators {
-    NSError* error;
     [self openOtherDB];
     
     XCTestExpectation* change1 = [self expectationWithDescription: @"changes 1"];

@@ -16,8 +16,6 @@
 //  limitations under the License.
 //
 
-#if COUCHBASE_ENTERPRISE
-
 import XCTest
 @testable import CouchbaseLiteSwift
 
@@ -1243,6 +1241,4 @@ class VectorSearchTest_Main: VectorSearchTest {
         
         XCTAssert(numResultsFor5Probes > numResultsFor1Probes)
     }
-    
-    #endif
 }

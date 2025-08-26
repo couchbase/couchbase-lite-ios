@@ -16,8 +16,6 @@
 //  limitations under the License.
 //
 
-#if COUCHBASE_ENTERPRISE
-
 import XCTest
 @testable import CouchbaseLiteSwift
 
@@ -1388,8 +1386,6 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
             try TLSIdentity.deleteIdentity(withLabel: serverCertLabel)
         }
     }
-
-    #endif
 }
 
 extension URLEndpointListener {

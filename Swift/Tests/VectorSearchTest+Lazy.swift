@@ -16,8 +16,6 @@
 //  limitations under the License.
 //
 
-#if COUCHBASE_ENTERPRISE
-
 import XCTest
 @testable import CouchbaseLiteSwift
 
@@ -828,6 +826,4 @@ class VectorSearchTest_Lazy : VectorSearchTest {
             updater.skipVector(at: 1)
         }
     }
-    
-    #endif
 }

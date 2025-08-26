@@ -17,8 +17,6 @@
 //  limitations under the License.
 //
 
-#if COUCHBASE_ENTERPRISE
-
 import XCTest
 import CouchbaseLiteSwift
 
@@ -208,6 +206,5 @@ class DatabaseEncryptionTest: CBLTestCase {
             i = i + 1
         }
     }
-    
-    #endif
+
 }

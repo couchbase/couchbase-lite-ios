@@ -17,8 +17,6 @@
 //  limitations under the License.
 //
 
-#ifdef COUCHBASE_ENTERPRISE
-
 #import "VectorSearchTest.h"
 #import "CBLJSON.h"
 
@@ -1286,7 +1284,5 @@
         [updater skipVectorAtIndex: 0];
     }];
 }
-
-#endif
 
 @end

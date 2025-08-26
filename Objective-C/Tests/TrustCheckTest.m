@@ -17,8 +17,6 @@
 //  limitations under the License.
 //
 
-#ifdef COUCHBASE_ENTERPRISE
-
 #import "CBLTestCase.h"
 #import "CBLTrustCheck.h"
 
@@ -276,7 +274,5 @@
     CFRelease(secCert2);
     CFRelease(secCert3);
 }
-
-#endif
 
 @end

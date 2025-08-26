@@ -17,8 +17,6 @@
 //  limitations under the License.
 //
 
-#ifdef COUCHBASE_ENTERPRISE
-
 #import "VectorSearchTest.h"
 #import "CBLWordEmbeddingModel.h"
 #import "CBLTestCustomLogSink.h"
@@ -1420,7 +1418,5 @@
     */
     AssertEqual(config.encoding.hash, 31872);
 }
-
-#endif
 
 @end

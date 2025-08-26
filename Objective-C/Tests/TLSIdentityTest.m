@@ -17,8 +17,6 @@
 //  limitations under the License.
 //
 
-#ifdef COUCHBASE_ENTERPRISE
-
 #import "CBLTestCase.h"
 #import "CBLTLSIdentity+Internal.h"
 #import "CBLTrustCheck.h"
@@ -668,7 +666,5 @@
     AssertNil(identity);
     AssertNil(error);
 }
-
-#endif
 
 @end

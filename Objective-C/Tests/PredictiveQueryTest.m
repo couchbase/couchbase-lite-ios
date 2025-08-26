@@ -16,8 +16,6 @@
 //  limitations under the License.
 //
 
-#ifdef COUCHBASE_ENTERPRISE
-
 #import "CBLTestCase.h"
 #import "CBLJSON.h"
 
@@ -1032,8 +1030,6 @@
     }];
     AssertEqual(numRows, tests.count);
 }
-
-#endif
 
 @end
 

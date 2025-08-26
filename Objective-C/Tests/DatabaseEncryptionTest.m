@@ -17,8 +17,6 @@
 //  limitations under the License.
 //
 
-#ifdef COUCHBASE_ENTERPRISE
-
 #import "CBLTestCase.h"
 #import "CBLDatabase+Internal.h"
 
@@ -265,8 +263,6 @@
         AssertEqual([r integerAtIndex: 0], i++);
     }
 }
-
-#endif
 
 #pragma clang diagnostic pop
 

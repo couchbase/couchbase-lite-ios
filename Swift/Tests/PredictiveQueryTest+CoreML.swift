@@ -16,8 +16,6 @@
 //  limitations under the License.
 //
 
-#if COUCHBASE_ENTERPRISE
-
 import XCTest
 import CoreML
 import CouchbaseLiteSwift
@@ -270,6 +268,4 @@ class PredictiveQueryWithCoreMLTest: CBLTestCase {
         
         Database.prediction.unregisterModel(withName: "MobileNet")
     }
-    
-    #endif
 }

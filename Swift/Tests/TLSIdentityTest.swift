@@ -16,8 +16,6 @@
 //  limitations under the License.
 //
 
-#if COUCHBASE_ENTERPRISE
-
 import XCTest
 @testable import CouchbaseLiteSwift
 
@@ -529,6 +527,4 @@ class TLSIdentityTest: CBLTestCase {
         checkIdentity = try TLSIdentity.identity(withLabel: self.serverCertLabel)
         XCTAssertNil(checkIdentity)
     }
-    
-    #endif
 }

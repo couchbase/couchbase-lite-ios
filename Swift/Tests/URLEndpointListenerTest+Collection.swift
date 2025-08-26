@@ -17,8 +17,6 @@
 //  limitations under the License.
 //
 
-#if COUCHBASE_ENTERPRISE
-
 import XCTest
 @testable import CouchbaseLiteSwift
 
@@ -116,6 +114,4 @@ class URLEndpointListenerTest_Collection: URLEndpointListenerTest {
     }
     
     // Note: testCreateListenerConfigWithEmptyCollection can't be tested due to fatalError
-    
-    #endif
 }

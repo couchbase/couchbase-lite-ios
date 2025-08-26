@@ -17,8 +17,6 @@
 //  limitations under the License.
 //
 
-#ifdef COUCHBASE_ENTERPRISE
-
 #import "URLEndpointListenerTest.h"
 #import "CollectionUtils.h"
 
@@ -1478,8 +1476,6 @@
 - (void) testDeleteWithActiveReplicatorAndURLEndpointListeners {
     [self validateActiveReplicatorAndURLEndpointListeners: YES];
 }
-
-#endif
 
 #pragma clang diagnostic pop
 

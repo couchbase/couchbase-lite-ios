@@ -16,8 +16,6 @@
 //  limitations under the License.
 //
 
-#if COUCHBASE_ENTERPRISE
-
 import XCTest
 import CouchbaseLiteSwift
 
@@ -980,7 +978,6 @@ class PredictiveQueryTest: CBLTestCase {
         }
         XCTAssertEqual(Int(rows), tests.count);
     }
-    #endif
 }
 
 // MARK: Models
