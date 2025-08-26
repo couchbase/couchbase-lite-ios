@@ -53,10 +53,9 @@
  */
 - (void) testCreatePartialValueIndex {
     NSError* error;
-    CBLCollection* collection = [self.db defaultCollection: &error];
 
     CBLValueIndexConfiguration* config = [[CBLValueIndexConfiguration alloc] initWithExpression: @[@"num"] where: @"type='number'"];
-    Assert([collection createIndexWithName: @"numIndex" config: config error: nil]);
+    Assert([self.defaultCollection createIndexWithName: @"numIndex" config: config error: nil]);
     
     NSString* sql = @"SELECT * FROM _ WHERE type = 'number' AND num > 1000";
     CBLQuery* q = [_db createQuery: sql error: &error];
@@ -94,21 +93,20 @@
  */
 - (void) testCreatePartialFullTextIndex {
     NSError* error;
-    CBLCollection* collection = [self.db defaultCollection: &error];
     NSString* json1 = @"{\"content\":\"Couchbase Lite is a database.\"}";
     NSString* json2 = @"{\"content\":\"Couchbase Lite is a NoSQL syncable database.\"}";
     
-    [collection saveDocument:[[CBLMutableDocument alloc] initWithJSON:json1 error:&error]
+    [self.defaultCollection saveDocument:[[CBLMutableDocument alloc] initWithJSON:json1 error:&error]
                        error:&error];
     
-    [collection saveDocument:[[CBLMutableDocument alloc] initWithJSON:json2 error:&error]
+    [self.defaultCollection saveDocument:[[CBLMutableDocument alloc] initWithJSON:json2 error:&error]
                        error:&error];
 
     CBLFullTextIndexConfiguration* config = [[CBLFullTextIndexConfiguration alloc] initWithExpression: @[@"content"]
                                                                                                 where: @"length(content)>30"
                                                                                         ignoreAccents: false
                                                                                              language: nil];
-    Assert([collection createIndexWithName: @"contentIndex" config: config error: nil]);
+    Assert([self.defaultCollection createIndexWithName: @"contentIndex" config: config error: nil]);
     
     NSString* sql = @"SELECT content FROM _ WHERE match(contentIndex, 'database')";
     CBLQuery* q = [_db createQuery: sql error: &error];

@@ -16,6 +16,7 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 //
+
 #import "VectorSearchTest.h"
 #import "CBLJSON.h"
 
@@ -135,8 +136,7 @@
  */
 - (void) testGetNonExistingIndex {
     NSError* error;
-    CBLCollection* defaultCollection = [self.db defaultCollection: &error];
-    AssertNil([defaultCollection indexWithName: @"nonexistingindex" error: &error]);
+    AssertNil([self.defaultCollection indexWithName: @"nonexistingindex" error: &error]);
     AssertEqual(error.code, 0);
 }
 
@@ -159,17 +159,16 @@
  */
 - (void) testGetExistingNonVectorIndex {
     NSError* error;
-    CBLCollection* defaultCollection = [self.db defaultCollection: &error];
     
     CBLValueIndexItem* item = [CBLValueIndexItem expression:
                                [CBLQueryExpression property: @"value"]];
     CBLValueIndex* vIndex = [CBLIndexBuilder valueIndexWithItems: @[item]];
-    [defaultCollection createIndex: vIndex name: @"value_index" error: &error];
+    [self.defaultCollection createIndex: vIndex name: @"value_index" error: &error];
     AssertNil(error);
     
-    CBLQueryIndex* qIndex = [defaultCollection indexWithName: @"value_index" error: &error];
+    CBLQueryIndex* qIndex = [self.defaultCollection indexWithName: @"value_index" error: &error];
     AssertEqual(qIndex.name, @"value_index");
-    AssertEqual(qIndex.collection, defaultCollection);
+    AssertEqual(qIndex.collection, self.defaultCollection);
 }
 
 /**
@@ -378,17 +377,15 @@
  */
 - (void) testIndexUpdaterBeginUpdateOnNonVectorIndex {
     NSError* error;
-    CBLCollection* defaultCollection = [self.db defaultCollection: &error];
-    AssertNil(error);
     
     CBLValueIndexItem* item = [CBLValueIndexItem expression:
                                [CBLQueryExpression property: @"value"]];
     CBLValueIndex* vIndex = [CBLIndexBuilder valueIndexWithItems: @[item]];
-    [defaultCollection createIndex: vIndex name: @"value_index" error: &error];
+    [self.defaultCollection createIndex: vIndex name: @"value_index" error: &error];
     
     AssertNil(error);
     
-    CBLQueryIndex* qIndex = [defaultCollection indexWithName: @"value_index" error: &error];
+    CBLQueryIndex* qIndex = [self.defaultCollection indexWithName: @"value_index" error: &error];
     
     [self expectError: CBLErrorDomain code: CBLErrorUnsupported in: ^BOOL(NSError** err) {
         return [qIndex beginUpdateWithLimit: 10 error: err] != nil;
@@ -623,43 +620,42 @@
  */
 - (void) testIndexUpdaterGettingValues {
     NSError* error;
-    CBLCollection* defaultCollection = [self.db defaultCollection: &error];
     
     CBLMutableDocument* mdoc = [self createDocument: @"doc-0"];
     [mdoc setValue: @"a string" forKey: @"value"];
-    [defaultCollection saveDocument: mdoc error: &error];
+    [self.defaultCollection saveDocument: mdoc error: &error];
     
     mdoc = [self createDocument: @"doc-1"];
     [mdoc setValue: @(100) forKey: @"value"];
-    [defaultCollection saveDocument: mdoc error: &error];
+    [self.defaultCollection saveDocument: mdoc error: &error];
     
     mdoc = [self createDocument: @"doc-2"];
     [mdoc setValue: @(20.8) forKey: @"value"];
-    [defaultCollection saveDocument: mdoc error: &error];
+    [self.defaultCollection saveDocument: mdoc error: &error];
     
     mdoc = [self createDocument: @"doc-3"];
     [mdoc setValue: @(true) forKey: @"value"];
-    [defaultCollection saveDocument: mdoc error: &error];
+    [self.defaultCollection saveDocument: mdoc error: &error];
     
     mdoc = [self createDocument: @"doc-4"];
     [mdoc setValue: @(false) forKey: @"value"];
-    [defaultCollection saveDocument: mdoc error: &error];
+    [self.defaultCollection saveDocument: mdoc error: &error];
     
     mdoc = [self createDocument: @"doc-5"];
     [mdoc setValue: [CBLJSON dateWithJSONObject: @"2024-05-10T00:00:00.000Z"] forKey: @"value"];
-    [defaultCollection saveDocument: mdoc error: &error];
+    [self.defaultCollection saveDocument: mdoc error: &error];
     
     mdoc = [self createDocument: @"doc-6"];
     NSData* content = [@"I'm Blob" dataUsingEncoding: NSUTF8StringEncoding];
     CBLBlob* blob = [[CBLBlob alloc] initWithContentType:@"text/plain" data: content];
     [mdoc setValue: blob forKey: @"value"];
-    [defaultCollection saveDocument: mdoc error: &error];
+    [self.defaultCollection saveDocument: mdoc error: &error];
     
     mdoc = [self createDocument: @"doc-7"];
     CBLMutableDictionary* dict = [[CBLMutableDictionary alloc] init];
     [dict setValue: @"Bob" forKey: @"name"];
     [mdoc setValue: dict forKey: @"value"];
-    [defaultCollection saveDocument: mdoc error: &error];
+    [self.defaultCollection saveDocument: mdoc error: &error];
     
     mdoc = [self createDocument: @"doc-8"];
     CBLMutableArray* array = [[CBLMutableArray alloc] init];
@@ -667,18 +663,18 @@
     [array addValue: @"two"];
     [array addValue: @"three"];
     [mdoc setValue: array forKey: @"value"];
-    [defaultCollection saveDocument: mdoc error: &error];
+    [self.defaultCollection saveDocument: mdoc error: &error];
     
     mdoc = [self createDocument: @"doc-9"];
     [mdoc setValue: [NSNull null] forKey: @"value"];
-    [defaultCollection saveDocument: mdoc error: &error];
+    [self.defaultCollection saveDocument: mdoc error: &error];
     
     // Create index
-    [self createVectorIndexInCollection: defaultCollection
+    [self createVectorIndexInCollection: self.defaultCollection
                                    name: @"vector_index"
                                  config: LAZY_VECTOR_INDEX_CONFIG(@"value", 300, 8)];
     
-    CBLQueryIndex* index = [defaultCollection indexWithName: @"vector_index" error: &error];
+    CBLQueryIndex* index = [self.defaultCollection indexWithName: @"vector_index" error: &error];
     AssertNotNil(index);
     
     CBLIndexUpdater* updater = [index beginUpdateWithLimit: 10 error: &error];
@@ -1160,17 +1156,16 @@
  */
 - (void) testIndexUpdaterIndexOutOfBounds {
     NSError* error;
-    CBLCollection* defaultCollection = [self.db defaultCollection: &error];
-    
+
     CBLMutableDocument* mdoc = [self createDocument: @"doc-0"];
     [mdoc setValue: @"a string" forKey: @"value"];
-    [defaultCollection saveDocument: mdoc error: &error];
+    [self.defaultCollection saveDocument: mdoc error: &error];
     
-    [self createVectorIndexInCollection: defaultCollection
+    [self createVectorIndexInCollection: self.defaultCollection
                                    name: @"vector_index"
                                  config: LAZY_VECTOR_INDEX_CONFIG(@"value", 300, 8)];
     
-    CBLQueryIndex* index = [defaultCollection indexWithName: @"vector_index" error: &error];
+    CBLQueryIndex* index = [self.defaultCollection indexWithName: @"vector_index" error: &error];
     AssertNotNil(index);
     
     CBLIndexUpdater* updater = [index beginUpdateWithLimit: 10 error: &error];

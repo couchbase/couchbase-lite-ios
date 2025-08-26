@@ -63,7 +63,7 @@
         if (values[1] != [NSNull null]) [doc setValue: values[1] forKey: @"greenhouses"];
         if (values[2] != [NSNull null]) [doc setValue: values[2] forKey: @"size"];
         if (values.count > 3)           [doc setValue: values[3] forKey: @"expected_price"];
-        [self saveDocument: doc];
+        [self saveDocument: doc collection: self.defaultCollection];
     }
 }
 
@@ -76,7 +76,7 @@
     NSString* type = [[ext lowercaseString] isEqualToString: @"jpg"] ? @"image/jpeg" : @"image/png";
     [doc setBlob: [[CBLBlob alloc] initWithContentType: type data: data] forKey: @"image"];
     [doc setString: name forKey: @"name"];
-    [self saveDocument: doc];
+    [self saveDocument: doc collection: self.defaultCollection];
 }
 
 - (void) testMarsHabitatPricerModel {

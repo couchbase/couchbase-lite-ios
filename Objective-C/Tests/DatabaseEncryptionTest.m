@@ -26,6 +26,7 @@
 
 @implementation DatabaseEncryptionTest {
     CBLDatabase* _seekrit;
+    CBLCollection* _seekritCollection;
 }
 
 // TODO: Remove https://issues.couchbase.com/browse/CBL-3206
@@ -33,7 +34,7 @@
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 
 - (void) tearDown {
-    [_seekrit close: nil];
+    [self reset];
     [super tearDown];
 }
 
@@ -42,7 +43,16 @@
     if (password)
         config.encryptionKey = [[CBLEncryptionKey alloc] initWithPassword: password];
     config.directory = self.directory;
-    return [[CBLDatabase alloc] initWithName: @"seekrit" config: config error: error];
+    CBLDatabase* seekrit = [[CBLDatabase alloc] initWithName: @"seekrit" config: config error: error];
+    if (!seekrit) return nil;
+    _seekritCollection = [seekrit defaultCollection:error];
+    return seekrit;
+}
+
+- (void) reset {
+    _seekritCollection = nil;
+    [_seekrit close: nil];
+    _seekrit = nil;
 }
 
 - (void) testUnEncryptedDatabase {
@@ -51,9 +61,8 @@
     Assert(_seekrit, @"Failed to create unencrypted db: %@", error);
     
     CBLMutableDocument* doc = [self createDocument: nil data: @{@"answer": @(42)}];
-    Assert([_seekrit saveDocument: doc error: &error], @"Error when save a document: %@", error);
-    [_seekrit close: nil];
-    _seekrit = nil;
+    Assert([_seekritCollection saveDocument: doc error: &error], @"Error when save a document: %@", error);
+    [self reset];
     
     static const int expectedError = CBLErrorUnreadableDatabase;
     
@@ -65,7 +74,7 @@
     // Reopen with no password:
     _seekrit = [self openSeekritWithPassword: nil error: &error];
     Assert(_seekrit, @"Failed to reopen encrypted db: %@", error);
-    AssertEqual(_seekrit.count, 1u);
+    AssertEqual(_seekritCollection.count, 1u);
 }
 
 - (void) testEncryptedDatabase {
@@ -75,9 +84,8 @@
     Assert(_seekrit, @"Failed to reopen encrypted db: %@", error);
     
     CBLMutableDocument* doc = [self createDocument: nil data: @{@"answer": @(42)}];
-    Assert([_seekrit saveDocument: doc error: &error], @"Error when save a document: %@", error);
-    [_seekrit close: nil];
-    _seekrit = nil;
+    Assert([_seekritCollection saveDocument: doc error: &error], @"Error when save a document: %@", error);
+    [self reset];
     
     // Reopen without password (fails):
     [self expectError: CBLErrorDomain code: CBLErrorUnreadableDatabase in: ^BOOL(NSError ** err) {
@@ -106,16 +114,14 @@
     // Re-create database:
     _seekrit = [self openSeekritWithPassword: nil error: &error];
     Assert(_seekrit, @"Failed to create formally encrypted db: %@", error);
-    AssertEqual(_seekrit.count, 0u);
-    Assert([_seekrit close: nil]);
-    _seekrit = nil;
+    AssertEqual(_seekritCollection.count, 0u);
+    [self reset];
     
     // Make sure it doesn't need a password now:
     _seekrit = [self openSeekritWithPassword: nil error: &error];
     Assert(_seekrit, @"Failed to create formally encrypted db: %@", error);
-    AssertEqual(_seekrit.count, 0u);
-    Assert([_seekrit close: nil]);
-    _seekrit = nil;
+    AssertEqual(_seekritCollection.count, 0u);
+    [self reset];
     
     // Make sure old password doesn't work:
     [self expectError: CBLErrorDomain code: CBLErrorUnreadableDatabase in: ^BOOL(NSError ** err) {
@@ -131,23 +137,23 @@
     
     // Create a doc and then update it:
     CBLMutableDocument* doc = [self createDocument: nil data: @{@"answer": @(42)}];
-    Assert([_seekrit saveDocument: doc error: &error], @"Saving Error: %@", error);
+    Assert([_seekritCollection saveDocument: doc error: &error], @"Saving Error: %@", error);
     
     [doc setValue: @(84) forKey: @"answer"];
-    Assert([_seekrit saveDocument: doc error: &error], @"Saving Error: %@", error);
+    Assert([_seekritCollection saveDocument: doc error: &error], @"Saving Error: %@", error);
     
     // Compact:
     Assert([_seekrit performMaintenance: kCBLMaintenanceTypeCompact error: &error], @"Compaction failed: %@", error);
     
     // Update the document again:
     [doc setValue: @(85) forKey: @"answer"];
-    Assert([_seekrit saveDocument: doc error: &error], @"Error when save a document: %@", error);
+    Assert([_seekritCollection saveDocument: doc error: &error], @"Error when save a document: %@", error);
     
     // Close and re-open:
     Assert([_seekrit close: &error], @"Close failed: %@", error);
     _seekrit = [self openSeekritWithPassword: @"letmein" error: &error];
     Assert(_seekrit, @"Failed to reopen encrypted db: %@", error);
-    AssertEqual(_seekrit.count, 1u);
+    AssertEqual(_seekritCollection.count, 1u);
 }
 
 - (void) testEncryptedBlobs {
@@ -165,7 +171,7 @@
     NSData* body = [@"This is a blob!" dataUsingEncoding: NSUTF8StringEncoding];
     CBLBlob* blob = [[CBLBlob alloc] initWithContentType: @"text/plain" data: body];
     [doc setValue: blob forKey: @"blob"];
-    Assert([_seekrit saveDocument: doc error: &error], @"Error when save a document: %@", error);
+    Assert([_seekritCollection saveDocument: doc error: &error], @"Error when save a document: %@", error);
     
     // Read content from the raw blob file:
     blob = [doc blobForKey: @"blob"];
@@ -182,7 +188,7 @@
         Assert([raw isEqualToData: body], @"Oops, attachment was encrypted");
     
     // Check blob content:
-    CBLDocument* savedDoc = [_seekrit documentWithID: @"att"];
+    CBLDocument* savedDoc = [_seekritCollection documentWithID: @"att" error: &error];
     blob = [savedDoc blobForKey: @"blob"];
     Assert(blob.digest);
     NSString* content = [[NSString alloc] initWithData: blob.content encoding: NSUTF8StringEncoding];
@@ -217,7 +223,7 @@
     [_seekrit inBatch: &error usingBlock: ^{
         for (unsigned i=0; i<100; i++) {
             CBLMutableDocument* doc = [self createDocument: nil data: @{@"seq": @(i)}];
-            [_seekrit saveDocument: doc error: nil];
+            [_seekritCollection saveDocument: doc error: nil];
         }
     }];
     
@@ -236,7 +242,7 @@
     _seekrit = seekrit2;
     
     // Check the document and its attachment:
-    CBLDocument* doc = [_seekrit documentWithID: @"att"];
+    CBLDocument* doc = [_seekritCollection documentWithID: @"att" error: nil];
     CBLBlob* blob = [doc blobForKey: @"blob"];
     Assert(blob.content);
     NSString* content = [[NSString alloc] initWithData: blob.content encoding: NSUTF8StringEncoding];

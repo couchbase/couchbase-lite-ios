@@ -36,11 +36,11 @@
     
     CBLMutableDocument* joinme = [[CBLMutableDocument alloc] initWithID: @"joinme"];
     [joinme setValue: @42 forKey: @"theone"];
-    [self saveDocument: joinme];
+    [self saveDocument: joinme collection: self.defaultCollection];
     
     CBLMutableDocument* joinmeCopy = [[CBLMutableDocument alloc] initWithID: @"joinmeCopy"];
     [joinmeCopy setValue: @42 forKey: @"theone"];
-    [self saveDocument: joinmeCopy];
+    [self saveDocument: joinmeCopy collection: self.defaultCollection];
     
     CBLQueryExpression* propNum1 = [CBLQueryExpression property: @"number1" from: @"main"];
     CBLQueryExpression* propNum2 = [CBLQueryExpression property: @"number2" from: @"main"];
@@ -83,15 +83,15 @@
     
     CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] init];
     [doc1 setValue: @42 forKey: @"theone"];
-    [self saveDocument: doc1];
+    [self saveDocument: doc1 collection: self.defaultCollection];
     
     CBLMutableDocument* doc2 = [[CBLMutableDocument alloc] init];
     [doc2 setValue: @42 forKey: @"theone"];
-    [self saveDocument: doc2];
+    [self saveDocument: doc2 collection: self.defaultCollection];
     
     CBLMutableDocument* doc3 = [[CBLMutableDocument alloc] init];
     [doc3 setValue: @32 forKey: @"theone"];
-    [self saveDocument: doc3];
+    [self saveDocument: doc3 collection: self.defaultCollection];
     
     CBLQuerySelectResult* MAIN_DOC_ID =
     [CBLQuerySelectResult expression: [CBLQueryMeta idFrom: @"main"]];
@@ -110,7 +110,8 @@
     uint64_t numRows = [self verifyQuery: q randomAccess: YES
                                     test: ^(uint64_t n, CBLQueryResult* r)
                         {
-                            CBLDocument* doc = [self.db documentWithID: [r valueAtIndex: 0]];
+        NSError* err;
+        CBLDocument* doc = [self.defaultCollection documentWithID: [r valueAtIndex: 0] error: &err];
                             AssertEqual([doc integerForKey:@"number1"], 42);
                         }];
     AssertEqual(numRows, 2u);
@@ -138,17 +139,17 @@
     CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] init];
     [doc1 setValue: @42 forKey: @"theone"];
     [doc1 setValue: @"Tom" forKey: @"name"];
-    [self saveDocument: doc1];
+    [self saveDocument: doc1 collection: self.defaultCollection];
     
     CBLMutableDocument* doc2 = [[CBLMutableDocument alloc] init];
     [doc2 setValue: @43 forKey: @"theone"];
     [doc2 setValue: @"Tom" forKey: @"name"];
-    [self saveDocument: doc2];
+    [self saveDocument: doc2 collection: self.defaultCollection];
     
     CBLMutableDocument* doc3 = [[CBLMutableDocument alloc] init];
     [doc3 setValue: @32 forKey: @"theone"];
     [doc3 setValue: @"Bob" forKey: @"name"];
-    [self saveDocument: doc3];
+    [self saveDocument: doc3 collection: self.defaultCollection];
     
     CBLQueryExpression* COUNT  = [CBLQueryFunction count: [CBLQueryExpression integer: 1]];
     CBLQuerySelectResult* MAIN_DOC_ID =
@@ -181,10 +182,12 @@
                                 groupBy: @[[CBLQueryExpression property: @"theone" from: @"secondary"]]
                                  having: [COUNT lessThan: [CBLQueryExpression integer: 2]]];
     Assert(q);
-    numRows = [self verifyQuery: q randomAccess: YES
+    numRows = [self verifyQuery: q
+                   randomAccess: YES
                            test: ^(uint64_t n, CBLQueryResult* r)
                {
-                   CBLDocument* doc = [self.db documentWithID: [r valueAtIndex: 0]];
+                   NSError* error;
+                   CBLDocument* doc = [self.defaultCollection documentWithID: [r valueAtIndex: 0] error: &error];
                    AssertEqual([r integerForKey:@"count"], 1);
                    Assert([doc integerForKey:@"number1"] != 42);
                }];
@@ -196,15 +199,15 @@
     
     CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] init];
     [doc1 setValue: @97 forKey: @"theone"];
-    [self saveDocument: doc1];
+    [self saveDocument: doc1 collection: self.defaultCollection];
     
     CBLMutableDocument* doc2 = [[CBLMutableDocument alloc] init];
     [doc2 setValue: @12 forKey: @"theone"];
-    [self saveDocument: doc2];
+    [self saveDocument: doc2 collection: self.defaultCollection];
     
     CBLMutableDocument* doc3 = [[CBLMutableDocument alloc] init];
     [doc3 setValue: @12 forKey: @"theone"];
-    [self saveDocument: doc3];
+    [self saveDocument: doc3 collection: self.defaultCollection];
     
     CBLQueryExpression* numb = [CBLQueryExpression property:@"number1" from:@"main"];
     CBLQuerySelectResult* MAIN_DOC_ID =
@@ -244,17 +247,17 @@
     CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] init];
     [doc1 setValue: @42 forKey: @"theone"];
     [doc1 setValue: @"Tom" forKey: @"name"];
-    [self saveDocument: doc1];
+    [self saveDocument: doc1 collection: self.defaultCollection];
     
     CBLMutableDocument* doc2 = [[CBLMutableDocument alloc] init];
     [doc2 setValue: @43 forKey: @"theone"];
     [doc2 setValue: @"Tom" forKey: @"name"];
-    [self saveDocument: doc2];
+    [self saveDocument: doc2 collection: self.defaultCollection];
     
     CBLMutableDocument* doc3 = [[CBLMutableDocument alloc] init];
     [doc3 setValue: @32 forKey: @"theone"];
     [doc3 setValue: @"Bob" forKey: @"name"];
-    [self saveDocument: doc3];
+    [self saveDocument: doc3 collection: self.defaultCollection];
     
     CBLQueryExpression* numb = [CBLQueryExpression property:@"number1" from:@"main"];
     CBLQueryExpression* COUNT  = [CBLQueryFunction count: [CBLQueryExpression integer: 1]];
@@ -307,7 +310,7 @@
     
     CBLMutableDocument* joinme = [[CBLMutableDocument alloc] initWithID: @"joinme"];
     [joinme setValue: @42 forKey: @"theone"];
-    [self saveDocument: joinme];
+    [self saveDocument: joinme collection: self.defaultCollection];
     
     CBLQueryExpression* on = [[CBLQueryExpression property: @"number1" from: @"main"]
                               equalTo: [CBLQueryExpression property:@"theone" from:@"secondary"]];
@@ -346,7 +349,7 @@
     
     CBLMutableDocument* joinme = [[CBLMutableDocument alloc] initWithID: @"joinme"];
     [joinme setValue: @42 forKey: @"theone"];
-    [self saveDocument: joinme];
+    [self saveDocument: joinme collection: self.defaultCollection];
     
     CBLQueryExpression* on = [[CBLQueryExpression property: @"number1" from: @"main"]
                               equalTo: [CBLQueryExpression property:@"theone" from:@"secondary"]];
@@ -415,7 +418,7 @@
     CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: @"joinme"];
     [doc1 setInteger: 42 forKey: @"theone"];
     [doc1 setString: @"doc1" forKey: @"numberID"];
-    [self saveDocument: doc1];
+    [self saveDocument: doc1 collection: self.defaultCollection];
     
     // datasources
     CBLQueryDataSource* mainDS = [CBLQueryDataSource database: self.db as: @"main"];
@@ -445,7 +448,8 @@
     uint64_t numRows = [self verifyQuery: q randomAccess: NO test:^(uint64_t n, CBLQueryResult * _Nonnull result) {
         AssertEqual(n, 1u);
         NSString* docID = [result stringForKey: @"mainDocID"];
-        CBLDocument* doc = [self.db documentWithID: docID];
+        NSError* error;
+        CBLDocument* doc = [self.defaultCollection documentWithID: docID error: &error];
         AssertEqual([doc integerForKey: @"number1"], 1u);
         AssertEqual([doc integerForKey: @"number2"], 99u);
         

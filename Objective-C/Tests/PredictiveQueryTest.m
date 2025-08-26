@@ -69,7 +69,7 @@
 - (CBLMutableDocument*) createDocumentWithNumbers: (NSArray*)numbers {
     CBLMutableDocument* doc = [[CBLMutableDocument alloc] init];
     [doc setValue: numbers forKey: @"numbers"];
-    [self saveDocument: doc];
+    [self saveDocument: doc collection: self.defaultCollection];
     return doc;
 }
 
@@ -150,7 +150,7 @@
     CBLMutableDocument *doc = [self createDocument];
     [doc setString: @"Daniel" forKey: @"name"];
     [doc setInteger: 2 forKey: @"number"];
-    [self saveDocument: doc];
+    [self saveDocument: doc collection: self.defaultCollection];
     
     // Create prediction function input:
     NSDate* date = [NSDate date];
@@ -242,7 +242,7 @@
     for (NSString* text in texts) {
         CBLMutableDocument* doc = [self createDocument];
         [doc setBlob: [self blobForString: text] forKey: @"text"];
-        [self saveDocument: doc];
+        [self saveDocument: doc collection: self.defaultCollection];
     }
     
     CBLTextModel* textModel = [[CBLTextModel alloc] init];
@@ -271,7 +271,7 @@
 }
 
 - (void) testPredictionWithBlobParameterInput {
-    Assert([self.db saveDocument: [[CBLMutableDocument alloc] init] error: nil]);
+    Assert([self.defaultCollection saveDocument: [[CBLMutableDocument alloc] init] error: nil]);
     
     CBLTextModel* textModel = [[CBLTextModel alloc] init];
     [textModel registerModel];
@@ -298,7 +298,7 @@
 
 // TODO: Thrown exception is causing the memory leak with Collection datasource
 - (void) _testPredictionWithNonSupportedInputTypes {
-    Assert([self.db saveDocument: [[CBLMutableDocument alloc] init] error: nil]);
+    Assert([self.defaultCollection saveDocument: [[CBLMutableDocument alloc] init] error: nil]);
     
     CBLEchoModel* echoModel = [[CBLEchoModel alloc] init];
     [echoModel registerModel];
@@ -474,7 +474,7 @@
     
     CBLMutableDocument* doc = [self createDocument];
     [doc setString: @"Knox on fox in socks in box. Socks on Knox and Knox in box." forKey: @"text"];
-    [self saveDocument: doc];
+    [self saveDocument: doc collection: self.defaultCollection];
     
     CBLAggregateModel* aggregateModel = [[CBLAggregateModel alloc] init];
     [aggregateModel registerModel];
@@ -531,7 +531,7 @@
     NSError* error;
     NSArray* indexItems = @[[CBLValueIndexItem expression: sumPrediction]];
     CBLValueIndex* index = [CBLIndexBuilder valueIndexWithItems: indexItems];
-    Assert([self.db createIndex: index withName: @"SumIndex" error: &error]);
+    Assert([self.defaultCollection createIndex: index name: @"SumIndex" error: &error]);
     
     CBLQuery *q = [CBLQueryBuilder select: @[SEL_PROP(@"numbers"),
                                              SEL_EXPR(sumPrediction)]
@@ -566,11 +566,11 @@
     NSError* error;
     CBLValueIndex* sumIndex = [CBLIndexBuilder valueIndexWithItems:
                                @[[CBLValueIndexItem expression: sumPrediction]]];
-    Assert([self.db createIndex: sumIndex withName: @"SumIndex" error: &error]);
+    Assert([self.defaultCollection createIndex: sumIndex name: @"SumIndex" error: &error]);
     
     CBLValueIndex* avgIndex = [CBLIndexBuilder valueIndexWithItems:
                                @[[CBLValueIndexItem expression: avgPrediction]]];
-    Assert([self.db createIndex: avgIndex withName: @"AvgIndex" error: &error]);
+    Assert([self.defaultCollection createIndex: avgIndex name: @"AvgIndex" error: &error]);
     
     CBLQuery *q = [CBLQueryBuilder select: @[SEL_EXPR_AS(sumPrediction, @"s"),
                                              SEL_EXPR_AS(avgPrediction, @"a")]
@@ -603,7 +603,7 @@
     CBLValueIndex* index = [CBLIndexBuilder valueIndexWithItems:
                             @[[CBLValueIndexItem expression: sumPrediction],
                               [CBLValueIndexItem expression: avgPrediction]]];
-    Assert([self.db createIndex: index withName: @"SumAvgIndex" error: &error]);
+    Assert([self.defaultCollection createIndex: index name: @"SumAvgIndex" error: &error]);
     
     CBLQuery *q = [CBLQueryBuilder select: @[SEL_EXPR_AS(sumPrediction, @"sum"),
                                              SEL_EXPR_AS(avgPrediction, @"avg")]
@@ -637,7 +637,7 @@
     CBLPredictiveIndex* index =  [CBLIndexBuilder predictiveIndexWithModel: model
                                                                      input: input
                                                                 properties: nil];
-    Assert([self.db createIndex: index withName: @"AggCache" error: &error]);
+    Assert([self.defaultCollection createIndex: index name: @"AggCache" error: &error]);
     
     CBLQuery *q = [CBLQueryBuilder select: @[SEL_PROP(@"numbers"),
                                              SEL_EXPR(sumPrediction)]
@@ -675,7 +675,7 @@
     CBLPredictiveIndex* index =  [CBLIndexBuilder predictiveIndexWithModel: model
                                                                      input: input
                                                                 properties: @[@"sum"]];
-    Assert([self.db createIndex: index withName: @"SumIndex" error: &error]);
+    Assert([self.defaultCollection createIndex: index name: @"SumIndex" error: &error]);
     
     CBLQuery* q = [CBLQueryBuilder select: @[SEL_PROP(@"numbers"),
                                              SEL_EXPR(sumPrediction)]
@@ -713,12 +713,12 @@
     CBLPredictiveIndex* sumIndex = [CBLIndexBuilder predictiveIndexWithModel: model
                                                                        input: input
                                                                   properties: @[@"sum"]];
-    Assert([self.db createIndex: sumIndex withName: @"SumIndex" error: &error]);
+    Assert([self.defaultCollection createIndex: sumIndex name: @"SumIndex" error: &error]);
     
     CBLPredictiveIndex* avgIndex = [CBLIndexBuilder predictiveIndexWithModel: model
                                                                        input: input
                                                                   properties: @[@"avg"]];
-    Assert([self.db createIndex: avgIndex withName: @"AvgIndex" error: &error]);
+    Assert([self.defaultCollection createIndex: avgIndex name: @"AvgIndex" error: &error]);
     
     CBLQuery *q = [CBLQueryBuilder select: @[SEL_EXPR_AS(sumPrediction, @"s"),
                                              SEL_EXPR_AS(avgPrediction, @"a")]
@@ -754,7 +754,7 @@
     CBLPredictiveIndex* index =  [CBLIndexBuilder predictiveIndexWithModel: model
                                                                      input: input
                                                                 properties: @[@"sum", @"avg"]];
-    Assert([self.db createIndex: index withName: @"SumAvgIndex" error: &error]);
+    Assert([self.defaultCollection createIndex: index name: @"SumAvgIndex" error: &error]);
     
     CBLQuery *q = [CBLQueryBuilder select: @[SEL_EXPR_AS(sumPrediction, @"sum"),
                                              SEL_EXPR_AS(avgPrediction, @"avg")]
@@ -790,7 +790,7 @@
     CBLPredictiveIndex* index =  [CBLIndexBuilder predictiveIndexWithModel: model
                                                                      input: input
                                                                 properties: @[@"sum"]];
-    Assert([self.db createIndex: index withName: @"SumIndex" error: &error]);
+    Assert([self.defaultCollection createIndex: index name: @"SumIndex" error: &error]);
     
     CBLQuery *q = [CBLQueryBuilder select: @[SEL_PROP(@"numbers")]
                                      from: kDATA_SRC_DB
@@ -807,7 +807,7 @@
     AssertEqual(aggregateModel.numberOfCalls, 2u);
     
     // Delete SumIndex:
-    Assert([self.db deleteIndexForName: @"SumIndex" error: &error]);
+    Assert([self.defaultCollection deleteIndexWithName: @"SumIndex" error: &error]);
     
     // Query again:
     [aggregateModel reset];
@@ -844,19 +844,19 @@
     CBLPredictiveIndex* aggIndex =  [CBLIndexBuilder predictiveIndexWithModel: model
                                                                           input: input
                                                                      properties: nil];
-    Assert([self.db createIndex: aggIndex withName: @"AggIndex" error: &error]);
+    Assert([self.defaultCollection createIndex: aggIndex name: @"AggIndex" error: &error]);
     
     // Create sum index:
     CBLPredictiveIndex* sumIndex =  [CBLIndexBuilder predictiveIndexWithModel: model
                                                                         input: input
                                                                    properties: @[@"sum"]];
-    Assert([self.db createIndex: sumIndex withName: @"SumIndex" error: &error]);
+    Assert([self.defaultCollection createIndex: sumIndex name: @"SumIndex" error: &error]);
     
     // Create avg index:
     CBLPredictiveIndex* avgIndex =  [CBLIndexBuilder predictiveIndexWithModel: model
                                                                         input: input
                                                                    properties: @[@"avg"]];
-    Assert([self.db createIndex: avgIndex withName: @"AvgIndex" error: &error]);
+    Assert([self.defaultCollection createIndex: avgIndex name: @"AvgIndex" error: &error]);
     
     // Query:
     CBLQuery *q = [CBLQueryBuilder select: @[SEL_PROP(@"numbers")]
@@ -875,7 +875,7 @@
     AssertEqual(aggregateModel.numberOfCalls, 2u);
     
     // Delete SumIndex:
-    Assert([self.db deleteIndexForName: @"SumIndex" error: &error]);
+    Assert([self.defaultCollection deleteIndexWithName: @"SumIndex" error: &error]);
     
     [aggregateModel reset];
     // Note: when having only one index, SQLite optimizer doesn't utilize the index
@@ -907,7 +907,7 @@
     AssertEqual(aggregateModel.numberOfCalls, 0u);
     
     // Delete AvgIndex:
-    Assert([self.db deleteIndexForName: @"AvgIndex" error: &error]);
+    Assert([self.defaultCollection deleteIndexWithName: @"AvgIndex" error: &error]);
     
     [aggregateModel reset];
     q = [CBLQueryBuilder select: @[SEL_PROP(@"numbers")]
@@ -924,7 +924,7 @@
     AssertEqual(aggregateModel.numberOfCalls, 0u); // Still using cache table
     
     // Delete AggIndex:
-    Assert([self.db deleteIndexForName: @"AggIndex" error: &error]);
+    Assert([self.defaultCollection deleteIndexWithName: @"AggIndex" error: &error]);
     
     [aggregateModel reset];
     q = [CBLQueryBuilder select: @[SEL_PROP(@"numbers")]
@@ -957,7 +957,7 @@
         [doc setValue: t[0] forKey: @"v1"];
         [doc setValue: t[1] forKey: @"v2"];
         [doc setValue: t[2] forKey: @"distance"];
-        [self saveDocument: doc];
+        [self saveDocument: doc collection: self.defaultCollection];
     }
     
     CBLQueryExpression* distance = [CBLQueryFunction euclideanDistanceBetween: EXPR_PROP(@"v1")
@@ -984,7 +984,7 @@
         [doc setValue: t[0] forKey: @"v1"];
         [doc setValue: t[1] forKey: @"v2"];
         [doc setValue: t[2] forKey: @"distance"];
-        [self saveDocument: doc];
+        [self saveDocument: doc collection: self.defaultCollection];
     }
     
     CBLQueryExpression* distance = [CBLQueryFunction squaredEuclideanDistanceBetween: EXPR_PROP(@"v1")
@@ -1014,7 +1014,7 @@
         [doc setValue: t[0] forKey: @"v1"];
         [doc setValue: t[1] forKey: @"v2"];
         [doc setValue: t[2] forKey: @"distance"];
-        [self saveDocument: doc];
+        [self saveDocument: doc collection: self.defaultCollection];
     }
     
     CBLQueryExpression* distance = [CBLQueryFunction cosineDistanceBetween: EXPR_PROP(@"v1")

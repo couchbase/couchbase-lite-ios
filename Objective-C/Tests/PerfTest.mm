@@ -132,6 +132,13 @@ static NSString* sResourceDir;
     return _db;
 }
 
+- (CBLCollection*) defaultCollection {
+    NSError* error;
+    CBLCollection* collection = [_db defaultCollection: &error];
+    Assert(collection);
+    AssertNil(error);
+    return collection;
+}
 
 - (void) setUp {
     // Subclasses can override this.

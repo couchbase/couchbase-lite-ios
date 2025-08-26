@@ -61,7 +61,7 @@
 }
 
 - (void) testAddCollectionsToDatabaseInitiatedConfig {
-    [self createDocNumbered: nil start: 0 num: 5];
+    [self createDocNumbered: self.defaultCollection start: 0 num: 5];
     
     _config = [[CBLReplicatorConfiguration alloc] initWithDatabase: self.db
                                                             target: _target];
@@ -81,17 +81,17 @@
     
     [_config addCollections: @[col1a] config: nil];
     
-    AssertEqual(self.db.count, 5);
+    AssertEqual(self.defaultCollection.count, 5);
     AssertEqual(col1a.count, 7);
-    AssertEqual(self.otherDB.count, 0);
+    AssertEqual(self.otherDBDefaultCollection.count, 0);
     AssertEqual(col2a.count, 0);
     
     [self run: _config errorCode: 0 errorDomain: nil];
     
     // make sure it sync all docs
-    AssertEqual(self.db.count, 5);
+    AssertEqual(self.defaultCollection.count, 5);
     AssertEqual(col1a.count, 7);
-    AssertEqual(self.otherDB.count, 5);
+    AssertEqual(self.otherDBDefaultCollection.count, 5);
     AssertEqual(col2a.count, 7);
 }
 
@@ -140,18 +140,15 @@
         config.documentIDs = @[@"docID1", @"docID2"];
     }];
     
-    CBLCollection* defaultCollection = [self.db defaultCollection: &error];
-    AssertNotNil(defaultCollection);
-    
     // set the outer filters after adding default collection
-    [config addCollection: defaultCollection config: nil];
+    [config addCollection: self.defaultCollection config: nil];
     config.pushFilter = filter1;
     config.pullFilter = filter2;
     config.channels = @[@"channel1", @"channel2", @"channel3"];
     config.documentIDs = @[@"docID1", @"docID2"];
     config.conflictResolver = resolver;
     
-    CBLCollectionConfiguration* colConfig = [config collectionConfig: defaultCollection];
+    CBLCollectionConfiguration* colConfig = [config collectionConfig: self.defaultCollection];
     Assert(colConfig.pushFilter == filter1);
     Assert(colConfig.pullFilter == filter2);
     AssertEqualObjects(colConfig.channels, (@[@"channel1", @"channel2", @"channel3"]));
@@ -159,29 +156,30 @@
     Assert(colConfig.conflictResolver == resolver);
 }
 
-- (void) testCreateConfigWithDatabase {
+- (void) testCreateConfigWithCollection {
+    NSError* error;
     NSURL* url = [NSURL URLWithString: @"wss://foo"];
     CBLURLEndpoint* endpoint = [[CBLURLEndpoint alloc] initWithURL: url];
-    CBLReplicatorConfiguration* config = [[CBLReplicatorConfiguration alloc] initWithDatabase: self.db
-                                                                                       target: endpoint];
+    CBLCollection* col1a = [self.db createCollectionWithName: @"colA"
+                                                       scope: @"scopeA" error: &error];
+    AssertNotNil(col1a);
+    
+    CBLCollectionConfiguration* colConfig = [[CBLCollectionConfiguration alloc] initWithCollection: col1a];
+    CBLReplicatorConfiguration* config = [[CBLReplicatorConfiguration alloc] initWithCollections: @[colConfig]
+                                                                                          target: endpoint];
     
     AssertEqual(config.collections.count, 1);
-    NSError* error = nil;
-    CBLCollection* defaultCollection = [self.db defaultCollection: &error];
-    AssertNotNil(defaultCollection);
-    AssertEqualObjects(config.collections[0], defaultCollection);
-    CBLCollectionConfiguration* colConfig = [config collectionConfig: defaultCollection];
-    AssertNotNil(colConfig);
+    AssertEqualObjects(config.collections[0], col1a);
+    CBLCollectionConfiguration* colConfig2 = [config collectionConfig: col1a];
+    AssertNotNil(colConfig2);
     
-    // TODO: colConfig.collection == defaultCollection
-    
-    AssertNil(colConfig.conflictResolver);
-    AssertNil(colConfig.channels);
-    AssertNil(colConfig.pushFilter);
-    AssertNil(colConfig.pullFilter);
-    AssertNil(colConfig.documentIDs);
-    
-    Assert(config.database == self.db);
+    // only value match
+    AssertEqualObjects(colConfig2.collection.fullName, col1a.fullName);
+    AssertNil(colConfig2.conflictResolver);
+    AssertNil(colConfig2.channels);
+    AssertNil(colConfig2.pushFilter);
+    AssertNil(colConfig2.pullFilter);
+    AssertNil(colConfig2.documentIDs);
 }
 
 - (void) testConfigWithDatabaseAndConflictResolver {
@@ -196,10 +194,7 @@
     }];
     config.conflictResolver = resolver;
     
-    NSError* error = nil;
-    CBLCollection* defaultCollection = [self.db defaultCollection: &error];
-    AssertNotNil(defaultCollection);
-    CBLCollectionConfiguration* colConfig = [config collectionConfig: defaultCollection];
+    CBLCollectionConfiguration* colConfig = [config collectionConfig: self.defaultCollection];
     AssertNotNil(colConfig);
     
     Assert(config.conflictResolver == resolver);
@@ -219,10 +214,10 @@
         return nil;
     }];
     colConfig.conflictResolver = resolver;
-    colConfig = [config collectionConfig: defaultCollection];
+    colConfig = [config collectionConfig: self.defaultCollection];
     Assert(colConfig.conflictResolver == resolver);
     
-    [config addCollection: defaultCollection config: colConfig];
+    [config addCollection: self.defaultCollection config: colConfig];
     Assert(config.conflictResolver == resolver);
 }
 
@@ -239,9 +234,7 @@
     config.documentIDs = @[@"docID1", @"docID2"];
     
     NSError* error = nil;
-    CBLCollection* defaultCollection = [self.db defaultCollection: &error];
-    AssertNotNil(defaultCollection);
-    CBLCollectionConfiguration* colConfig = [config collectionConfig: defaultCollection];
+    CBLCollectionConfiguration* colConfig = [config collectionConfig: self.defaultCollection];
     
     Assert(colConfig.pushFilter == filter1);
     Assert(colConfig.pullFilter == filter2);
@@ -253,7 +246,7 @@
     config.pullFilter = filter1;
     config.channels = @[@"channel1"];
     config.documentIDs = @[@"docID1"];
-    colConfig = [config collectionConfig: defaultCollection];
+    colConfig = [config collectionConfig: self.defaultCollection];
     
     Assert(colConfig.pushFilter == filter2);
     Assert(colConfig.pullFilter == filter1);
@@ -266,13 +259,13 @@
     colConfig.channels = @[@"channel1", @"channel2"];
     colConfig.documentIDs = @[@"doc1", @"doc2"];
     
-    colConfig = [config collectionConfig: defaultCollection];
+    colConfig = [config collectionConfig: self.defaultCollection];
     Assert(colConfig.pushFilter == filter1);
     Assert(colConfig.pullFilter == filter2);
     AssertEqualObjects(colConfig.channels, (@[@"channel1", @"channel2"]));
     AssertEqualObjects(colConfig.documentIDs, (@[@"doc1", @"doc2"]));
     
-    [config addCollection: defaultCollection config: colConfig];
+    [config addCollection: self.defaultCollection config: colConfig];
     Assert(config.pushFilter == filter1);
     Assert(config.pullFilter == filter2);
     AssertEqualObjects(config.channels, (@[@"channel1", @"channel2"]));
@@ -605,6 +598,7 @@
 }
 
 - (void) testCollectionPushReplication: (BOOL)continous {
+    NSUInteger totalDocs = 10;
     NSError* error = nil;
     CBLCollection* col1a = [self.db createCollectionWithName: @"colA"
                                                        scope: @"scopeA" error: &error];
@@ -627,24 +621,31 @@
     AssertNotNil(col2b);
     AssertNil(error);
     
-    [self createDocNumbered: col1a start: 0 num: 10];
-    [self createDocNumbered: col1b start: 10 num: 10];
+    [self createDocNumbered: col1a start: 0 num: totalDocs];
+    [self createDocNumbered: col1b start: 10 num: totalDocs];
+    AssertEqual(col1a.count, totalDocs);
+    AssertEqual(col1b.count, totalDocs);
     AssertEqual(col2a.count, 0);
     AssertEqual(col2b.count, 0);
-    AssertEqual(col1a.count, 10);
-    AssertEqual(col1b.count, 10);
+    
+    // we have additional logic for default collection
+    [self createDocNumbered: self.defaultCollection start: 20 num: totalDocs];
+    AssertEqual(self.defaultCollection.count, totalDocs);
+    AssertEqual(self.otherDBDefaultCollection.count, 0);
     
     id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
-    CBLReplicatorConfiguration* config = [self configWithCollections: @[col1a, col1b]
+    CBLReplicatorConfiguration* config = [self configWithCollections: @[col1a, col1b, self.defaultCollection]
                                                               target: target
                                                                 type: kCBLReplicatorTypePush
                                                           continuous: continous];
     [self run: config errorCode: 0 errorDomain: nil];
     
-    AssertEqual(col2a.count, 10);
-    AssertEqual(col2b.count, 10);
-    AssertEqual(col1a.count, 10);
-    AssertEqual(col1b.count, 10);
+    AssertEqual(col2a.count, totalDocs);
+    AssertEqual(col2b.count, totalDocs);
+    AssertEqual(col1a.count, totalDocs);
+    AssertEqual(col1b.count, totalDocs);
+    AssertEqual(self.defaultCollection.count, totalDocs);
+    AssertEqual(self.otherDBDefaultCollection.count, totalDocs);
 }
 
 - (void) testCollectionSingleShotPullReplication {
@@ -686,8 +687,13 @@
     AssertEqual(col1a.count, 0);
     AssertEqual(col1b.count, 0);
     
+    // we have additional logic for default collection
+    [self createDocNumbered: self.otherDBDefaultCollection start: 20 num: totalDocs];
+    AssertEqual(self.otherDBDefaultCollection.count, totalDocs);
+    AssertEqual(self.defaultCollection.count, 0);
+    
     id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
-    CBLReplicatorConfiguration* config = [self configWithCollections: @[col1a, col1b]
+    CBLReplicatorConfiguration* config = [self configWithCollections: @[col1a, col1b, self.defaultCollection]
                                                               target: target
                                                                 type: kCBLReplicatorTypePull
                                                           continuous: continous];
@@ -697,6 +703,9 @@
     AssertEqual(col2b.count, totalDocs);
     AssertEqual(col1a.count, totalDocs);
     AssertEqual(col1b.count, totalDocs);
+    
+    AssertEqual(self.defaultCollection.count, totalDocs);
+    AssertEqual(self.otherDBDefaultCollection.count, totalDocs);
 }
 
 - (void) testCollectionSingleShotPushPullReplication {
@@ -730,29 +739,39 @@
     AssertNotNil(col2b);
     AssertNil(error);
     
-    [self createDocNumbered: col1a start: 0 num: 2];
-    [self createDocNumbered: col2a start: 10 num: 5];
+    [self createDocNumbered: col1a start: 0 num: 5];
+    [self createDocNumbered: col2a start: 5 num: 5];
     
-    [self createDocNumbered: col1b start: 5 num: 3];
-    [self createDocNumbered: col2b start: 15 num: 8];
+    [self createDocNumbered: col1b start: 20 num: 3];
+    [self createDocNumbered: col2b start: 23 num: 3];
     
-    AssertEqual(col1a.count, 2);
+    AssertEqual(col1a.count, 5);
     AssertEqual(col2a.count, 5);
     
     AssertEqual(col1b.count, 3);
-    AssertEqual(col2b.count, 8);
+    AssertEqual(col2b.count, 3);
+    
+    // we have additional logic for default collection
+    [self createDocNumbered: self.defaultCollection start: 30 num: 1];
+    [self createDocNumbered: self.otherDBDefaultCollection start: 31 num: 1];
+    AssertEqual(self.defaultCollection.count, 1);
+    AssertEqual(self.otherDBDefaultCollection.count, 1);
     
     id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
-    CBLReplicatorConfiguration* config = [self configWithCollections: @[col1a, col1b]
+    CBLReplicatorConfiguration* config = [self configWithCollections: @[col1a, col1b, self.defaultCollection]
                                                               target: target
                                                                 type: kCBLReplicatorTypePushAndPull
                                                           continuous: continous];
     [self run: config errorCode: 0 errorDomain: nil];
     
-    AssertEqual(col1a.count, 7);
-    AssertEqual(col2a.count, 7);
-    AssertEqual(col1b.count, 11);
-    AssertEqual(col2b.count, 11);
+    AssertEqual(col1a.count, 10);
+    AssertEqual(col2a.count, 10);
+    
+    AssertEqual(col1b.count, 6);
+    AssertEqual(col2b.count, 6);
+    
+    AssertEqual(self.defaultCollection.count, 2);
+    AssertEqual(self.otherDBDefaultCollection.count, 2);
 }
 
 - (void) testCollectionResetReplication {
@@ -1393,42 +1412,41 @@
 
 - (void) testPullConflictWithCollection {
     NSError* error = nil;
-    CBLCollection* defaultCollection = [self.db defaultCollection: &error];
     
     // Create a document and push it to otherDB:
     CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID:@"doc"];
     [doc1 setValue: @"Tiger" forKey: @"species"];
-    Assert([self.db saveDocument: doc1 error: &error]);
+    Assert([self.defaultCollection saveDocument: doc1 error: &error]);
     
-    CBLReplicatorConfiguration* pushConfig = [self configWithCollections: @[defaultCollection]
+    CBLReplicatorConfiguration* pushConfig = [self configWithCollections: @[self.defaultCollection]
                                                                   target: _target
                                                                     type: kCBLReplicatorTypePush
                                                               continuous: NO];
     [self run: pushConfig errorCode: 0 errorDomain: nil];
     
     // Now make different changes in db and otherDB:
-    doc1 = [[self.db documentWithID: @"doc"] toMutable];
+    doc1 = [[self.defaultCollection documentWithID: @"doc" error: &error] toMutable];
     [doc1 setValue: @"Hobbes" forKey: @"name"];
-    Assert([self.db saveDocument: doc1 error: &error]);
+    Assert([self.defaultCollection saveDocument: doc1 error: &error]);
     
-    CBLMutableDocument* doc2 = [[self.otherDB documentWithID: @"doc"] toMutable];
+    CBLMutableDocument* doc2 = [[self.otherDBDefaultCollection documentWithID: @"doc" error: &error] toMutable];
     Assert(doc2);
     [doc2 setValue: @"striped" forKey: @"pattern"];
-    Assert([self.otherDB saveDocument: doc2 error: &error]);
+    Assert([self.otherDBDefaultCollection saveDocument: doc2 error: &error]);
     
     [doc2 setValue: @"black-yellow" forKey: @"color"];
-    Assert([self.otherDB saveDocument: doc2 error: &error]);
+    Assert([self.otherDBDefaultCollection saveDocument: doc2 error: &error]);
     
     // Pull from otherDB, creating a conflict to resolve:
-    CBLReplicatorConfiguration* pullConfig = [self configWithCollections: @[defaultCollection]
+    CBLReplicatorConfiguration* pullConfig = [self configWithCollections: @[self.defaultCollection]
                                                                   target: _target
                                                                     type: kCBLReplicatorTypePull
                                                               continuous: NO];
     [self run: pullConfig errorCode: 0 errorDomain: nil];
     
     // Check that it was resolved:
-    AssertEqual(self.db.count, 1u);
-    CBLDocument* savedDoc = [self.db documentWithID: @"doc"];
+    AssertEqual(self.defaultCollection.count, 1u);
+    CBLDocument* savedDoc = [self.defaultCollection documentWithID: @"doc" error: &error];
     
     // Most-Active Win:
     NSDictionary* expectedResult = @{@"species": @"Tiger",
@@ -1440,41 +1458,39 @@
     // and that otherDB ends up with the same resolved document:
     [self run: pushConfig errorCode: 0 errorDomain: nil];
     
-    AssertEqual(self.otherDB.count, 1u);
-    CBLDocument* otherSavedDoc = [self.otherDB documentWithID: @"doc"];
+    AssertEqual(self.otherDBDefaultCollection.count, 1u);
+    CBLDocument* otherSavedDoc = [self.otherDBDefaultCollection documentWithID: @"doc" error: &error];
     AssertEqualObjects(otherSavedDoc.toDictionary, expectedResult);
 }
 
 - (void) testPullConflictNoBaseRevisionWithCollection {
     NSError* error;
-    CBLCollection* defaultCollection = [self.db defaultCollection: &error];
-    
     // Create the conflicting docs separately in each database. They have the same base revID
     // because the contents are identical, but because the db never pushed revision 1, it doesn't
     // think it needs to preserve its body; so when it pulls a conflict, there won't be a base
     // revision for the resolver.
     CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID: @"doc"];
     [doc1 setValue: @"Tiger" forKey: @"species"];
-    Assert([self.db saveDocument: doc1 error: &error]);
+    Assert([self.defaultCollection saveDocument: doc1 error: &error]);
     [doc1 setValue: @"Hobbes" forKey: @"name"];
-    Assert([self.db saveDocument: doc1 error: &error]);
+    Assert([self.defaultCollection saveDocument: doc1 error: &error]);
     
     CBLMutableDocument* doc2 = [[CBLMutableDocument alloc] initWithID: @"doc"];
     [doc2 setValue: @"Tiger" forKey: @"species"];
-    Assert([self.otherDB saveDocument: doc2 error: &error]);
+    Assert([self.otherDBDefaultCollection saveDocument: doc2 error: &error]);
     [doc2 setValue: @"striped" forKey: @"pattern"];
-    Assert([self.otherDB saveDocument: doc2 error: &error]);
+    Assert([self.otherDBDefaultCollection saveDocument: doc2 error: &error]);
     [doc2 setValue: @"black-yellow" forKey: @"color"];
-    Assert([self.otherDB saveDocument: doc2 error: &error]);
+    Assert([self.otherDBDefaultCollection saveDocument: doc2 error: &error]);
     
-    CBLReplicatorConfiguration* pullConfig = [self configWithCollections: @[defaultCollection]
+    CBLReplicatorConfiguration* pullConfig = [self configWithCollections: @[self.defaultCollection]
                                                                   target: _target
                                                                     type: kCBLReplicatorTypePull
                                                               continuous: NO];
     [self run: pullConfig errorCode: 0 errorDomain: nil];
     
-    AssertEqual(self.db.count, 1u);
-    CBLDocument* savedDoc = [self.db documentWithID: @"doc"];
+    AssertEqual(self.defaultCollection.count, 1u);
+    CBLDocument* savedDoc = [self.defaultCollection documentWithID: @"doc" error: &error];
     AssertEqualObjects(savedDoc.toDictionary, (@{@"species": @"Tiger",
                                                  @"pattern": @"striped",
                                                  @"color": @"black-yellow"}));
@@ -1482,42 +1498,41 @@
 
 - (void) testPullConflictDeleteWinsWithCollection {
     NSError* error;
-    CBLCollection* defaultCollection = [self.db defaultCollection: &error];
     
     // Create a document and push it to otherDB:
     CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] initWithID:@"doc"];
     [doc1 setValue: @"Tiger" forKey: @"species"];
-    Assert([self.db saveDocument: doc1 error: &error]);
+    Assert([self.defaultCollection saveDocument: doc1 error: &error]);
     
-    CBLReplicatorConfiguration* pushConfig = [self configWithCollections: @[defaultCollection]
+    CBLReplicatorConfiguration* pushConfig = [self configWithCollections: @[self.defaultCollection]
                                                                   target: _target
                                                                     type: kCBLReplicatorTypePush
                                                               continuous: NO];
     [self run: pushConfig errorCode: 0 errorDomain: nil];
     
     // Delete the document from db:
-    Assert([self.db deleteDocument: doc1 error: &error]);
-    AssertNil([self.db documentWithID: doc1.id]);
+    Assert([self.defaultCollection deleteDocument: doc1 error: &error]);
+    AssertNil([self.defaultCollection documentWithID: doc1.id error: &error]);
     
     // Update the document in otherDB:
-    CBLMutableDocument* doc2 = [[self.otherDB documentWithID: doc1.id] toMutable];
+    CBLMutableDocument* doc2 = [[self.otherDBDefaultCollection documentWithID: doc1.id error: &error] toMutable];
     Assert(doc2);
     [doc2 setValue: @"striped" forKey: @"pattern"];
-    Assert([self.otherDB saveDocument: doc2 error: &error]);
+    Assert([self.otherDBDefaultCollection saveDocument: doc2 error: &error]);
     
     [doc2 setValue: @"black-yellow" forKey: @"color"];
-    Assert([self.otherDB saveDocument: doc2 error: &error]);
+    Assert([self.otherDBDefaultCollection saveDocument: doc2 error: &error]);
     
     // Pull from otherDB, creating a conflict to resolve:
-    CBLReplicatorConfiguration* pullConfig = [self configWithCollections: @[defaultCollection]
+    CBLReplicatorConfiguration* pullConfig = [self configWithCollections: @[self.defaultCollection]
                                                                   target: _target
                                                                     type: kCBLReplicatorTypePull
                                                               continuous: NO];
     [self run: pullConfig errorCode: 0 errorDomain: nil];
     
     // Check that it was resolved as delete wins:
-    AssertEqual(self.db.count, 0u);
-    AssertNil([self.db documentWithID: doc1.id]);
+    AssertEqual(self.defaultCollection.count, 0u);
+    AssertNil([self.defaultCollection documentWithID: doc1.id error: &error]);
 }
 
 #pragma clang diagnostic pop

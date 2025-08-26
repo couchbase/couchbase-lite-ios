@@ -1085,5 +1085,4 @@ class TextModel: TestPredictiveModel {
         output.setInt(sc, forKey: "sc")
         return output
     }
-    
 }

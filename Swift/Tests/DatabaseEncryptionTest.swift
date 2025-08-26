@@ -37,7 +37,7 @@ class DatabaseEncryptionTest: CBLTestCase {
         config.directory = self.directory
         return try Database(name: "seekrit", config: config)
     }
-    
+
     func testUnEncryptedDatabase() throws {
         seekrit = try openSeekrit(password: nil)
         
@@ -206,5 +206,5 @@ class DatabaseEncryptionTest: CBLTestCase {
             i = i + 1
         }
     }
-    
+
 }
