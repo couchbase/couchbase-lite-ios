@@ -17,6 +17,8 @@
 //  limitations under the License.
 //
 
+#ifdef COUCHBASE_ENTERPRISE
+
 #import "CBLTestCase.h"
 #import "CBLDatabase+Internal.h"
 
@@ -55,7 +57,6 @@
     _seekrit = nil;
 }
 
-#ifdef COUCHBASE_ENTERPRISE
 - (void) testUnEncryptedDatabase {
     NSError* error;
     _seekrit = [self openSeekritWithPassword: nil error: &error];

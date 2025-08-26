@@ -16,6 +16,8 @@
 //  limitations under the License.
 //
 
+#if COUCHBASE_ENTERPRISE
+
 import XCTest
 import CouchbaseLiteSwift
 
@@ -36,7 +38,6 @@ class PredictiveQueryTest: CBLTestCase {
         return doc
     }
     
-    #if COUCHBASE_ENTERPRISE
     func testRegisterAndUnregisterModel() throws {
         createDocument(withNumbers: [1, 2, 3, 4, 5])
         

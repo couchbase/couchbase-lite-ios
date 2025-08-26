@@ -16,6 +16,9 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 //
+
+#ifdef COUCHBASE_ENTERPRISE
+
 #import "VectorSearchTest.h"
 #import "CBLJSON.h"
 
@@ -84,8 +87,6 @@
     AssertNotNil(results);
     return results;
 }
-
-#ifdef COUCHBASE_ENTERPRISE
 
 /**
  * 1. TestIsLazyDefaultValue

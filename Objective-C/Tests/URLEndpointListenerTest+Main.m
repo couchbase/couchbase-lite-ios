@@ -17,6 +17,8 @@
 //  limitations under the License.
 //
 
+#ifdef COUCHBASE_ENTERPRISE
+
 #import "URLEndpointListenerTest.h"
 #import "CollectionUtils.h"
 
@@ -250,7 +252,6 @@
 
 #pragma mark - Tests
 
-#ifdef COUCHBASE_ENTERPRISE
 - (void) testDefaultProperties {
     Config* config = [[Config alloc] initWithDatabase: self.otherDB];
     

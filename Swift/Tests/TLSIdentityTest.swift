@@ -16,6 +16,8 @@
 //  limitations under the License.
 //
 
+#if COUCHBASE_ENTERPRISE
+
 import XCTest
 @testable import CouchbaseLiteSwift
 
@@ -204,7 +206,6 @@ class TLSIdentityTest: CBLTestCase {
         }
     }
     
-    #if COUCHBASE_ENTERPRISE
     func testCreateGetDeleteServerIdentity() throws {
         try XCTSkipUnless(keyChainAccessAllowed)
         

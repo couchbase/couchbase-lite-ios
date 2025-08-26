@@ -17,6 +17,8 @@
 //  limitations under the License.
 //
 
+#ifdef COUCHBASE_ENTERPRISE
+
 #import "VectorSearchTest.h"
 #import "CBLWordEmbeddingModel.h"
 #import "CBLTestCustomLogSink.h"
@@ -241,8 +243,6 @@
 @end
 
 @implementation VectorSearchTest_Main
-
-#ifdef COUCHBASE_ENTERPRISE
 
 /**
  * 1. TestVectorIndexConfigurationDefaultValue

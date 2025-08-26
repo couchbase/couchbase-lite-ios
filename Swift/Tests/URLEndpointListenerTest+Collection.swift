@@ -17,6 +17,8 @@
 //  limitations under the License.
 //
 
+#if COUCHBASE_ENTERPRISE
+
 import XCTest
 @testable import CouchbaseLiteSwift
 
@@ -29,7 +31,6 @@ class URLEndpointListenerTest_Collection: URLEndpointListenerTest {
         try super.tearDownWithError()
     }
     
-    #if COUCHBASE_ENTERPRISE
     func testCollectionsSingleShotPushPullReplication() throws {
         if !self.keyChainAccessAllowed { return }
         

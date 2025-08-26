@@ -17,6 +17,8 @@
 //  limitations under the License.
 //
 
+#ifdef COUCHBASE_ENTERPRISE
+
 #import "CBLTestCase.h"
 #import "CBLTLSIdentity+Internal.h"
 #import "CBLTrustCheck.h"
@@ -248,7 +250,6 @@
     }];
 }
 
-#ifdef COUCHBASE_ENTERPRISE
 - (void) testCreateGetDeleteServerIdentity {
     XCTSkipUnless(self.keyChainAccessAllowed);
     

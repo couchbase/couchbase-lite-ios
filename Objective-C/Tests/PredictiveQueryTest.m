@@ -16,6 +16,8 @@
 //  limitations under the License.
 //
 
+#ifdef COUCHBASE_ENTERPRISE
+
 #import "CBLTestCase.h"
 #import "CBLJSON.h"
 
@@ -73,7 +75,6 @@
     return doc;
 }
 
-#ifdef COUCHBASE_ENTERPRISE
 - (void) testRegisterAndUnregisterModel {
     [self createDocumentWithNumbers: @[@1, @2, @3, @4, @5]];
     

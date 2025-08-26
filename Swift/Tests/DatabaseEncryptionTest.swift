@@ -17,6 +17,8 @@
 //  limitations under the License.
 //
 
+#if COUCHBASE_ENTERPRISE
+
 import XCTest
 import CouchbaseLiteSwift
 
@@ -37,8 +39,7 @@ class DatabaseEncryptionTest: CBLTestCase {
         config.directory = self.directory
         return try Database(name: "seekrit", config: config)
     }
-    
-    #if COUCHBASE_ENTERPRISE
+
     func testUnEncryptedDatabase() throws {
         seekrit = try openSeekrit(password: nil)
         

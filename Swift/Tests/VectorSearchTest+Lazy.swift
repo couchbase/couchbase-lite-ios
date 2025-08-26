@@ -16,6 +16,8 @@
 //  limitations under the License.
 //
 
+#if COUCHBASE_ENTERPRISE
+
 import XCTest
 @testable import CouchbaseLiteSwift
 
@@ -70,7 +72,6 @@ class VectorSearchTest_Lazy : VectorSearchTest {
         return nil
     }
     
-    #if COUCHBASE_ENTERPRISE
     /// 1. TestIsLazyDefaultValue
     ///
     /// Description

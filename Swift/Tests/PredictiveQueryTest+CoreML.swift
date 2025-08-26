@@ -16,6 +16,8 @@
 //  limitations under the License.
 //
 
+#if COUCHBASE_ENTERPRISE
+
 import XCTest
 import CoreML
 import CouchbaseLiteSwift
@@ -77,7 +79,6 @@ class PredictiveQueryWithCoreMLTest: CBLTestCase {
         try saveDocument(doc)
     }
 
-    #if COUCHBASE_ENTERPRISE
     func testMarsHabitatPricerModel() throws {
         let model = try self.model(name: "Mars/MarsHabitatPricer")!
         Database.prediction.registerModel(model, withName: "MarsHabitatPricer")

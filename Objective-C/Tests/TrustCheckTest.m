@@ -17,6 +17,8 @@
 //  limitations under the License.
 //
 
+#ifdef COUCHBASE_ENTERPRISE
+
 #import "CBLTestCase.h"
 #import "CBLTrustCheck.h"
 
@@ -55,7 +57,6 @@
     return certArray;
 }
 
-#ifdef COUCHBASE_ENTERPRISE
 - (void) testTrustCheckWithBasicPolicy {
     [CBLTrustCheck setAnchorCerts: [self getAnchorCerts] onlyThese: NO];
     

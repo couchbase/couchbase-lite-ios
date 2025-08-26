@@ -16,6 +16,8 @@
 //  limitations under the License.
 //
 
+#if COUCHBASE_ENTERPRISE
+
 import XCTest
 @testable import CouchbaseLiteSwift
 
@@ -325,7 +327,6 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
     
     // MARK: -- Tests
     
-    #if COUCHBASE_ENTERPRISE
     func testPort() throws {
         if !self.keyChainAccessAllowed { return }
         
