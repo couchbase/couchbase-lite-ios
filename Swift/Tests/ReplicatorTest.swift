@@ -1329,6 +1329,44 @@ class ReplicatorTest_Main: ReplicatorTest {
         XCTAssertNil(config.collectionConfigs.first?.pullFilter)
         XCTAssertNil(config.collectionConfigs.first?.pushFilter)
     }
+    
+    func createDocNumbered2(_ col: Collection, start: Int, num: Int) throws {
+        for i in start..<start+num {
+            let mdoc = createDocument("doc\(i)")
+            let filterProperty = i % 3 == 0 ? "type1" : (i % 3 == 1 ? "type2" : "type3")
+            mdoc.setString(filterProperty, forKey: "typeProp")
+            mdoc.setInt(i, forKey: "number1")
+            try col.save(document: mdoc)
+            
+        }
+    }
+        
+    func testFilterPerf() throws {
+        Database.log.console.level = .verbose
+        Database.log.console.domains = .replicator
+        try createDocNumbered2(otherDB_defaultCollection!, start: 0, num: 4000)
+        
+        var colConfig = CollectionConfiguration()
+        colConfig.pullFilter = { (doc, flags) in
+            if (doc.string(forKey: "typeProp") == "type1") {
+                return true
+            }
+            return false
+        }
+        
+        let target = DatabaseEndpoint(database: otherDB!)
+        var config = self.config(target: target, type: .pull, continuous: false)
+        config.addCollection(defaultCollection!, config: colConfig)
+        
+        // Run the replicator:
+        run(config: config, expectedError: nil)
+        
+        XCTAssertNil(try defaultCollection!.document(id: "doc100"))
+        XCTAssertNil(try defaultCollection!.document(id: "doc1001"))
+        XCTAssertNotNil(try defaultCollection!.document(id: "doc3000"))
+        
+    }
+    
 }
 
 class TestConflictResolver: ConflictResolverProtocol {
