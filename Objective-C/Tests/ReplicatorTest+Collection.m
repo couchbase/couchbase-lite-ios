@@ -20,7 +20,6 @@
 #import "ReplicatorTest.h"
 #import "CBLReplicator+Internal.h"
 
-#ifdef COUCHBASE_ENTERPRISE
 @interface ReplicatorTest_Collection : ReplicatorTest
 
 @end
@@ -1107,5 +1106,3 @@
 }
 
 @end
-
-#endif // COUCHBASE_ENTERPRISE

@@ -40,10 +40,6 @@
     [super tearDown];
 }
 
-// TODO: Remove https://issues.couchbase.com/browse/CBL-3206
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-
 #pragma mark - Tests without replication
 
 - (void) testConflictResolverConfigProperty {
@@ -68,8 +64,6 @@
 }
 
 #pragma mark - Tests with replication
-
-#ifdef COUCHBASE_ENTERPRISE
 
 - (void) makeConflictFor: (NSString*)docID
                withLocal: (nullable NSDictionary*) localData
@@ -1182,8 +1176,5 @@
     localDoc = [self.defaultCollection documentWithID: docId error: nil];
     Assert(localDoc.c4Doc.revFlags & kRevHasAttachments & localRevFlags);
 }
-
-#endif
-#pragma clang diagnostic pop
 
 @end

@@ -58,8 +58,6 @@
     }];
 }
 
-#ifdef COUCHBASE_ENTERPRISE
-
 - (void) testStopContinuousReplicator {
     id config = [self configWithTarget: _target type: kCBLReplicatorTypePushAndPull continuous: YES];
     CBLReplicator* r = [[CBLReplicator alloc] initWithConfig: config];
@@ -1275,8 +1273,6 @@
     
     freeifaddrs(ifaddrs);
 }
-
-#endif // COUCHBASE_ENTERPRISE
 
 #pragma mark - Replicator Config
 

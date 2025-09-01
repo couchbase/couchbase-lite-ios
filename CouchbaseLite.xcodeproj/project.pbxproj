@@ -107,13 +107,9 @@
 		1A416032227D0AD40061A567 /* ConflictResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A41602B227D08580061A567 /* ConflictResolver.swift */; };
 		1A416033227D0AD50061A567 /* Conflict.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A41602A227D08580061A567 /* Conflict.swift */; };
 		1A416035227D0AD50061A567 /* ConflictResolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A41602B227D08580061A567 /* ConflictResolver.swift */; };
-		1A4160C62283673E0061A567 /* ReplicatorTest+CustomConflict.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A4160C52283673E0061A567 /* ReplicatorTest+CustomConflict.m */; };
 		1A4160D82283694B0061A567 /* ReplicatorTest+CustomConflict.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A4160C52283673E0061A567 /* ReplicatorTest+CustomConflict.m */; };
-		1A4160DA22836C7F0061A567 /* ReplicatorTest+Main.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A4160D922836C7F0061A567 /* ReplicatorTest+Main.m */; };
 		1A4160DB22836E8C0061A567 /* ReplicatorTest+Main.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A4160D922836C7F0061A567 /* ReplicatorTest+Main.m */; };
-		1A4160DD228375950061A567 /* ReplicatorTest+Main.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A4160D922836C7F0061A567 /* ReplicatorTest+Main.m */; };
 		1A4160DE228375960061A567 /* ReplicatorTest+Main.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A4160D922836C7F0061A567 /* ReplicatorTest+Main.m */; };
-		1A4160DF228375990061A567 /* ReplicatorTest+CustomConflict.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A4160C52283673E0061A567 /* ReplicatorTest+CustomConflict.m */; };
 		1A4160E02283759A0061A567 /* ReplicatorTest+CustomConflict.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A4160C52283673E0061A567 /* ReplicatorTest+CustomConflict.m */; };
 		1A4FE76A225ED344009D5F43 /* MiscCppTest.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1A4FE769225ED344009D5F43 /* MiscCppTest.mm */; };
 		1A53B2862966AB910010A73E /* FullTextIndexExpression.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A53B2852966AB910010A73E /* FullTextIndexExpression.swift */; };
@@ -148,7 +144,6 @@
 		1A8F85092893F318008C4333 /* QueryTest+Collection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A8F84E72893F187008C4333 /* QueryTest+Collection.swift */; };
 		1A8F850A2893F32F008C4333 /* QueryTest+Collection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A8F84E72893F187008C4333 /* QueryTest+Collection.swift */; };
 		1A8F850B2893F330008C4333 /* QueryTest+Collection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A8F84E72893F187008C4333 /* QueryTest+Collection.swift */; };
-		1A908401288027EE006B1885 /* ReplicatorTest+Collection.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A908400288027EE006B1885 /* ReplicatorTest+Collection.m */; };
 		1A93FAFC24F735250015D54D /* ReplicatorTest+PendingDocIds.m in Sources */ = {isa = PBXBuildFile; fileRef = 1ACDD8C223FF5BB200AF5D56 /* ReplicatorTest+PendingDocIds.m */; };
 		1A93FB0824F735260015D54D /* ReplicatorTest+PendingDocIds.m in Sources */ = {isa = PBXBuildFile; fileRef = 1ACDD8C223FF5BB200AF5D56 /* ReplicatorTest+PendingDocIds.m */; };
 		1A93FB0924F737320015D54D /* ReplicatorTest+PendingDocIds.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A690CC824214EE70084D017 /* ReplicatorTest+PendingDocIds.swift */; };
@@ -229,7 +224,6 @@
 		1ABA63AC288135F4005835E7 /* CBLCollectionTypes.h in Headers */ = {isa = PBXBuildFile; fileRef = 1ABA639F288135A1005835E7 /* CBLCollectionTypes.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		1ABA63AD288135F7005835E7 /* CBLCollectionTypes.h in Headers */ = {isa = PBXBuildFile; fileRef = 1ABA639F288135A1005835E7 /* CBLCollectionTypes.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		1ABA63AE288135F8005835E7 /* CBLCollectionTypes.h in Headers */ = {isa = PBXBuildFile; fileRef = 1ABA639F288135A1005835E7 /* CBLCollectionTypes.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		1ABA63AF28813A8A005835E7 /* ReplicatorTest+Collection.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A908400288027EE006B1885 /* ReplicatorTest+Collection.m */; };
 		1ABA63B028813A8C005835E7 /* ReplicatorTest+Collection.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A908400288027EE006B1885 /* ReplicatorTest+Collection.m */; };
 		1ABA63B128813A8D005835E7 /* ReplicatorTest+Collection.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A908400288027EE006B1885 /* ReplicatorTest+Collection.m */; };
 		1ABA63B32881A9DC005835E7 /* CBLCollectionConfiguration+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 1ABA63B22881A93C005835E7 /* CBLCollectionConfiguration+Internal.h */; };
@@ -7489,15 +7483,12 @@
 				9388CC3F21C1E2B8005CA66D /* LogTest.m in Sources */,
 				40938A542D4B464500691393 /* CBLTestCustomLogSink.m in Sources */,
 				938CFA2F1E442B5700291631 /* DatabaseTest.m in Sources */,
-				1A4160DD228375950061A567 /* ReplicatorTest+Main.m in Sources */,
 				1A93FB0824F735260015D54D /* ReplicatorTest+PendingDocIds.m in Sources */,
 				938CFA2D1E442B4200291631 /* DocumentTest.m in Sources */,
 				AEAFDD982D15EC3B00BA5C9C /* LogTestOld.m in Sources */,
 				40086B572B803B4300DA6770 /* CBLBlockConflictResolver.m in Sources */,
 				1A0BFA4727B5274300BA84E5 /* ReplicatorTest+SG.m in Sources */,
-				1A4160DF228375990061A567 /* ReplicatorTest+CustomConflict.m in Sources */,
 				93CD01901E95546200AFB3FA /* DictionaryTest.m in Sources */,
-				1ABA63AF28813A8A005835E7 /* ReplicatorTest+Collection.m in Sources */,
 				AEFEED762D4A8D82008AF4C2 /* PartialIndexTest.m in Sources */,
 				1A621D792887DCFC0017F905 /* QueryTest+Collection.m in Sources */,
 				9388CBAC21BD917D005CA66D /* DocumentExpirationTest.m in Sources */,
@@ -7648,11 +7639,9 @@
 				9388CBAB21BD916F005CA66D /* DocumentExpirationTest.m in Sources */,
 				1AF555C422946ED90077DF6D /* QueryTest+Main.m in Sources */,
 				9378C5971E25B473001BB196 /* CBLTestCase.m in Sources */,
-				1A4160C62283673E0061A567 /* ReplicatorTest+CustomConflict.m in Sources */,
 				AEAFDD972D15EC3B00BA5C9C /* LogTestOld.m in Sources */,
 				9378C5911E25B3F0001BB196 /* DatabaseTest.m in Sources */,
 				1A4FE76A225ED344009D5F43 /* MiscCppTest.mm in Sources */,
-				1A908401288027EE006B1885 /* ReplicatorTest+Collection.m in Sources */,
 				AE5F25582CAC310700AAB7F4 /* UnnestArrayIndexTest.m in Sources */,
 				1AC83BC821C026D100792098 /* DateTimeQueryFunctionTest.m in Sources */,
 				938B3702200D7D1D004485D8 /* MigrationTest.m in Sources */,
@@ -7663,7 +7652,6 @@
 				1AC16CE7287D4D820041728F /* CollectionTest.m in Sources */,
 				27E35A821E8B3B3A00E103F9 /* ReplicatorTest.m in Sources */,
 				1AAF6372226A8B060016754C /* QueryTest+Meta.m in Sources */,
-				1A4160DA22836C7F0061A567 /* ReplicatorTest+Main.m in Sources */,
 				1A621D6D2887DCE70017F905 /* QueryTest+Collection.m in Sources */,
 				1AAF6383226A8DBF0016754C /* QueryTest+Join.m in Sources */,
 				1A0BFA4527B5273B00BA84E5 /* ReplicatorTest+SG.m in Sources */,
