@@ -241,31 +241,6 @@ public final class Replicator {
             .eraseToAnyPublisher()
     }
     
-    /// Get pending document ids for default collection. If the default collection is not part of
-    /// the replication, an Illegal State Exception will be thrown.
-    ///
-    /// - Returns: A  set of document Ids, each of which has one or more pending revisions
-    @available(*, deprecated, message: "Use pendingDocumentIds(collection:) instead.")
-    public func pendingDocumentIds() throws -> Set<String> {
-        return try impl.pendingDocumentIDs()
-    }
-
-    /// Check whether the document in the default collection is pending to push or not. If the
-    /// default collection is not  part of the replicator, an Illegal State Exception will be thrown.
-    ///
-    /// - Parameter documentID: The ID of the document to check
-    /// - Returns: true if the document has one or more revisions pending, false otherwise
-    @available(*, deprecated, message: "Use isDocumentPending(_ documentID:collection:) instead.")
-    public func isDocumentPending(_ documentID: String) throws -> Bool {
-        var error: NSError?
-        let result = impl.isDocumentPending(documentID, error: &error)
-        if let err = error {
-            throw err
-        }
-
-        return result
-    }
-    
     /// Get pending document ids for the given collection. If the given collection is not part of
     /// the replication, an Invalid Parameter Exception will be thrown.
     ///

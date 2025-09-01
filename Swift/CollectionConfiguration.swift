@@ -47,10 +47,6 @@ public struct CollectionConfiguration {
     /// If not specified, all docs in the collection will be replicated.
     public var documentIDs: Array<String>?
     
-    /// Initializes the configuration. 
-    @available(*, deprecated, message: "Use init(collection:) instead.")
-    public init() { }
-    
     /// Initializes the configuration with the specified collection.
     ///
     /// - Parameter collection: The collection.
@@ -64,8 +60,6 @@ public struct CollectionConfiguration {
     /// (no filters and no custom conflict resolvers).
     ///
     /// This is a convenience method for configuring multiple collections with default configurations.
-    /// If custom configurations are needed, construct `CollectionConfiguration` objects
-    /// directly instead.
     ///
     /// - Parameter collections: An array of `Collection` objects to configure for replication.
     /// - Returns: An array of `CollectionConfiguration` objects corresponding to the given collections.
@@ -73,6 +67,30 @@ public struct CollectionConfiguration {
         Precondition.assertNotEmpty(collections, name: "collections")
         return collections.map { CollectionConfiguration(collection: $0) }
     }
+    
+    /// Creates an array of `CollectionConfiguration` objects from the given collections with the same configuration closure.
+    ///
+    /// Each collection is wrapped in a `CollectionConfiguration`using default settings
+    /// (no filters and no custom conflict resolvers).
+    ///
+    /// This is a convenience method for configuring multiple collections with the same configuration.
+    /// If custom configurations are needed, construct `CollectionConfiguration` objects
+    /// directly instead.
+    ///
+    /// - Parameter collections: An array of `Collection` objects to configure for replication.
+    /// - Parameter config: A closure that takes a `CollectionConfiguration` object
+    /// - Returns: An array of `CollectionConfiguration` objects corresponding to the given collections.
+    /// Creates configurations from an array of collections with a configuration closure.
+    static func fromCollections(_ collections: [Collection], config: (CollectionConfiguration) -> Void) -> [CollectionConfiguration] {
+        Precondition.assertNotEmpty(collections, name: "collections")
+        return collections.map {
+            let colConfig = CollectionConfiguration(collection: $0)
+            config(colConfig)
+            return colConfig
+        }
+    }
+    
+    
     
     // MARK: internal
     
@@ -96,13 +114,7 @@ public struct CollectionConfiguration {
         // from the ReplicatorConfiguration used for setting up the filter and
         // conflict resolver wrapper functions. Once we removed the deprecated API,
         // the collection doesn't need to be passed anymore.
-        let config: CBLCollectionConfiguration
-        if let coll = self.collection {
-            config = CBLCollectionConfiguration(collection: coll.impl)
-        } else {
-            // If no collection specified, use the old API.
-            config = CBLCollectionConfiguration()
-        }
+        let config = CBLCollectionConfiguration(collection: collection.impl)
         
         config.channels = self.channels
         config.documentIDs = self.documentIDs

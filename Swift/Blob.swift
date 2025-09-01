@@ -152,7 +152,7 @@ extension Blob: Codable {
         guard decoder is DocumentDecoder || decoder is FleeceDecoder || decoder is QueryResultDecoder else {
             throw CBLError.create(CBLError.decodingError, description: "Cannot decode Blob from non-CBL decoder")
         }
-        var container = try decoder.singleValueContainer()
+        let container = try decoder.singleValueContainer()
         let blob = try container.decode(Blob.self)
         self.init(blob.impl)
     }
