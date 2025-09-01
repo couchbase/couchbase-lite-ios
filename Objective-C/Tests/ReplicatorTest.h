@@ -2,7 +2,7 @@
 //  ReplicatorTest.h
 //  CouchbaseLite
 //
-//  Copyright (c) 2017 Couchbase, Inc All rights reserved.
+//  Copyright (c) 2025 Couchbase, Inc All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -110,6 +110,10 @@ NS_ASSUME_NONNULL_BEGIN
                                                target: (id<CBLEndpoint>)target
                                                  type: (CBLReplicatorType)type
                                            continuous: (BOOL)continuous;
+
+- (CBLReplicatorConfiguration*) configForCollection:(CBLCollection*)collection
+                                             target:(id <CBLEndpoint>)target
+                                        configBlock:(nullable void (^)(CBLCollectionConfiguration *config))block;
 
 #pragma mark - Run Replicator
 
