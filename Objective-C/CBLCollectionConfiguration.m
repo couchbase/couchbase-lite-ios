@@ -27,10 +27,6 @@
 @synthesize pushFilter=_pushFilter, pullFilter=_pullFilter;
 @synthesize conflictResolver=_conflictResolver;
 
-- (instancetype) init {
-    return [super init];
-}
-
 - (instancetype) initWithCollection: (CBLCollection*)collection {
     self = [super init];
     if (self) {
@@ -57,6 +53,20 @@
     NSMutableArray* configs = [NSMutableArray arrayWithCapacity: collections.count];
     for (CBLCollection* collection in collections) {
         [configs addObject: [[CBLCollectionConfiguration alloc] initWithCollection: collection]];
+    }
+    return configs;
+}
+
++ (NSArray<CBLCollectionConfiguration*>*) fromCollections:(NSArray<CBLCollection*>*)collections
+                                                   config:(void (^)(CBLCollectionConfiguration* config))config {
+    [CBLPrecondition assertArrayNotEmpty:collections name:@"collections"];
+    NSMutableArray* configs = [NSMutableArray arrayWithCapacity:collections.count];
+    for (CBLCollection* collection in collections) {
+        CBLCollectionConfiguration* colConfig = [[CBLCollectionConfiguration alloc] initWithCollection:collection];
+        if (config) {
+            config(colConfig);
+        }
+        [configs addObject:colConfig];
     }
     return configs;
 }

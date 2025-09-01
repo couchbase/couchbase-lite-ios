@@ -138,16 +138,6 @@ the replicator change notification.
 - (void) removeChangeListenerWithToken: (id<CBLListenerToken>)token;
 
 /**
- Get pending document ids for default collection. If the default collection is not part of the
- replication, an Illegal State Exception will be thrown.
- 
- @param error On return, the error if any.
- @return A  set of document Ids, each of which has one or more pending revisions. If error, nil.
- */
-- (nullable NSSet<NSString*>*) pendingDocumentIDs: (NSError**)error
-__deprecated_msg("Use [replicator pendingDocumentIDsForCollection:error:] instead.");
-
-/**
  Get pending document ids for the given collection. If the given collection is not part of
  the replication, an Illegal State Exception will be thrown.
  
@@ -157,16 +147,6 @@ __deprecated_msg("Use [replicator pendingDocumentIDsForCollection:error:] instea
  */
 - (nullable NSSet<NSString*>*) pendingDocumentIDsForCollection: (CBLCollection*)collection
                                                          error: (NSError**)error;
-
-/**
- Check whether the document in the default collection is pending to push or not. If the default
- collection is not  part of the replicator, an Illegal State Exception will be thrown.
- 
- @param documentID The ID of the document to check
- @param error On return, the error if any.
- @return true if the document has one or more revisions pending, false otherwise. */
-- (BOOL) isDocumentPending: (NSString*)documentID error: (NSError**)error NS_SWIFT_NOTHROW
-__deprecated_msg("Use [replicator isDocumentPending:collection:error:] instead.");
 
 /**
  Check whether the document in the given collection is pending to push or not. If the given
