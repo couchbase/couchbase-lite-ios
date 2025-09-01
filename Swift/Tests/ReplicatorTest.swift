@@ -55,7 +55,7 @@ class ReplicatorTest: CBLTestCase {
                       maxAttempts: maxAttempts)
     }
     
-    func config(configs: [CollectionConfiguration]? = nil,
+    func config(configs: [CollectionConfiguration],
                 target: Endpoint,
                 type: ReplicatorType = .pushAndPull,
                 continuous: Bool = false,
@@ -64,12 +64,7 @@ class ReplicatorTest: CBLTestCase {
                 serverCert: SecCertificate? = nil,
                 maxAttempts: UInt = 0) -> ReplicatorConfiguration {
         var config: ReplicatorConfiguration
-        if let configs = configs {
-            config = ReplicatorConfiguration(collections: configs, target: target)
-        } else {
-            config = ReplicatorConfiguration(target: target)
-        }
-        
+        config = ReplicatorConfiguration(collections: configs, target: target)
         config.replicatorType = type
         config.continuous = continuous
         config.authenticator = auth
@@ -968,7 +963,7 @@ class ReplicatorTest_Main: ReplicatorTest {
         func expectExceptionFor(_ val: TimeInterval) throws {
             do {
                 try CBLTestHelper.catchException {
-                    var config = self.config(target: target, type: .pushAndPull, continuous: true)
+                    var config = self.config(collections: [self.defaultCollection!], target: target, type: .pushAndPull, continuous: true)
                     config.heartbeat = val
                 }
             } catch {
@@ -1079,13 +1074,18 @@ class ReplicatorTest_Main: ReplicatorTest {
     
     func testCustomMaxAttemptWaitTime() {
         // single shot
-        var config: ReplicatorConfiguration = self.config(target: self.kConnRefusedTarget,
-                                                          type: .pushAndPull, continuous: false)
+        var config: ReplicatorConfiguration = self.config(collections: [self.defaultCollection!],
+                                                          target: self.kConnRefusedTarget,
+                                                          type: .pushAndPull,
+                                                          continuous: false)
         config.maxAttemptWaitTime = 444
         XCTAssertEqual(config.maxAttemptWaitTime, 444)
         
         // continous
-        config = self.config(target: kConnRefusedTarget, type: .pushAndPull, continuous: true)
+        config = self.config(collections: [self.defaultCollection!],
+                             target: kConnRefusedTarget,
+                             type: .pushAndPull,
+                             continuous: true)
         config.maxAttemptWaitTime = 555
         XCTAssertEqual(config.maxAttemptWaitTime, 555)
     }
@@ -1094,8 +1094,10 @@ class ReplicatorTest_Main: ReplicatorTest {
         func expectException(_ val: TimeInterval) throws {
             do {
                 try CBLTestHelper.catchException {
-                    var config: ReplicatorConfiguration = self.config(target: self.kConnRefusedTarget,
-                                                                      type: .pushAndPull, continuous: false)
+                    var config: ReplicatorConfiguration = self.config(collections: [self.defaultCollection!],
+                                                                      target: self.kConnRefusedTarget,
+                                                                      type: .pushAndPull,
+                                                                      continuous: false)
                     config.maxAttemptWaitTime = val
                 }
             } catch {
@@ -1110,8 +1112,10 @@ class ReplicatorTest_Main: ReplicatorTest {
     
     func testMaxAttemptWaitTimeOfReplicator() {
         let x = self.expectation(description: "repl finish")
-        var config = self.config(collections: [defaultCollection!], target: kConnRefusedTarget,
-                                 type: .pushAndPull, continuous: false)
+        var config = self.config(collections: [defaultCollection!],
+                                 target: kConnRefusedTarget,
+                                 type: .pushAndPull,
+                                 continuous: false)
         config.maxAttempts = 4
         config.maxAttemptWaitTime = 2
 

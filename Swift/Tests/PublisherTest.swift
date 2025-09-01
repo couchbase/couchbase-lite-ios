@@ -48,7 +48,7 @@ class PublisherTest: CBLTestCase {
             .store(in: &cancellables)
 
         // it also saves the document into the db
-        let doc = try generateDocument(withID: "doc1")
+        try generateDocument(withID: "doc1")
         
         XCTAssert(cancellables.count == 1)
         waitForExpectations(timeout: expTimeout)
@@ -65,7 +65,7 @@ class PublisherTest: CBLTestCase {
             .store(in: &cancellables)
 
         // it also saves the document into the db
-        let doc = try generateDocument(withID: "doc1")
+        try generateDocument(withID: "doc1")
         
         XCTAssert(cancellables.count == 1)
         waitForExpectations(timeout: expTimeout)
@@ -80,9 +80,10 @@ class PublisherTest: CBLTestCase {
         try createDocNumbered(defaultCollection!, start: 0, num: 10)
         
         let target = DatabaseEndpoint(database: otherDB!)
-        var config = ReplicatorConfiguration(target: target)
+        let colConfig = CollectionConfiguration(collection: self.defaultCollection!)
+        var config = ReplicatorConfiguration(collections: [colConfig], target: target)
         config.replicatorType = .push
-        config.addCollection(defaultCollection!)
+        
         let replicator = Replicator(config: config)
         
         replicator.changePublisher()
@@ -108,9 +109,10 @@ class PublisherTest: CBLTestCase {
         try createDocNumbered(defaultCollection!, start: 0, num: 10)
         
         let target = DatabaseEndpoint(database: otherDB!)
-        var config = ReplicatorConfiguration(target: target)
+        let colConfig = CollectionConfiguration(collection: self.defaultCollection!)
+        var config = ReplicatorConfiguration(collections: [colConfig], target: target)
         config.replicatorType = .push
-        config.addCollection(defaultCollection!)
+        
         let replicator = Replicator(config: config)
         
         replicator.documentReplicationPublisher()
