@@ -205,13 +205,9 @@ public struct ReplicatorConfiguration {
         self.target = target
         
         for config in collections {
-            guard let collection = config.collection else {
-                Precondition.assert(false, message: "Each collection configuration must have a non-null collection.")
-                return
-            }
-            
+            let collection = config.collection
             if self.db == nil {
-                self.db = config.collection!.database
+                self.db = collection.database
             } else {
                 Precondition.assert(
                     self.db!.impl == collection.database.impl,
@@ -225,7 +221,7 @@ public struct ReplicatorConfiguration {
     ///
     /// - Parameter config: The configuration object.
     public init(config: ReplicatorConfiguration) {
-        self.db = config.database
+        self.db = config.db
         self.target = config.target
         self.replicatorType = config.replicatorType
         self.continuous = config.continuous
@@ -255,20 +251,8 @@ public struct ReplicatorConfiguration {
         let target = self.target as! IEndpoint
         
         var configs: [CBLCollectionConfiguration] = []
-        for (col, config) in self.collectionConfigMap {
-            if config.collection == nil {
-                // When we remove the deprecated API, config.collection will be nonull
-                // and this code that creates a new collection object can be removed.
-                var copy = CollectionConfiguration(collection: col)
-                copy.channels = config.channels
-                copy.documentIDs = config.documentIDs
-                copy.pushFilter = config.pushFilter
-                copy.pullFilter = config.pullFilter
-                copy.conflictResolver = config.conflictResolver
-                configs.append(copy.toImpl(col))
-            } else {
-                configs.append(config.toImpl(col))
-            }
+        for config in self.collectionConfigMap.values {
+            configs.append(config.toImpl())
         }
         
         var c = CBLReplicatorConfiguration(collections: configs, target: target.toImpl())
@@ -296,12 +280,6 @@ public struct ReplicatorConfiguration {
     
     var collectionConfigMap = [Collection: CollectionConfiguration]()
     
-    var database: Database {
-        guard let db = self.db else {
-            fatalError("Attempt to access database property but no collections added")
-        }
-        return db
-    }
     var db: Database?
     
     fileprivate var didMaxAttemptUpdate: Bool = false

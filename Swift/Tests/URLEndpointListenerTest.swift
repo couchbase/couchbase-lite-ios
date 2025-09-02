@@ -181,7 +181,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
                                      serverCert: listener.tlsIdentity!.certs[0])
         let changeListener = { (change: ReplicatorChange) in
             if change.status.activity == .stopped {
-                if change.replicator.config.database.name == "db1" {
+                if change.replicator.config.collectionConfigs[0].collection.name == "db1" {
                     exp1.fulfill()
                 } else {
                     exp2.fulfill()
@@ -242,13 +242,13 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
         
         let changeListener = { (change: ReplicatorChange) in
             if change.status.activity == .idle && change.status.progress.completed == change.status.progress.total {
-                if change.replicator.config.database.name == "db2" {
+                if change.replicator.config.collectionConfigs[0].collection.name == "db2" {
                     idleExp2.fulfill()
                 } else {
                     idleExp1.fulfill()
                 }
             } else if change.status.activity == .stopped {
-                if change.replicator.config.database.name == "db2" {
+                if change.replicator.config.collectionConfigs[0].collection.name == "db2" {
                     stopExp2.fulfill()
                 } else {
                     stopExp1.fulfill()

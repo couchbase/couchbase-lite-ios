@@ -23,7 +23,7 @@ import CouchbaseLiteSwift_Private
 /// The collection configuration that can be configured specifically for the replication.
 public struct CollectionConfiguration {
     /// The collection.
-    public var collection: Collection?
+    public let collection: Collection
     
     /// The custom conflict resolver function. If this value is nil, the default conflict resolver will be used..
     public var conflictResolver: ConflictResolverProtocol?
@@ -94,37 +94,20 @@ public struct CollectionConfiguration {
     
     // MARK: internal
     
-    /// Used by ReplicatatorConfiguration's addCollection()
-    init(config: CollectionConfiguration?) {
-        guard let config = config else { return }
-        
-        self.collection = config.collection
-        self.conflictResolver = config.conflictResolver
-        self.pushFilter = config.pushFilter
-        self.pullFilter = config.pullFilter
-        self.channels = config.channels
-        self.documentIDs = config.documentIDs
-    }
-    
-    func toImpl(_ collection: Collection) -> CBLCollectionConfiguration {
-        // This function is called by ReplicatorConfiguration's toImpl() to construct
-        // the objective-c CBLCollectionConfiguration version.
-        //
-        // When using the old (deprecated now) api, the collection passed to this function is
-        // from the ReplicatorConfiguration used for setting up the filter and
-        // conflict resolver wrapper functions. Once we removed the deprecated API,
-        // the collection doesn't need to be passed anymore.
+    func toImpl() -> CBLCollectionConfiguration {
         let config = CBLCollectionConfiguration(collection: collection.impl)
-        
         config.channels = self.channels
         config.documentIDs = self.documentIDs
-        
-        if let pushFilter = self.wrapFilter(push: true, collection: collection) {
-            config.pushFilter = pushFilter
+        if let pushFilter = self.pushFilter {
+            config.pushFilter = { doc, flags in
+                pushFilter(Document(doc, collection: collection), DocumentFlags(rawValue: Int(flags.rawValue)))
+            }
         }
         
-        if let pullFilter = self.wrapFilter(push: false, collection: collection) {
-            config.pullFilter = pullFilter
+        if let pullFilter = self.pullFilter {
+            config.pullFilter = { doc, flags in
+                pullFilter(Document(doc, collection: collection), DocumentFlags(rawValue: Int(flags.rawValue)))
+            }
         }
         
         if let resolver = self.conflictResolver {
@@ -134,16 +117,6 @@ public struct CollectionConfiguration {
         }
         
         return config
-    }
-    
-    func wrapFilter(push: Bool, collection: Collection) -> ((CBLDocument, CBLDocumentFlags) -> Bool)? {
-        guard let filter = push ? self.pushFilter : self.pullFilter else {
-            return nil
-        }
-        
-        return { (doc, flags) in
-            return filter(Document(doc, collection: collection), DocumentFlags(rawValue: Int(flags.rawValue)))
-        }
     }
 }
  

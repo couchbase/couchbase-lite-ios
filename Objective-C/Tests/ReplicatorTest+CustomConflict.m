@@ -57,10 +57,10 @@
     repl = [[CBLReplicator alloc] initWithConfig: rConfig];
     
     // checks whether the conflict resolver can be set-to/get-from config
-    AssertNotNil(rConfig.collectionConfigMap[self.defaultCollection].conflictResolver);
-    AssertEqualObjects(rConfig.collectionConfigMap[self.defaultCollection].conflictResolver, resolver);
-    AssertNotNil(repl.config.collectionConfigMap[self.defaultCollection].conflictResolver);
-    AssertEqualObjects(repl.config.collectionConfigMap[self.defaultCollection].conflictResolver, resolver);
+    AssertNotNil(rConfig.collectionConfigs[0].conflictResolver);
+    AssertEqualObjects(rConfig.collectionConfigs[0].conflictResolver, resolver);
+    AssertNotNil(repl.config.collectionConfigs[0].conflictResolver);
+    AssertEqualObjects(repl.config.collectionConfigs[0].conflictResolver, resolver);
 }
 
 #pragma mark - Tests with replication

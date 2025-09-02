@@ -63,7 +63,7 @@
                                                                                           target: endpoint];
     
     AssertEqual(config.collectionConfigs.count, 1);
-    AssertEqualObjects(config.collectionConfigMap[col1a].collection, col1a);
+    AssertEqualObjects(config.collectionConfigs[0].collection, col1a);
     CBLCollectionConfiguration* colConfig2 = config.collectionConfigs.firstObject;
     AssertNotNil(colConfig2);
     
@@ -76,7 +76,7 @@
     AssertNil(colConfig2.documentIDs);
 }
 
-- (void) testAddCollectionsWithCollectionConfig {
+- (void) testFromCollectionsWithCollectionConfig {
     NSError* error = nil;
     CBLCollection* col1a = [self.db createCollectionWithName: @"colA"
                                                        scope: @"scopeA" error: &error];
@@ -100,7 +100,6 @@
     
     NSArray<CBLCollectionConfiguration*>* colConfigs = [CBLCollectionConfiguration fromCollections: @[col1a, col1b] config:^(CBLCollectionConfiguration* config) {
         config.conflictResolver = resolver;
-        
         config.pushFilter = filter1;
         config.pullFilter = filter2;
         config.channels = @[@"channel1", @"channel2", @"channel3"];

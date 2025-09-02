@@ -203,9 +203,10 @@
 }
 
 - (CBLDatabase*) database {
-    if (!_database)
+    if (![_collectionConfigMap allKeys].count){
         [NSException raise: NSInternalInconsistencyException
                     format: @"%@", kCBLErrorMessageAccessDBWithoutCollection];
+    }
     return _database;
 }
 

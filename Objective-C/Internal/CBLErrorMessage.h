@@ -78,9 +78,6 @@ extern NSString* const kCBLErrorMessageNoDefaultCollectionInConfig;
 extern NSString* const kCBLErrorMessageNegativeHeartBeat;
 extern NSString* const kCBLErrorMessageNegativeMaxAttemptWaitTime;
 extern NSString* const kCBLErrorMessageAccessDBWithoutCollection;
-extern NSString* const kCBLErrorMessageAddInvalidCollection;
-extern NSString* const kCBLErrorMessageAddCollectionFromAnotherDB;
-extern NSString* const kCBLErrorMessageAddEmptyCollectionArray;
 
 @end
 
