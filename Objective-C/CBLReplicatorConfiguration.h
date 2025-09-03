@@ -43,7 +43,7 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  The collection configurations used for the replication. Each configuration specifies a collection and its configuration.
  */
-@property (nonatomic, readonly) NSArray<CBLCollectionConfiguration*>* collectionConfigs;
+@property (nonatomic, readonly) NSArray<CBLCollectionConfiguration*>* collections;
 
 /**
  Replication type indicating the direction of the replication. The default value is

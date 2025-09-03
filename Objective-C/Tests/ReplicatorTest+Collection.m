@@ -62,9 +62,9 @@
     CBLReplicatorConfiguration* config = [[CBLReplicatorConfiguration alloc] initWithCollections: @[colConfig]
                                                                                           target: endpoint];
     
-    AssertEqual(config.collectionConfigs.count, 1);
-    AssertEqualObjects(config.collectionConfigs[0].collection, col1a);
-    CBLCollectionConfiguration* colConfig2 = config.collectionConfigs.firstObject;
+    AssertEqual(config.collections.count, 1);
+    AssertEqualObjects(config.collections[0].collection, col1a);
+    CBLCollectionConfiguration* colConfig2 = config.collections.firstObject;
     AssertNotNil(colConfig2);
     
     // only value match
@@ -109,14 +109,14 @@
     CBLReplicatorConfiguration* config = [[CBLReplicatorConfiguration alloc] initWithCollections: colConfigs
                                                                                           target: endpoint];
     
-    AssertEqual(config.collectionConfigs.count, 2);
+    AssertEqual(config.collections.count, 2);
     Assert([(@[@"colA", @"colB"]) containsObject: config.collectionConfigs[0].collection.name]);
-    Assert([(@[@"colA", @"colB"]) containsObject: config.collectionConfigs[1].collection.name]);
-    Assert([config.collectionConfigs[0].collection.scope.name isEqualToString: @"scopeA"]);
-    Assert([config.collectionConfigs[1].collection.scope.name isEqualToString: @"scopeA"]);
+    Assert([(@[@"colA", @"colB"]) containsObject: config.collections[1].collection.name]);
+    Assert([config.collections[0].collection.scope.name isEqualToString: @"scopeA"]);
+    Assert([config.collections[1].collection.scope.name isEqualToString: @"scopeA"]);
     
-    CBLCollectionConfiguration* config1 = config.collectionConfigs[0];
-    CBLCollectionConfiguration* config2 = config.collectionConfigs[1];
+    CBLCollectionConfiguration* config1 = config.collections[0];
+    CBLCollectionConfiguration* config2 = config.collections[1];
     Assert(config1 != config2);
     
     Assert(config1.pushFilter == filter1);

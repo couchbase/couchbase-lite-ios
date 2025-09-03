@@ -62,7 +62,7 @@ public struct ReplicatorConfiguration {
     /**
      The collection configurations used for the replication. Each configuration specifies a collection and its configuration.
      */
-    public var collectionConfigs: [CollectionConfiguration] {
+    public var collections: [CollectionConfiguration] {
         return Array(self.collectionConfigMap.values)
     }
     

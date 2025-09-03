@@ -1231,11 +1231,11 @@ class ReplicatorTest_Main: ReplicatorTest {
         XCTAssertEqual(config.maxAttempts, 223)
         XCTAssertEqual(config.maxAttemptWaitTime, 227)
         XCTAssertEqual(config.pinnedServerCertificate, cert)
-        XCTAssertEqual(config.collectionConfigs.count, 1)
-        XCTAssertEqual(config.collectionConfigs.first?.channels, ["c1", "c2"])
-        XCTAssertEqual(config.collectionConfigs.first?.documentIDs, ["d1", "d2"])
-        XCTAssertNotNil(config.collectionConfigs.first?.pushFilter)
-        XCTAssertNotNil(config.collectionConfigs.first?.pullFilter)
+        XCTAssertEqual(config.collections.count, 1)
+        XCTAssertEqual(config.collections.first?.channels, ["c1", "c2"])
+        XCTAssertEqual(config.collections.first?.documentIDs, ["d1", "d2"])
+        XCTAssertNotNil(config.collections.first?.pushFilter)
+        XCTAssertNotNil(config.collections.first?.pullFilter)
         
     #if COUCHBASE_ENTERPRISE
         XCTAssert(config.acceptOnlySelfSignedServerCertificate)
@@ -1295,7 +1295,7 @@ class ReplicatorTest_Main: ReplicatorTest {
         XCTAssert(repl.config.acceptOnlySelfSignedServerCertificate)
     #endif
         
-        let colConfigs = repl.config.collectionConfigs
+        let colConfigs = repl.config.collections
         XCTAssertEqual(colConfigs.count, 1)
         XCTAssertEqual(colConfigs.first?.channels, ["c1", "c2"])
         XCTAssertEqual(colConfigs.first?.documentIDs, ["d1", "d2"])
@@ -1326,12 +1326,12 @@ class ReplicatorTest_Main: ReplicatorTest {
         XCTAssertEqual(config.acceptOnlySelfSignedServerCertificate, ReplicatorConfiguration.defaultSelfSignedCertificateOnly)
     #endif
         
-        XCTAssertEqual(config.collectionConfigs.count, 1)
-        XCTAssertNil(config.collectionConfigs.first?.channels)
-        XCTAssertNil(config.collectionConfigs.first?.conflictResolver)
-        XCTAssertNil(config.collectionConfigs.first?.documentIDs)
-        XCTAssertNil(config.collectionConfigs.first?.pullFilter)
-        XCTAssertNil(config.collectionConfigs.first?.pushFilter)
+        XCTAssertEqual(config.collections.count, 1)
+        XCTAssertNil(config.collections.first?.channels)
+        XCTAssertNil(config.collections.first?.conflictResolver)
+        XCTAssertNil(config.collections.first?.documentIDs)
+        XCTAssertNil(config.collections.first?.pullFilter)
+        XCTAssertNil(config.collections.first?.pushFilter)
     }
 }
 

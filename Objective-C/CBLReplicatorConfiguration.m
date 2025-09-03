@@ -211,7 +211,7 @@
     return _database;
 }
 
-- (NSArray<CBLCollectionConfiguration*>*) collectionConfigs {
+- (NSArray<CBLCollectionConfiguration*>*) collections {
     return [_collectionConfigMap allValues];
 }
 

@@ -113,7 +113,7 @@ typedef enum {
     if (self) {
         NSParameterAssert(config.target != nil);
         
-        if (config.collectionConfigs.count == 0)
+        if (config.collections.count == 0)
             [NSException raise: NSInvalidArgumentException
                         format: @"Attempt to initiate replicator with no collections configured"];
         
