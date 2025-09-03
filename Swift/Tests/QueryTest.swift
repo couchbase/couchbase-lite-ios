@@ -1978,7 +1978,7 @@ class QueryTest: CBLTestCase {
                 x1.fulfill()
             }
         }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
             try! self.defaultCollection!.purge(id: "doc1")
         }
         wait(for: [x1], timeout: expTimeout)

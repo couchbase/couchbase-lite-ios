@@ -2,7 +2,7 @@
 //  CBLReplicatorConfiguration.m
 //  CouchbaseLite
 //
-//  Copyright (c) 2017 Couchbase, Inc All rights reserved.
+//  Copyright (c) 2025 Couchbase, Inc All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -18,7 +18,6 @@
 //
 
 #import "CBLReplicatorConfiguration.h"
-#import "CBLReplicatorConfiguration+Swift.h"
 #import "CBLAuthenticator+Internal.h"
 #import "CBLCollection+Internal.h"
 #import "CBLCollectionConfiguration+Internal.h"
@@ -107,36 +106,10 @@
     return self;
 }
 
-- (instancetype) initWithDatabase: (CBLDatabase*)database target: (id<CBLEndpoint>)target {
-    CBLAssertNotNil(database);
-    CBLAssertNotNil(target);
-    
-    self = [self initWithDefaults];
-    if (self) {
-        _database = database;
-        _target = target;
-        
-        // Add default collection
-        CBLCollection* collection = [_database defaultCollection: nil];
-        CBLAssertNotNil(collection);
-        [self addCollection: collection config: nil];
-    }
-    return self;
-}
-
 - (instancetype) initWithConfig: (CBLReplicatorConfiguration*)config {
     CBLAssertNotNil(config);
     
     return [self initWithConfig: config readonly: NO];
-}
-
-- (instancetype) initWithTarget:(id<CBLEndpoint>)target {
-    CBLAssertNotNil(target);
-    self = [self initWithDefaults];
-    if (self) {
-        _target = target;
-    }
-    return self;
 }
 
 - (void) setReplicatorType: (CBLReplicatorType)replicatorType {
@@ -191,67 +164,6 @@
     _acceptParentDomainCookies = acceptParentDomainCookies;
 }
 
-- (CBLCollectionConfiguration*) defaultCollectionConfig: (BOOL)mustExist {
-    __block CBLCollectionConfiguration* config;
-    [_collectionConfigMap enumerateKeysAndObjectsUsingBlock:
-     ^(CBLCollection *col, CBLCollectionConfiguration *conf, BOOL *stop) {
-        if ([col.scope.name isEqualToString: kCBLDefaultScopeName] &&
-            [col.name isEqualToString: kCBLDefaultCollectionName]) {
-            config = conf;
-            *stop = YES;
-        }
-    }];
-    
-    if (!config && mustExist) {
-        [NSException raise: NSInternalInconsistencyException
-                    format: @"%@", kCBLErrorMessageNoDefaultCollectionInConfig];
-    }
-    return config;
-}
-
-- (void) setDocumentIDs: (NSArray<NSString *>*)documentIDs {
-    [self checkReadonly];
-    [self defaultCollectionConfig: YES].documentIDs = documentIDs;
-}
-
-- (NSArray<NSString*>*) documentIDs {
-    return [self defaultCollectionConfig: NO].documentIDs;
-}
-
-- (void) setChannels: (NSArray<NSString *>*)channels {
-    [self checkReadonly];
-    [self defaultCollectionConfig: YES].channels = channels;
-}
-
-- (NSArray<NSString*>*) channels {
-    return [self defaultCollectionConfig: NO].channels;
-}
-
-- (void) setConflictResolver: (id<CBLConflictResolver>)conflictResolver {
-    [self checkReadonly];
-    [self defaultCollectionConfig: YES].conflictResolver = conflictResolver;
-}
-
-- (id<CBLConflictResolver>) conflictResolver {
-    return [self defaultCollectionConfig: NO].conflictResolver;
-}
-
-- (void) setPullFilter: (CBLReplicationFilter)pullFilter {
-    [self defaultCollectionConfig: YES].pullFilter = pullFilter;
-}
-
-- (CBLReplicationFilter) pullFilter {
-    return [self defaultCollectionConfig: NO].pullFilter;
-}
-
-- (void) setPushFilter: (CBLReplicationFilter)pushFilter {
-    [self defaultCollectionConfig: YES].pushFilter = pushFilter;
-}
-
-- (CBLReplicationFilter) pushFilter {
-    return [self defaultCollectionConfig: NO].pushFilter;
-}
-
 #if TARGET_OS_IPHONE
 - (void) setAllowReplicatingInBackground: (BOOL)allowReplicatingInBackground {
     [self checkReadonly];
@@ -290,69 +202,8 @@
     _enableAutoPurge = enableAutoPurge;
 }
 
-- (CBLDatabase*) database {
-    if (!_database)
-        [NSException raise: NSInternalInconsistencyException
-                    format: @"%@", kCBLErrorMessageAccessDBWithoutCollection];
-    return _database;
-}
-
-- (NSArray<CBLCollectionConfiguration*>*) collectionConfigs {
+- (NSArray<CBLCollectionConfiguration*>*) collections {
     return [_collectionConfigMap allValues];
-}
-
-- (void) addCollection: (CBLCollection*)collection
-                config: (nullable CBLCollectionConfiguration*)config {
-    [CBLPrecondition assert: collection.isValid
-                    message: kCBLErrorMessageAddInvalidCollection];
-    
-    [CBLPrecondition assert: config.collection == nil || config.collection == collection
-                    message: @"CollectionConfiguration collection must be null or match the given collection."];
-    
-    if (_database) {
-        [CBLPrecondition assert: _database == collection.database
-                        message: kCBLErrorMessageAddCollectionFromAnotherDB];
-    } else {
-        _database = collection.database;
-    }
-    
-    // collection config is copied
-    CBLCollectionConfiguration* colConfig = nil;
-    if (config) {
-        colConfig = [[CBLCollectionConfiguration alloc] initWithConfig: config];
-    } else {
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-        colConfig = [[CBLCollectionConfiguration alloc] init];
-#pragma clang diagnostic pop
-    }
-    
-    [_collectionConfigMap setObject: colConfig forKey: collection];
-}
-
-- (void) addCollections: (NSArray<CBLCollection*>*)collections
-                 config: (nullable CBLCollectionConfiguration*)config {
-    [CBLPrecondition assertArrayNotEmpty: collections name: @"collections"];
-    for (CBLCollection* col in collections) {
-        [self addCollection: col config: config];
-    }
-}
-
-- (NSArray<CBLCollection*>*) collections {
-    return _collectionConfigMap.allKeys;
-}
-
-- (void) removeCollection:(CBLCollection *)collection {
-    [_collectionConfigMap removeObjectForKey: collection];
-    
-    // reset the database, when all collections are removed
-    if (_collectionConfigMap.count == 0) {
-        _database = nil;
-    }
-}
-
-- (CBLCollectionConfiguration*) collectionConfig:(CBLCollection *)collection {
-    return [_collectionConfigMap objectForKey: collection];
 }
 
 #pragma mark - Internal
@@ -416,16 +267,6 @@
     
     // Accept Parent Domain Cookies:
     options[@kC4ReplicatorOptionAcceptParentDomainCookies] = @(_acceptParentDomainCookies);
-    
-    // TODO: Remove https://issues.couchbase.com/browse/CBL-3206
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-
-    // Filters:
-    options[@kC4ReplicatorOptionDocIDs] = self.documentIDs;
-    options[@kC4ReplicatorOptionChannels] = self.channels;
-    
-#pragma clang diagnostic pop
     
     // Checkpoint intervals (no public api now):
     if (_checkpointInterval > 0)

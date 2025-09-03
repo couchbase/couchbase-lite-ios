@@ -56,23 +56,13 @@ public typealias ReplicationFilter = (Document, DocumentFlags) -> Bool
 
 /// Replicator configuration.
 public struct ReplicatorConfiguration {
-    
-    /// The local database to replicate with the replication target.
-    @available(*, deprecated, message: "Use config.collections instead.")
-    public var database: Database {
-        guard let db = self.db else {
-            fatalError("Attempt to access database property but no collections added")
-        }
-        return db
-    }
-    
     /// The replication target to replicate with.
     public let target: Endpoint
     
     /**
      The collection configurations used for the replication. Each configuration specifies a collection and its configuration.
      */
-    public var collectionConfigs: [CollectionConfiguration] {
+    public var collections: [CollectionConfiguration] {
         return Array(self.collectionConfigMap.values)
     }
     
@@ -125,66 +115,6 @@ public struct ReplicatorConfiguration {
     /// A set of Sync Gateway channel names to pull from for the default collection. Ignored for push replication.
     ///
     /// - Note: Channels are not supported in Peer-to-Peer and Database-to-Database replication.
-    @available(*, deprecated, message: "Use init(collections:target:) instead.")
-    public var channels: [String]? {
-        set {
-            var colConfig = defaultCollectionConfigOrNever
-            colConfig.channels = newValue
-            setDefaultCollectionConfig(colConfig)
-        }
-        
-        get { defaultCollectionConfig?.channels }
-    }
-    
-    /// A set of document IDs to filter by for the default collection. If given, only documents with these IDs will be pushed and/or pulled.
-    @available(*, deprecated, message: "Use init(collections:target:) instead.")
-    public var documentIDs: [String]? {
-        set {
-            var colConfig = defaultCollectionConfigOrNever
-            colConfig.documentIDs = newValue
-            setDefaultCollectionConfig(colConfig)
-        }
-        
-        get { defaultCollectionConfig?.documentIDs }
-    }
-    
-    
-    /// A push filter for the default collection. Only documents for which the filter returns true are replicated.
-    @available(*, deprecated, message: "Use init(collections:target:) instead.")
-    public var pushFilter: ReplicationFilter? {
-        set {
-            var colConfig = defaultCollectionConfigOrNever
-            colConfig.pushFilter = newValue
-            setDefaultCollectionConfig(colConfig)
-        }
-        
-        get { defaultCollectionConfig?.pushFilter }
-    }
-    
-    /// A pull filter for the default collection. Only documents for which the closure returns true are replicated.
-    @available(*, deprecated, message: "Use init(collections:target:) instead.")
-    public var pullFilter: ReplicationFilter? {
-        set {
-            var colConfig = defaultCollectionConfigOrNever
-            colConfig.pullFilter = newValue
-            setDefaultCollectionConfig(colConfig)
-        }
-        
-        get { defaultCollectionConfig?.pullFilter }
-    }
-    
-    /// The custom conflict resolver for the default collection. If this value is not set, or set to nil,
-    /// the default conflict resolver will be applied.
-    @available(*, deprecated, message: "Use init(collections:target:) instead.")
-    public var conflictResolver: ConflictResolverProtocol? {
-        set {
-            var colConfig = defaultCollectionConfigOrNever
-            colConfig.conflictResolver = newValue
-            setDefaultCollectionConfig(colConfig)
-        }
-        
-        get { defaultCollectionConfig?.conflictResolver }
-    }
     
     #if os(iOS)
     /// Allows the replicator to continue replicating in the background. The default
@@ -264,42 +194,6 @@ public struct ReplicatorConfiguration {
     /// - Note: Auto purge will not be performed when documentIDs filter is specified.
     public var enableAutoPurge: Bool = ReplicatorConfiguration.defaultEnableAutoPurge
     
-    /// The collections used for the replication.
-    @available(*, deprecated, message: "Use collectionConfigs instead.")
-    public var collections: [Collection] {
-        return Array(self.collectionConfigMap.keys)
-    }
-    
-    /// Initializes a `ReplicatorConfiguration` with the given database and the target's endpoint.
-    ///
-    /// When using this initializer, the default collection of the given database will be automatically
-    /// included in the configuration.
-    ///
-    /// If you do not intend to replicate the default collection, use init(collections:target:) instead to
-    /// explicity specifiy the intended collections.
-    ///
-    /// - Parameters:
-    ///   - database: The local database.
-    ///   - target: The replication target.
-    @available(*, deprecated, message: "Use init(collections:target:) instead.")
-    public init(database: Database, target: Endpoint) {
-        self.db = database
-        self.target = target
-        
-        initCollectionConfigs()
-    }
-    
-    /// Initializes a `ReplicatorConfiguration` with the target’s endpoint. After the `ReplicatorConfiguration`
-    /// object is created, use `addCollection(_ collection:, config:)` or `addCollections(_ collections:, config:)`
-    /// to specify and configure the collections used for replicating with the target. If there are no collections specified,
-    /// the replicator will fail to start with a no collections specified error.
-    @available(*, deprecated, message: "Use init(collections:target:) instead.")
-    public init(target: Endpoint) {
-        self.target = target
-        
-        initCollectionConfigs()
-    }
-    
     /// Initializes a `ReplicatorConfiguration` with the specified collection configurations and target's endpoint.
     ///
     /// Each `CollectionConfiguration` in the collections array must be initialized using `init(collections:)`.
@@ -309,18 +203,14 @@ public struct ReplicatorConfiguration {
     ///   - target: The target endpoint
     public init(collections: [CollectionConfiguration], target: Endpoint) {
         self.target = target
-        
+        Precondition.assertNotEmpty(collections, name: "collections")
         for config in collections {
-            guard let collection = config.collection else {
-                Precondition.assert(false, message: "Each collection configuration must have a non-null collection.")
-                return
-            }
-            
-            if self.db == nil {
-                self.db = collection.database
+            let collection = config.collection
+            if self.database == nil {
+                self.database = collection.database
             } else {
                 Precondition.assert(
-                    self.db!.impl == collection.database.impl,
+                    self.database!.impl == collection.database.impl,
                     message: "Collection \(collection.fullName) belongs to a different database instance.")
             }
             self.collectionConfigMap[collection] = config
@@ -331,7 +221,7 @@ public struct ReplicatorConfiguration {
     ///
     /// - Parameter config: The configuration object.
     public init(config: ReplicatorConfiguration) {
-        self.db = config.database
+        self.database = config.database
         self.target = config.target
         self.replicatorType = config.replicatorType
         self.continuous = config.continuous
@@ -355,131 +245,14 @@ public struct ReplicatorConfiguration {
         #endif
     }
     
-    /// Add a collection used for the replication with an optional collection configuration. If the collection has
-    /// been added before, the previous added and its configuration if specified will be replaced. If a nil
-    /// configuration is specified, a default empty configuration will be applied.
-    @available(*, deprecated, message: "Use init(collections:target:) instead.")
-    @discardableResult
-    public mutating func addCollection(_ collection: Collection,
-                                       config: CollectionConfiguration? = nil) -> ReplicatorConfiguration {
-        
-        if !collection.impl.isValid {
-            fatalError("Attempt to add an invalid collection.")
-        }
-        
-        let db = collection.database
-        if let db1 = self.db {
-            if db1.impl != db.impl {
-                fatalError("Attempt to add collection from different databases.")
-            }
-        } else {
-            self.db = db
-        }
-        
-        var colConfig: CollectionConfiguration!
-        if let config = config {
-            colConfig = CollectionConfiguration(config: config)
-        } else {
-            colConfig = CollectionConfiguration()
-        }
-        
-        self.collectionConfigMap[collection] = colConfig
-        
-        return self
-    }
-    
-    /// Add multiple collections used for the replication with an optional shared collection configuration.
-    /// If any of the collections have been added before, the previously added collections and their
-    /// configuration if specified will be replaced. Adding an empty collection array will be no-ops. if
-    /// specified will be replaced. If a nil configuration is specified, a default empty configuration will be
-    /// applied.
-    @available(*, deprecated, message: "Use init(collections:target:) instead.")
-    @discardableResult
-    public mutating func addCollections(_ collections: Array<Collection>,
-                                        config: CollectionConfiguration? = nil) -> ReplicatorConfiguration {
-        
-        if collections.count == 0 {
-            fatalError("Attempt to add empty collection array.")
-        }
-        
-        for col in collections {
-            addCollection(col, config: config)
-        }
-        
-        return self
-    }
-    
-    /// Remove the collection. If the collection doesn’t exist, this operation will be no ops.
-    @available(*, deprecated, message: "Use init(collections:target:) instead.")
-    @discardableResult
-    public mutating func removeCollection(_ collection: Collection) -> ReplicatorConfiguration {
-        self.collectionConfigMap.removeValue(forKey: collection)
-        
-        if self.collectionConfigMap.isEmpty {
-            self.db = nil
-        }
-        
-        return self
-    }
-    
-    /// Get a copy of the collection’s config. If the config needs to be changed for the collection, the
-    /// collection will need to be re-added with the updated config.
-    ///
-    /// - Parameter collection The collection whose config is needed.
-    /// - Returns The collection config if exists.
-    @available(*, deprecated, message: "Use collectionConfigs instead.")
-    public func collectionConfig(_ collection: Collection) -> CollectionConfiguration? {
-        return self.collectionConfigMap[collection]
-    }
-    
     // MARK: Internal
-    
-    var defaultCollectionConfig: CollectionConfiguration? {
-        guard let col = try? self.database.defaultCollection() else {
-            fatalError("Default collection is missing!")
-        }
-        
-        if let config = self.collectionConfigMap[col] {
-            return config
-        }
-        
-        return nil
-    }
-    
-    var defaultCollectionConfigOrNever: CollectionConfiguration {
-        guard let colConfig = defaultCollectionConfig else {
-            fatalError("No default collection added to the configuration")
-        }
-        
-        return colConfig
-    }
-    
-    mutating func setDefaultCollectionConfig(_ config: CollectionConfiguration) {
-        guard let col = try? self.database.defaultCollection() else {
-            fatalError("Default collection is missing!")
-        }
-        
-        self.collectionConfigMap[col] = config
-    }
     
     func toImpl() -> CBLReplicatorConfiguration {
         let target = self.target as! IEndpoint
         
         var configs: [CBLCollectionConfiguration] = []
-        for (col, config) in self.collectionConfigMap {
-            if config.collection == nil {
-                // When we remove the deprecated API, config.collection will be nonull
-                // and this code that creates a new collection object can be removed.
-                var copy = CollectionConfiguration(collection: col)
-                copy.channels = config.channels
-                copy.documentIDs = config.documentIDs
-                copy.pushFilter = config.pushFilter
-                copy.pullFilter = config.pullFilter
-                copy.conflictResolver = config.conflictResolver
-                configs.append(copy.toImpl(col))
-            } else {
-                configs.append(config.toImpl(col))
-            }
+        for config in self.collectionConfigMap.values {
+            configs.append(config.toImpl())
         }
         
         var c = CBLReplicatorConfiguration(collections: configs, target: target.toImpl())
@@ -505,20 +278,9 @@ public struct ReplicatorConfiguration {
         return c
     }
     
-    mutating func initCollectionConfigs() {
-        if let db = self.db {
-            guard let col = try? db.defaultCollection() else {
-                Database.throwNotOpenError()
-            }
-            
-            let colConfig = CollectionConfiguration()
-            addCollection(col, config: colConfig)
-        }
-    }
-    
     var collectionConfigMap = [Collection: CollectionConfiguration]()
     
-    var db: Database?
+    var database: Database?
     
     fileprivate var didMaxAttemptUpdate: Bool = false
 }

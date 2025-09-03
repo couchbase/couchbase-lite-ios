@@ -20,15 +20,12 @@
 #import "ReplicatorTest.h"
 #import "CBLTLSIdentity+Internal.h"
 #import "CBLURLEndpointListener+Internal.h"
-#import "CBLURLEndpointListenerConfiguration.h"
+#import "CBLURLEndpointListenerConfiguration+Internal.h"
+#import "CBLMessageEndpointListenerConfiguration+Internal.h"
 #import "CollectionUtils.h"
 #import "URLEndpointListenerTest.h"
 
 @implementation CBLURLEndpointListener (Test)
-
-// TODO: Remove https://issues.couchbase.com/browse/CBL-3206
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 
 - (NSURL*) localURL {
     assert(self.port > 0);
@@ -78,7 +75,7 @@
     }
     
     // Listener:
-    Config* config = [[Config alloc] initWithDatabase: self.otherDB];
+    Config* config = [[Config alloc] initWithCollections: @[self.otherDBDefaultCollection]];
     config.port = tls ? kWssPort : kWsPort;
     config.disableTLS = !tls;
     config.authenticator = auth;
@@ -140,10 +137,24 @@
                        target: (id<CBLEndpoint>)target
                    serverCert: (nullable SecCertificateRef)cert {
     CBLReplicatorConfiguration* c;
-    c = [[CBLReplicatorConfiguration alloc] initWithDatabase: db target: target];
+    CBLCollectionConfiguration* defaultConfig = [[CBLCollectionConfiguration alloc] initWithCollection: self.defaultCollection];
+    c = [[CBLReplicatorConfiguration alloc] initWithCollections: @[defaultConfig] target: target];
     c.continuous = continous;
     c.pinnedServerCertificate = cert;
     return [[CBLReplicator alloc] initWithConfig: c];
+}
+
+- (CBLReplicatorConfiguration*) configForCollection:(CBLCollection*)collection
+                                             target:(id<CBLEndpoint>)target
+                                        configBlock:(nullable void (^)(CBLCollectionConfiguration *config))block {
+    
+    CBLCollectionConfiguration* colConfig = [[CBLCollectionConfiguration alloc] initWithCollection:collection];
+    
+    if (block) {
+        block(colConfig);
+    }
+    
+    return [[CBLReplicatorConfiguration alloc] initWithCollections:@[colConfig] target:target];
 }
 
 - (void) checkEqualForCert: (SecCertificateRef)cert1 andCert: (SecCertificateRef)cert2 {
@@ -200,7 +211,5 @@
         }];
     }
 }
-
-#pragma clang diagnostic pop
 
 @end

@@ -32,10 +32,6 @@
 
 @implementation ReplicatorTest_PendingDocIds
 
-// TODO: Remove https://issues.couchbase.com/browse/CBL-3206
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-
 #ifdef COUCHBASE_ENTERPRISE
 
 #pragma mark - Helper Methods
@@ -53,16 +49,20 @@
 }
 
 - (void) validatePendingDocumentIDs: (NSSet*)docIds pushOnlyDocIds: (nullable NSSet*)pushOnlyDocIds {
-    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
-    CBLReplicatorConfiguration* config = [self configWithTarget: target type: kCBLReplicatorTypePush continuous: NO];
-    if (pushOnlyDocIds.count > 0) {
-        config.pushFilter = ^BOOL(CBLDocument* document, CBLDocumentFlags flags) {
-            return [pushOnlyDocIds containsObject: document.id];
-        };
-    }
-    CBLReplicator* replicator = [[CBLReplicator alloc] initWithConfig: config];
-    
     NSError* err;
+    
+    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
+    
+    
+    CBLReplicatorConfiguration* rConfig = [self configForCollection: self.defaultCollection target: target configBlock:^(CBLCollectionConfiguration* config) {
+        if (pushOnlyDocIds.count > 0) {
+            config.pushFilter = ^BOOL(CBLDocument* document, CBLDocumentFlags flags) {
+                return [pushOnlyDocIds containsObject: document.id];
+            };
+        }
+    }];
+    rConfig.replicatorType = kCBLReplicatorTypePush;
+    CBLReplicator* replicator = [[CBLReplicator alloc] initWithConfig: rConfig];
     
     // Check document pendings:
     NSSet* pendingIds = [replicator pendingDocumentIDsForCollection: self.defaultCollection error: &err];
@@ -102,7 +102,7 @@
     CBLReplicator* replicator = [[CBLReplicator alloc] initWithConfig: config];
 
     [self expectError: CBLErrorDomain code: CBLErrorUnsupported in: ^BOOL(NSError** err) {
-        return [replicator pendingDocumentIDs: err].count != 0;
+        return [replicator pendingDocumentIDsForCollection: self.defaultCollection error: err].count != 0;
     }];
 }
 
@@ -172,26 +172,18 @@
 - (void) testPendingDocumentIdsWithDatabaseClosed {
     NSError* error = nil;
     id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
-    id config = [self configWithTarget: target type: kCBLReplicatorTypePush continuous: NO];
-    CBLReplicator* replicator = [[CBLReplicator alloc] initWithConfig: config];
+    
+    CBLCollection* collection = self.defaultCollection;
+    CBLReplicatorConfiguration* rConfig = [self configForCollection: collection target: target configBlock: nil];
+    rConfig.replicatorType = kCBLReplicatorTypePush;
+    CBLReplicator* replicator = [[CBLReplicator alloc] initWithConfig: rConfig];
 
     [self.db close: &error];
     [self expectException: @"NSInternalInconsistencyException" in: ^{
-        [replicator pendingDocumentIDs: nil];
-    }];
-    
-    [self reopenDB];
-    config = [self configWithTarget: target type: kCBLReplicatorTypePush continuous: NO];
-    replicator = [[CBLReplicator alloc] initWithConfig: config];
-    
-    [self.otherDB close: &error];
-    [self expectException: @"NSInternalInconsistencyException" in: ^{
-        [replicator pendingDocumentIDs: nil];
+        [replicator pendingDocumentIDsForCollection: collection  error: nil];
     }];
 }
 
 #endif
-
-#pragma clang diagnostic pop
 
 @end

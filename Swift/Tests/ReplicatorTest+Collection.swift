@@ -18,7 +18,7 @@
 //
 
 import XCTest
-import CouchbaseLiteSwift
+@testable import CouchbaseLiteSwift
 
 class ReplicatorTest_Collection: ReplicatorTest {
     override func setUpWithError() throws {
@@ -31,325 +31,30 @@ class ReplicatorTest_Collection: ReplicatorTest {
     
     // MARK: 8.13 Replicator Configuration
     
-    func testCreateConfigWithDatabase() throws {
+    func testCreateConfigWithCollection() throws {
         let url = URL(string: "wss://foo")!
         let target = URLEndpoint(url: url)
         
-        let config = ReplicatorConfiguration(database: self.db, target: target)
-        XCTAssertEqual(config.collections.count, 1)
-        
-        let col = try self.db.defaultCollection()
-        XCTAssertEqual(col, config.collections[0])
-        XCTAssertEqual(col.name, config.collections[0].name)
-        XCTAssertEqual(col.scope.name, config.collections[0].scope.name)
-        
-        guard let colConfig = config.collectionConfig(col) else {
-            XCTFail("Missing default collection")
-            return
-        }
-        
-        XCTAssertNil(colConfig.documentIDs)
-        XCTAssertNil(colConfig.channels)
-        XCTAssertNil(colConfig.conflictResolver)
-        XCTAssertNil(colConfig.pushFilter)
-        XCTAssertNil(colConfig.pullFilter)
-        
-        XCTAssertEqual(config.database.path, self.db.path)
-    }
-    
-    func collectionConfig(_ config: ReplicatorConfiguration, col: Collection) -> CollectionConfiguration {
-        guard let colConfig = config.collectionConfig(col) else {
-            fatalError("Collection config is missing!")
-        }
-        
-        return colConfig
-    }
-    
-    func defaultCollection() throws -> Collection {
-        return try self.db.defaultCollection()
-    }
-    
-    func testConfigWithDatabaseAndConflictResolver() throws {
-        let url = URL(string: "wss://foo")!
-        let target = URLEndpoint(url: url)
-        var config = ReplicatorConfiguration(database: self.db, target: target)
-        
-        let conflictResolver = TestConflictResolver({ (con: Conflict) -> Document? in
-            return con.remoteDocument
-        })
-        config.conflictResolver = conflictResolver
-        XCTAssertNotNil(conflictResolver)
-        
-        var colConfig = collectionConfig(config, col: try defaultCollection())
-        XCTAssert(conflictResolver === (config.conflictResolver as! TestConflictResolver))
-        XCTAssert(conflictResolver === (colConfig.conflictResolver as! TestConflictResolver))
-        
-        // Update replicator.conflictResolver
-        let conflictResolver2 = TestConflictResolver({ (con: Conflict) -> Document? in
-            return con.localDocument
-        })
-        XCTAssert(conflictResolver !== conflictResolver2)
-        config.conflictResolver = conflictResolver2
-        
-        colConfig = collectionConfig(config, col: try defaultCollection())
-        XCTAssert(conflictResolver2 === (config.conflictResolver as! TestConflictResolver))
-        XCTAssert(conflictResolver2 === (colConfig.conflictResolver as! TestConflictResolver))
-        
-        // Update collectionConfig.conflictResolver
-        let conflictResolver3 = TestConflictResolver({ (con: Conflict) -> Document? in
-            return nil
-        })
-        XCTAssert(conflictResolver2 !== conflictResolver3)
-        colConfig = collectionConfig(config, col: try defaultCollection())
-        colConfig.conflictResolver = conflictResolver3
-        config.addCollection(try defaultCollection(), config: colConfig)
-        
-        XCTAssert(conflictResolver3 === (config.conflictResolver as! TestConflictResolver))
-        XCTAssert(conflictResolver3 === (colConfig.conflictResolver as! TestConflictResolver))
-    }
-    
-    func testConfigWithDatabaseAndFilters() throws {
-        let url = URL(string: "wss://foo")!
-        let target = URLEndpoint(url: url)
-        
-        var config = ReplicatorConfiguration(database: self.db, target: target)
-        let filter1 = { (doc: Document, flags: DocumentFlags) in return true }
-        let filter2 = { (doc: Document, flags: DocumentFlags) in return true }
-        config.pushFilter = filter1
-        config.pullFilter = nil
-        config.channels = ["c1", "c2", "c3"]
-        config.documentIDs = ["d1", "d2", "d3"]
-        
-        var colConfig = collectionConfig(config, col: try defaultCollection())
-        XCTAssertEqual(colConfig.channels, ["c1", "c2", "c3"])
-        XCTAssertEqual(colConfig.documentIDs, ["d1", "d2", "d3"])
-        XCTAssertNotNil(colConfig.pushFilter)
-        XCTAssertNil(colConfig.pullFilter)
-        
-        // Update replicator.filters
-        config.pushFilter = nil
-        config.pullFilter = filter2
-        config.channels = ["c1"]
-        config.documentIDs = ["d1"]
-        
-        colConfig = collectionConfig(config, col: try defaultCollection())
-        XCTAssertEqual(colConfig.channels, ["c1"])
-        XCTAssertEqual(colConfig.documentIDs, ["d1"])
-        XCTAssertNil(colConfig.pushFilter)
-        XCTAssertNotNil(colConfig.pullFilter)
-        
-        // Update collectionConfig.filters
-        colConfig = collectionConfig(config, col: try defaultCollection())
-        colConfig.pushFilter = filter1
-        colConfig.pullFilter = filter2
-        colConfig.channels = ["c1", "c2"]
-        colConfig.documentIDs = ["d1", "d2"]
-        config.addCollection(try defaultCollection(), config: colConfig)
-        
-        XCTAssertEqual(colConfig.channels, ["c1", "c2"])
-        XCTAssertEqual(colConfig.documentIDs, ["d1", "d2"])
-        XCTAssertNotNil(colConfig.pushFilter)
-        XCTAssertNotNil(colConfig.pullFilter)
-    }
-    
-    // Note: testCreateConfigWithEndpointOnly:  can't test due to fatalError
-    
-    func testAddCollectionsWithoutCollectionConfig() throws {
         let col1a = try self.db.createCollection(name: "colA", scope: "scopeA")
-        let col1b = try self.db.createCollection(name: "colB", scope: "scopeA")
         
-        let url = URL(string: "wss://foo")!
-        let target = URLEndpoint(url: url)
-        var config = ReplicatorConfiguration(target: target)
-        config.addCollections([col1a, col1b])
-        
-        XCTAssertEqual(config.collections.count, 2)
-        XCTAssert(config.collections.contains(where: { $0.name == "colA" && $0.scope.name == "scopeA" }))
-        XCTAssert(config.collections.contains(where: { $0.name == "colB" && $0.scope.name == "scopeA" }))
-        
-        let config1 = collectionConfig(config, col: col1a)
-        let config2 = collectionConfig(config, col: col1b)
-        
-        XCTAssertNil(config1.conflictResolver)
-        XCTAssertNil(config1.channels)
-        XCTAssertNil(config1.documentIDs)
-        XCTAssertNil(config1.pushFilter)
-        XCTAssertNil(config1.pullFilter)
-        
-        XCTAssertNil(config2.conflictResolver)
-        XCTAssertNil(config2.channels)
-        XCTAssertNil(config2.documentIDs)
-        XCTAssertNil(config2.pushFilter)
-        XCTAssertNil(config2.pullFilter)
-    }
-    
-    func testAddCollectionsWithCollectionConfig() throws {
-        let col1a = try self.db.createCollection(name: "colA", scope: "scopeA")
-        let col1b = try self.db.createCollection(name: "colB", scope: "scopeA")
-        
-        let url = URL(string: "wss://foo")!
-        let target = URLEndpoint(url: url)
-        var config = ReplicatorConfiguration(target: target)
-        
-        var colConfig = CollectionConfiguration()
-        let conflictResolver = TestConflictResolver({ (con: Conflict) -> Document? in
-            return con.remoteDocument
-        })
-        let filter1 = { (doc: Document, flags: DocumentFlags) in return true }
-        let filter2 = { (doc: Document, flags: DocumentFlags) in return true }
-        colConfig.conflictResolver = conflictResolver
-        colConfig.pushFilter = filter1
-        colConfig.pullFilter = filter2
-        colConfig.channels = ["channel1", "channel2", "channel3"]
-        colConfig.documentIDs = ["doc1", "doc2", "doc3"]
-        
-        config.addCollections([col1a, col1b], config: colConfig)
-        
-        XCTAssertEqual(config.collections.count, 2)
-        XCTAssert(config.collections.contains(where: { $0.name == "colA" && $0.scope.name == "scopeA" }))
-        XCTAssert(config.collections.contains(where: { $0.name == "colB" && $0.scope.name == "scopeA" }))
-        
-        let config1 = collectionConfig(config, col: col1a)
-        let config2 = collectionConfig(config, col: col1b)
-        
-        XCTAssertNotNil(config1.pushFilter)
-        XCTAssertNotNil(config1.pullFilter)
-        XCTAssertEqual(config1.channels, ["channel1", "channel2", "channel3"])
-        XCTAssertEqual(config1.documentIDs, ["doc1", "doc2", "doc3"])
-        XCTAssert((config1.conflictResolver as! TestConflictResolver) === conflictResolver)
-        
-        XCTAssertNotNil(config2.pushFilter)
-        XCTAssertNotNil(config2.pullFilter)
-        XCTAssertEqual(config2.channels, ["channel1", "channel2", "channel3"])
-        XCTAssertEqual(config2.documentIDs, ["doc1", "doc2", "doc3"])
-        XCTAssert((config2.conflictResolver as! TestConflictResolver) === conflictResolver)
-    }
-    
-    func testAddUpdateCollection() throws {
-        let col1a = try self.db.createCollection(name: "colA", scope: "scopeA")
-        let col1b = try self.db.createCollection(name: "colB", scope: "scopeA")
-        
-        let url = URL(string: "wss://foo")!
-        let target = URLEndpoint(url: url)
-        var config = ReplicatorConfiguration(target: target)
-        
-        // add collection 1 with empty config
-        config.addCollection(col1a)
-        
-        // Create and add Collection config for collection 2
-        var colConfig = CollectionConfiguration()
-        let conflictResolver = TestConflictResolver({ (con: Conflict) -> Document? in
-            return con.remoteDocument
-        })
-        let filter1 = { (doc: Document, flags: DocumentFlags) in return true }
-        let filter2 = { (doc: Document, flags: DocumentFlags) in return true }
-        colConfig.conflictResolver = conflictResolver
-        colConfig.pushFilter = filter1
-        colConfig.pullFilter = filter2
-        colConfig.channels = ["channel1", "channel2", "channel3"]
-        colConfig.documentIDs = ["doc1", "doc2", "doc3"]
-        config.addCollection(col1b, config: colConfig)
-        
-        XCTAssertEqual(config.collections.count, 2)
-        XCTAssert(config.collections.contains(where: { $0.name == "colA" && $0.scope.name == "scopeA" }))
-        XCTAssert(config.collections.contains(where: { $0.name == "colB" && $0.scope.name == "scopeA" }))
-        
-        // validate the config1 for NULL values
-        var config1 = collectionConfig(config, col: col1a)
-        XCTAssertNil(config1.conflictResolver)
-        XCTAssertNil(config1.channels)
-        XCTAssertNil(config1.documentIDs)
-        XCTAssertNil(config1.pushFilter)
-        XCTAssertNil(config1.pullFilter)
-        
-        // vlaidate the config2 for valid values
-        var config2 = collectionConfig(config, col: col1b)
-        XCTAssertNotNil(config2.pushFilter)
-        XCTAssertNotNil(config2.pullFilter)
-        XCTAssertEqual(config2.channels, ["channel1", "channel2", "channel3"])
-        XCTAssertEqual(config2.documentIDs, ["doc1", "doc2", "doc3"])
-        XCTAssert((config2.conflictResolver as! TestConflictResolver) === conflictResolver)
-        
-        // Update in reverse
-        config.addCollection(col1a, config: colConfig)
-        config.addCollection(col1b)
-        
-        // validate the config1 for valid values
-        config1 = collectionConfig(config, col: col1a)
-        XCTAssertNotNil(config1.pushFilter)
-        XCTAssertNotNil(config1.pullFilter)
-        XCTAssertEqual(config1.channels, ["channel1", "channel2", "channel3"])
-        XCTAssertEqual(config1.documentIDs, ["doc1", "doc2", "doc3"])
-        XCTAssert((config1.conflictResolver as! TestConflictResolver) === conflictResolver)
-        
-        // vlaidate the config2 for NULL
-        config2 = collectionConfig(config, col: col1b)
-        XCTAssertNil(config2.conflictResolver)
-        XCTAssertNil(config2.channels)
-        XCTAssertNil(config2.documentIDs)
-        XCTAssertNil(config2.pushFilter)
-        XCTAssertNil(config2.pullFilter)
-    }
-    
-    func testRemoveCollection() throws {
-        let col1a = try self.db.createCollection(name: "colA", scope: "scopeA")
-        let col1b = try self.db.createCollection(name: "colB", scope: "scopeA")
-        
-        let url = URL(string: "wss://foo")!
-        let target = URLEndpoint(url: url)
-        var config = ReplicatorConfiguration(target: target)
-        
-        // Create and add Collection config for both collections.
-        var colConfig = CollectionConfiguration()
-        let conflictResolver = TestConflictResolver({ (con: Conflict) -> Document? in
-            return con.remoteDocument
-        })
-        let filter1 = { (doc: Document, flags: DocumentFlags) in return true }
-        let filter2 = { (doc: Document, flags: DocumentFlags) in return true }
-        colConfig.conflictResolver = conflictResolver
-        colConfig.pushFilter = filter1
-        colConfig.pullFilter = filter2
-        colConfig.channels = ["channel1", "channel2", "channel3"]
-        colConfig.documentIDs = ["doc1", "doc2", "doc3"]
-        config.addCollection(col1b, config: colConfig)
-        
-        config.addCollection(col1a, config: colConfig)
-        config.addCollection(col1b, config: colConfig)
-        
-        XCTAssertEqual(config.collections.count, 2)
-        XCTAssert(config.collections.contains(where: { $0.name == "colA" && $0.scope.name == "scopeA" }))
-        XCTAssert(config.collections.contains(where: { $0.name == "colB" && $0.scope.name == "scopeA" }))
-        
-        // validate the config1 for valid values
-        let config1 = collectionConfig(config, col: col1a)
-        XCTAssertNotNil(config1.pushFilter)
-        XCTAssertNotNil(config1.pullFilter)
-        XCTAssertEqual(config1.channels, ["channel1", "channel2", "channel3"])
-        XCTAssertEqual(config1.documentIDs, ["doc1", "doc2", "doc3"])
-        XCTAssert((config1.conflictResolver as! TestConflictResolver) === conflictResolver)
-        
-        let config2 = collectionConfig(config, col: col1b)
-        XCTAssertNotNil(config2.pushFilter)
-        XCTAssertNotNil(config2.pullFilter)
-        XCTAssertEqual(config2.channels, ["channel1", "channel2", "channel3"])
-        XCTAssertEqual(config2.documentIDs, ["doc1", "doc2", "doc3"])
-        XCTAssert((config2.conflictResolver as! TestConflictResolver) === conflictResolver)
-        
-        config.removeCollection(col1b)
+        let config = self.config(collections: [col1a], target: target)
         
         XCTAssertEqual(config.collections.count, 1)
-        XCTAssert(config.collections.contains(where: { $0.name == "colA" && $0.scope.name == "scopeA" }))
+        XCTAssertEqual(col1a, config.collections[0].collection)
+    
+        let colConfig = config.collections.first
+        XCTAssertNotNil(colConfig)
         
-        XCTAssertNil(config.collectionConfig(col1b))
-        
-        // remove a non-existing collection
-        config.removeCollection(col1b)
-        XCTAssertEqual(config.collections.count, 1)
-        XCTAssert(config.collections.contains(where: { $0.name == "colA" && $0.scope.name == "scopeA" }))
+        XCTAssertEqual(colConfig!.collection.fullName, col1a.fullName)
+        XCTAssertNil(colConfig!.documentIDs)
+        XCTAssertNil(colConfig!.channels)
+        XCTAssertNil(colConfig!.conflictResolver)
+        XCTAssertNil(colConfig!.pushFilter)
+        XCTAssertNil(colConfig!.pullFilter)
     }
     
     // fatal error! can't be unit tested.
-    func _testAddCollectionsFromDifferentDatabaseInstances() throws {
+    func _testCollectionsFromDifferentDatabaseInstances() throws {
         let col1a = try self.db.createCollection(name: "colA", scope: "scopeA")
         
         let db2 = try openDB(name: databaseName)
@@ -357,50 +62,12 @@ class ReplicatorTest_Collection: ReplicatorTest {
         
         let url = URL(string: "wss://foo")!
         let target = URLEndpoint(url: url)
-        var config = ReplicatorConfiguration(target: target)
+        
+        let colConfigs = CollectionConfiguration.fromCollections([col1a, col1b])
+       
         
         expectException(exception: .invalidArgumentException) {
-            config.addCollections([col1a, col1b])
-        }
-        
-        XCTAssertEqual(config.collections.count, 0)
-        
-        config.addCollection(col1a)
-        
-        XCTAssertEqual(config.collections.count, 1)
-        XCTAssert(config.collections.contains(where: { $0.name == "colA" && $0.scope.name == "scopeA" }))
-        
-        expectException(exception: .invalidArgumentException) {
-            config.addCollection(col1b)
-        }
-    }
-    
-    // fatal error! can't be unit tested.
-    func _testAddDeletedCollections() throws {
-        let col1a = try self.db.createCollection(name: "colA", scope: "scopeA")
-        
-        let db2 = try openDB(name: databaseName)
-        let col1b = try db2.createCollection(name: "colB", scope: "scopeA")
-        
-        try db2.deleteCollection(name: "colB", scope: "scopeA")
-        
-        let url = URL(string: "wss://foo")!
-        let target = URLEndpoint(url: url)
-        var config = ReplicatorConfiguration(target: target)
-        
-        expectException(exception: .invalidArgumentException) {
-            config.addCollections([col1a, col1b])
-        }
-        
-        XCTAssertEqual(config.collections.count, 0)
-        
-        config.addCollection(col1a)
-        
-        XCTAssertEqual(config.collections.count, 1)
-        XCTAssert(config.collections.contains(where: { $0.name == "colA" && $0.scope.name == "scopeA" }))
-        
-        expectException(exception: .invalidArgumentException) {
-            config.addCollection(col1b)
+            let _ = ReplicatorConfiguration(collections: colConfigs, target: target)
         }
     }
     
@@ -417,27 +84,35 @@ class ReplicatorTest_Collection: ReplicatorTest {
     }
     
     func testCollectionPushReplication(continous: Bool) throws {
+        let totalDocs = 10
+        
         let col1a = try self.db.createCollection(name: "colA", scope: "scopeA")
         let col1b = try self.db.createCollection(name: "colB", scope: "scopeA")
         
         let col2a = try otherDB!.createCollection(name: "colA", scope: "scopeA")
         let col2b = try otherDB!.createCollection(name: "colB", scope: "scopeA")
         
-        try createDocNumbered(col1a, start: 0, num: 5)
-        try createDocNumbered(col1b, start: 10, num: 3)
-        XCTAssertEqual(col1a.count, 5)
-        XCTAssertEqual(col1b.count, 3)
+        try createDocNumbered(col1a, start: 0, num: totalDocs)
+        try createDocNumbered(col1b, start: 10, num: totalDocs)
+        XCTAssertEqual(col1a.count, UInt64(totalDocs))
+        XCTAssertEqual(col1b.count, UInt64(totalDocs))
         XCTAssertEqual(col2a.count, 0)
         XCTAssertEqual(col2b.count, 0)
         
+        try createDocNumbered(defaultCollection!, start: 20, num: totalDocs)
+        XCTAssertEqual(defaultCollection!.count, UInt64(totalDocs))
+        XCTAssertEqual(otherDB_defaultCollection!.count, 0)
+        
         let target = DatabaseEndpoint(database: otherDB!)
-        var config = self.config(collections: [col1a, col1b], target: target, type: .push, continuous: continous)
+        let config = self.config(collections: [col1a, col1b, defaultCollection!], target: target, type: .push, continuous: continous)
         run(config: config, expectedError: nil)
         
-        XCTAssertEqual(col1a.count, 5)
-        XCTAssertEqual(col1b.count, 3)
-        XCTAssertEqual(col2a.count, 5)
-        XCTAssertEqual(col2b.count, 3)
+        XCTAssertEqual(col2a.count, UInt64(totalDocs))
+        XCTAssertEqual(col2b.count, UInt64(totalDocs))
+        XCTAssertEqual(col1a.count, UInt64(totalDocs))
+        XCTAssertEqual(col1b.count, UInt64(totalDocs))
+        XCTAssertEqual(defaultCollection!.count, UInt64(totalDocs))
+        XCTAssertEqual(otherDB_defaultCollection!.count, UInt64(totalDocs))
     }
     
     func testCollectionSingleShotPullReplication() throws {
@@ -449,27 +124,36 @@ class ReplicatorTest_Collection: ReplicatorTest {
     }
     
     func testCollectionPullReplication(continous: Bool) throws {
+        let totalDocs = 10
+        
         let col1a = try self.db.createCollection(name: "colA", scope: "scopeA")
         let col1b = try self.db.createCollection(name: "colB", scope: "scopeA")
         
         let col2a = try otherDB!.createCollection(name: "colA", scope: "scopeA")
         let col2b = try otherDB!.createCollection(name: "colB", scope: "scopeA")
         
-        try createDocNumbered(col2a, start: 0, num: 10)
-        try createDocNumbered(col2b, start: 10, num: 10)
+        try createDocNumbered(col2a, start: 0, num: totalDocs)
+        try createDocNumbered(col2b, start: 10, num: totalDocs)
+        XCTAssertEqual(col2a.count, UInt64(totalDocs))
+        XCTAssertEqual(col2b.count, UInt64(totalDocs))
         XCTAssertEqual(col1a.count, 0)
         XCTAssertEqual(col1b.count, 0)
-        XCTAssertEqual(col2a.count, 10)
-        XCTAssertEqual(col2b.count, 10)
+        
+        try createDocNumbered(otherDB_defaultCollection!, start: 20, num: totalDocs)
+        XCTAssertEqual(otherDB_defaultCollection!.count, UInt64(totalDocs))
+        XCTAssertEqual(defaultCollection!.count, 0)
+        
         
         let target = DatabaseEndpoint(database: otherDB!)
-        var config = self.config(collections: [col1a, col1b], target: target, type: .pull, continuous: continous)
+        let config = self.config(collections: [col1a, col1b, defaultCollection!], target: target, type: .pull, continuous: continous)
         run(config: config, expectedError: nil)
         
-        XCTAssertEqual(col1a.count, 10)
-        XCTAssertEqual(col1b.count, 10)
-        XCTAssertEqual(col2a.count, 10)
-        XCTAssertEqual(col2b.count, 10)
+        XCTAssertEqual(col2a.count, UInt64(totalDocs))
+        XCTAssertEqual(col2b.count, UInt64(totalDocs))
+        XCTAssertEqual(col1a.count, UInt64(totalDocs))
+        XCTAssertEqual(col1b.count, UInt64(totalDocs))
+        XCTAssertEqual(defaultCollection!.count, UInt64(totalDocs))
+        XCTAssertEqual(otherDB_defaultCollection!.count, UInt64(totalDocs))
     }
     
     func testCollectionSingleShotPushPullReplication() throws {
@@ -500,7 +184,7 @@ class ReplicatorTest_Collection: ReplicatorTest {
         XCTAssertEqual(col2b.count, 8)
         
         let target = DatabaseEndpoint(database: otherDB!)
-        var config = self.config(collections: [col1a, col1b], target: target, type: .pushAndPull, continuous: continous)
+        let config = self.config(collections: [col1a, col1b], target: target, type: .pushAndPull, continuous: continous)
         run(config: config, expectedError: nil)
         
         XCTAssertEqual(col1a.count, 7)
@@ -518,7 +202,7 @@ class ReplicatorTest_Collection: ReplicatorTest {
         XCTAssertEqual(col2a.count, 5)
         
         let target = DatabaseEndpoint(database: otherDB!)
-        var config = self.config(collections: [col1a], target: target, type: .pull, continuous: false)
+        let config = self.config(collections: [col1a], target: target, type: .pull, continuous: false)
         run(config: config, expectedError: nil)
         
         XCTAssertEqual(col1a.count, 5)
@@ -547,7 +231,7 @@ class ReplicatorTest_Collection: ReplicatorTest {
         try col1a.save(document: doc1)
         
         let target = DatabaseEndpoint(database: otherDB!)
-        var config = self.config(collections: [col1a], target: target, type: .pushAndPull, continuous: false)
+        let config = self.config(collections: [col1a], target: target, type: .pushAndPull, continuous: false)
         run(config: config, expectedError: nil)
         
         let mdoc1 = try col1a.document(id: "doc1")!.toMutable()
@@ -612,7 +296,7 @@ class ReplicatorTest_Collection: ReplicatorTest {
         colConfig2.conflictResolver = conflictResolver2
         
         let target = DatabaseEndpoint(database: otherDB!)
-        var config = self.config(configs: [colConfig1, colConfig2], target: target, type: .pushAndPull, continuous: false)
+        let config = self.config(configs: [colConfig1, colConfig2], target: target, type: .pushAndPull, continuous: false)
         run(config: config, expectedError: nil)
         
         // Update "doc1" in colA and colB of database A.
@@ -689,7 +373,7 @@ class ReplicatorTest_Collection: ReplicatorTest {
         config2.pushFilter = filter
         
         let target = DatabaseEndpoint(database: otherDB!)
-        var config = self.config(configs: [config1, config2], target: target, type: .push, continuous: false)
+        let config = self.config(configs: [config1, config2], target: target, type: .push, continuous: false)
         run(config: config, expectedError: nil)
         
         XCTAssertEqual(col1a.count, 10)
@@ -724,7 +408,7 @@ class ReplicatorTest_Collection: ReplicatorTest {
         config2.pullFilter = filter
         
         let target = DatabaseEndpoint(database: otherDB!)
-        var config = self.config(configs: [config1, config2], target: target, type: .pull, continuous: false)
+        let config = self.config(configs: [config1, config2], target: target, type: .pull, continuous: false)
         run(config: config, expectedError: nil)
         
         XCTAssertEqual(col1a.count, 5)
@@ -751,7 +435,7 @@ class ReplicatorTest_Collection: ReplicatorTest {
         var config2 = CollectionConfiguration(collection: col1b)
         config2.documentIDs = ["doc10", "doc11", "doc13"]
         
-        var config = self.config(configs: [config1, config2], target: target, type: .push, continuous: false)
+        let config = self.config(configs: [config1, config2], target: target, type: .push, continuous: false)
         run(config: config, expectedError: nil)
         
         XCTAssertEqual(col1a.count, 5)
@@ -778,7 +462,7 @@ class ReplicatorTest_Collection: ReplicatorTest {
         var config2 = CollectionConfiguration(collection: col1b)
         config2.documentIDs = ["doc10", "doc11", "doc13"]
         
-        var config = self.config(configs: [config1, config2], target: target, type: .pull, continuous: false)
+        let config = self.config(configs: [config1, config2], target: target, type: .pull, continuous: false)
         run(config: config, expectedError: nil)
         
         XCTAssertEqual(col1a.count, 2)
@@ -798,7 +482,7 @@ class ReplicatorTest_Collection: ReplicatorTest {
         try createDocNumbered(col1b, start: 10, num: 5)
         
         let target = DatabaseEndpoint(database: otherDB!)
-        var config = self.config(collections: [col1a, col1b], target: target, type: .push, continuous: false)
+        let config = self.config(collections: [col1a, col1b], target: target, type: .push, continuous: false)
         let r = Replicator(config: config)
         
         var docIds1a = try r.pendingDocumentIds(collection: col1a)
@@ -841,7 +525,7 @@ class ReplicatorTest_Collection: ReplicatorTest {
         try createDocNumbered(col1b, start: 10, num: 5)
         
         let target = DatabaseEndpoint(database: otherDB!)
-        var config = self.config(collections: [col1a, col1b], target: target, type: .push, continuous: false)
+        let config = self.config(collections: [col1a, col1b], target: target, type: .push, continuous: false)
         let r = Replicator(config: config)
         
         // make sure all docs are pending
@@ -887,7 +571,7 @@ class ReplicatorTest_Collection: ReplicatorTest {
         try createDocNumbered(col1b, start: 5, num: 5)
         
         let target = DatabaseEndpoint(database: otherDB!)
-        var config = self.config(collections: [col1a, col1b], target: target, type: .pushAndPull, continuous: false)
+        let config = self.config(collections: [col1a, col1b], target: target, type: .pushAndPull, continuous: false)
         let r = Replicator(config: config)
         var docCount = 0;
         var docs = [String]()

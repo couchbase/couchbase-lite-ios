@@ -58,6 +58,10 @@ NS_ASSUME_NONNULL_BEGIN
                        target: (id<CBLEndpoint>)target
                    serverCert: (nullable SecCertificateRef)cert;
 
+- (CBLReplicatorConfiguration*) configForCollection:(CBLCollection*)collection
+                                             target:(id <CBLEndpoint>)target
+                                        configBlock:(nullable void (^)(CBLCollectionConfiguration *config))block;
+                   
 // helpers
 - (void) checkEqualForCert: (SecCertificateRef)cert1 andCert: (SecCertificateRef)cert2;
 - (void) releaseCF: (CFTypeRef)ref;

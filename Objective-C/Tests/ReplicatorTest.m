@@ -2,7 +2,7 @@
 //  ReplicatorTest.m
 //  CouchbaseLite
 //
-//  Copyright (c) 2017 Couchbase, Inc All rights reserved.
+//  Copyright (c) 2025 Couchbase, Inc All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -239,7 +239,6 @@
                                    authenticator: (nullable CBLAuthenticator*)authenticator
                                       serverCert: (nullable SecCertificateRef)serverCert
                                      maxAttempts: (NSInteger)maxAttempts /* for default, set -1 */ {
-    NSError* error;
     CBLReplicatorConfiguration* c = [self configWithCollections: @[self.defaultCollection]
                                                          target: target
                                                            type: type
@@ -457,6 +456,18 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady {
     return fulfilled;
 }
 
+- (CBLReplicatorConfiguration*) configForCollection:(CBLCollection*)collection
+                                             target:(id <CBLEndpoint>)target
+                                        configBlock:(nullable void (^)(CBLCollectionConfiguration *config))block {
+    CBLCollectionConfiguration* colConfig = [[CBLCollectionConfiguration alloc] initWithCollection: collection];
+    
+    if (block) {
+        block(colConfig);
+    }
+    
+    return [[CBLReplicatorConfiguration alloc] initWithCollections:@[colConfig] target:target];
+}
+
 #pragma mark - Verify Replicator Change
 
 - (void) verifyChange: (CBLReplicatorChange*)change
@@ -484,7 +495,6 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady {
 - (XCTestExpectation *) waitForReplicatorIdle:(CBLReplicator*)replicator withProgressAtLeast:(uint64_t)progress {
     XCTestExpectation* x = [self expectationWithDescription:@"Replicator idle"];
     __block id token = nil;
-    __weak CBLReplicator* wReplicator = replicator;
     token = [replicator addChangeListener:^(CBLReplicatorChange * _Nonnull change) {
         if(change.status.progress.completed >= progress && change.status.activity == kCBLReplicatorIdle) {
             [x fulfill];
@@ -498,7 +508,6 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady {
 - (XCTestExpectation *) waitForReplicatorStopped:(CBLReplicator*)replicator {
     XCTestExpectation* x = [self expectationWithDescription:@"Replicator stop"];
     __block id token = nil;
-    __weak CBLReplicator* wReplicator = replicator;
     token = [replicator addChangeListener:^(CBLReplicatorChange * _Nonnull change) {
         if(change.status.activity == kCBLReplicatorStopped) {
             [x fulfill];

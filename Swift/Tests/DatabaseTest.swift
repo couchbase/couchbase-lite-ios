@@ -1401,7 +1401,8 @@ class DatabaseTest: CBLTestCase {
         try! openOtherDB()
         
         let target = DatabaseEndpoint(database: otherDB!)
-        var config = ReplicatorConfiguration(database: db, target: target)
+        let colConfig = CollectionConfiguration.fromCollections([self.defaultCollection!])
+        var config = ReplicatorConfiguration(collections: colConfig, target: target)
         config.continuous = true
         
         config.replicatorType = .push
@@ -1435,7 +1436,8 @@ class DatabaseTest: CBLTestCase {
         try! openOtherDB()
               
         let target = DatabaseEndpoint(database: otherDB!)
-        var config = ReplicatorConfiguration(database: db, target: target)
+        let colConfig = CollectionConfiguration.fromCollections([self.defaultCollection!])
+        var config = ReplicatorConfiguration(collections: colConfig, target: target)
         config.continuous = true
               
         config.replicatorType = .push

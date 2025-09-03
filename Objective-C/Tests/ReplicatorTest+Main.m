@@ -2,7 +2,7 @@
 //  ReplicatorTest_Main
 //  CouchbaseLite
 //
-//  Copyright (c) 2017 Couchbase, Inc All rights reserved.
+//  Copyright (c) 2025 Couchbase, Inc All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -37,17 +37,29 @@
 @interface ReplicatorTest_Main : ReplicatorTest
 @end
 
-@implementation ReplicatorTest_Main
+@implementation ReplicatorTest_Main {
+    id _target;
+}
 
-// TODO: Remove https://issues.couchbase.com/browse/CBL-3206
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+- (void) setUp {
+    [super setUp];
+    _target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
+}
 
-#ifdef COUCHBASE_ENTERPRISE
+- (void) tearDown {
+    _target = nil;
+    [super tearDown];
+}
+
+- (void) testCreateReplicatorWithNilConfig {
+    [self expectException: NSInternalInconsistencyException in:^{
+        CBLReplicatorConfiguration* config = nil;
+        (void) [[CBLReplicator alloc] initWithConfig: config];
+    }];
+}
 
 - (void) testStopContinuousReplicator {
-    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
-    id config = [self configWithTarget: target type: kCBLReplicatorTypePushAndPull continuous: YES];
+    id config = [self configWithTarget: _target type: kCBLReplicatorTypePushAndPull continuous: YES];
     CBLReplicator* r = [[CBLReplicator alloc] initWithConfig: config];
     
     NSArray* stopWhen = @[@(kCBLReplicatorConnecting), @(kCBLReplicatorBusy),
@@ -104,8 +116,7 @@
     Assert([self.defaultCollection saveDocument: doc1 error: &error]);
     AssertEqual(self.defaultCollection.count, 1u);
     
-    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
-    id config = [self configWithTarget: target type: kCBLReplicatorTypePush continuous: NO];
+    id config = [self configWithTarget: _target type: kCBLReplicatorTypePush continuous: NO];
     [self run: config errorCode: 0 errorDomain: nil];
     
     AssertEqual(self.otherDBDefaultCollection.count, 1u);
@@ -124,8 +135,7 @@
     Assert([self.otherDBDefaultCollection saveDocument: doc1 error: &error]);
     AssertEqual(self.otherDBDefaultCollection.count, 1u);
     
-    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
-    id config = [self configWithTarget: target type: kCBLReplicatorTypePull continuous: YES];
+    id config = [self configWithTarget: _target type: kCBLReplicatorTypePull continuous: YES];
     [self run: config errorCode: 0 errorDomain: nil];
     
     AssertEqual(self.defaultCollection.count, 1u);
@@ -136,8 +146,8 @@
 #if TARGET_OS_IPHONE
 
 - (void) testSwitchBackgroundForeground {
-    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
-    id config = [self configWithTarget: target type: kCBLReplicatorTypePushAndPull continuous: YES];
+    
+    id config = [self configWithTarget: _target type: kCBLReplicatorTypePushAndPull continuous: YES];
     CBLReplicator* r = [[CBLReplicator alloc] initWithConfig: config];
     
     static NSInteger numRounds = 10;
@@ -191,8 +201,7 @@
 }
 
 - (void) testSwitchToForegroundImmediately {
-    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
-    id config = [self configWithTarget: target type: kCBLReplicatorTypePushAndPull continuous: YES];
+    id config = [self configWithTarget: _target type: kCBLReplicatorTypePushAndPull continuous: YES];
     CBLReplicator* r = [[CBLReplicator alloc] initWithConfig: config];
 
     XCTestExpectation* idle = [self allowOverfillExpectationWithDescription: @"idle"];
@@ -229,8 +238,7 @@
 }
 
 - (void) testBackgroundingWhenStopping {
-    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
-    id config = [self configWithTarget: target type: kCBLReplicatorTypePushAndPull continuous: YES];
+    id config = [self configWithTarget: _target type: kCBLReplicatorTypePushAndPull continuous: YES];
     CBLReplicator* r = [[CBLReplicator alloc] initWithConfig: config];
     
     __block BOOL foregrounding = NO;
@@ -282,8 +290,7 @@
     XCTestExpectation* stop = [self allowOverfillExpectationWithDescription: @"finish-transfer"];
     
     // setup replicator
-    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
-    CBLReplicatorConfiguration* config = [self configWithTarget: target type: kCBLReplicatorTypePush
+    CBLReplicatorConfiguration* config = [self configWithTarget: _target type: kCBLReplicatorTypePush
                                                      continuous: YES];
     CBLReplicator* replicator = [[CBLReplicator alloc] initWithConfig: config];
     __block int busyCount = 0;
@@ -363,11 +370,14 @@
         [resolving fulfill];
         return conflict.remoteDocument;
     }];
+
+    CBLReplicatorConfiguration* rConfig = [self configForCollection: self.defaultCollection target: _target configBlock:^(CBLCollectionConfiguration* config) {
+        config.conflictResolver = resolver;
+    }];
+    rConfig.replicatorType = kCBLReplicatorTypePull;
+    rConfig.continuous = YES;
     
-    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
-    CBLReplicatorConfiguration* config = [self configWithTarget: target type: kCBLReplicatorTypePull continuous: YES];
-    config.conflictResolver = resolver;
-    CBLReplicator* r = [[CBLReplicator alloc] initWithConfig: config];
+    CBLReplicator* r = [[CBLReplicator alloc] initWithConfig: rConfig];
     
     XCTestExpectation* offline = [self expectationWithDescription: @"Offline"];
     XCTestExpectation* stopped = [self expectationWithDescription: @"Stopped"];
@@ -428,12 +438,11 @@
     Assert([self.defaultCollection saveDocument: doc2 error: &error]);
     
     // Push:
-    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
-    id config = [self configWithTarget: target type: kCBLReplicatorTypePush continuous: NO];
+    id config = [self configWithTarget: _target type: kCBLReplicatorTypePush continuous: NO];
     [self run: config errorCode: 0 errorDomain: nil];
     
     // Pull:
-    config = [self configWithTarget: target type: kCBLReplicatorTypePull continuous: NO];
+    config = [self configWithTarget: _target type: kCBLReplicatorTypePull continuous: NO];
     [self run: config errorCode: 0 errorDomain: nil];
     
     AssertEqual(self.defaultCollection.count, 2u);
@@ -468,12 +477,11 @@
     Assert([self.defaultCollection saveDocument: doc2 error: &error]);
     
     // Push:
-    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
-    id config = [self configWithTarget: target type: kCBLReplicatorTypePush continuous: YES];
+    id config = [self configWithTarget: _target type: kCBLReplicatorTypePush continuous: YES];
     [self run: config errorCode: 0 errorDomain: nil];
     
     // Pull:
-    config = [self configWithTarget: target type: kCBLReplicatorTypePull continuous: YES];
+    config = [self configWithTarget: _target type: kCBLReplicatorTypePull continuous: YES];
     [self run: config errorCode: 0 errorDomain: nil];
     
     AssertEqual(self.defaultCollection.count, 2u);
@@ -508,8 +516,7 @@
     Assert([self.defaultCollection saveDocument: doc2 error: &error]);
     
     // Push:
-    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
-    id config = [self configWithTarget: target type: kCBLReplicatorTypePush continuous: NO];
+    id config = [self configWithTarget: _target type: kCBLReplicatorTypePush continuous: NO];
     
     __block id<CBLListenerToken> token;
     __block CBLReplicator* replicator;
@@ -640,8 +647,7 @@
     Assert([self.otherDBDefaultCollection saveDocument: doc1b error: &error]);
     
     // Push:
-    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
-    id config = [self configWithTarget: target type: kCBLReplicatorTypePush continuous: NO];
+    id config = [self configWithTarget: _target type: kCBLReplicatorTypePush continuous: NO];
     
     __block id<CBLListenerToken> token;
     __block CBLReplicator* replicator;
@@ -685,8 +691,7 @@
     Assert([self.otherDBDefaultCollection saveDocument: doc1b error: &error]);
     
     // Pull:
-    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
-    id config = [self configWithTarget: target type: kCBLReplicatorTypePull continuous: NO];
+    id config = [self configWithTarget: _target type: kCBLReplicatorTypePull continuous: NO];
     
     __block id<CBLListenerToken> token;
     __block CBLReplicator* replicator;
@@ -723,8 +728,7 @@
     Assert([self.defaultCollection deleteDocument: doc1 error: &error]);
     
     // Push:
-    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
-    id config = [self configWithTarget: target type: kCBLReplicatorTypePush continuous: NO];
+    id config = [self configWithTarget: _target type: kCBLReplicatorTypePush continuous: NO];
     
     __block id<CBLListenerToken> token;
     __block CBLReplicator* replicator;
@@ -763,8 +767,8 @@
     XCTestExpectation* exp = [self expectationWithDescription: @"Document Replication - Inverted"];
     exp.inverted = YES;
     
-    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
-    id config = [self configWithTarget: target type: kCBLReplicatorTypePush continuous: NO];
+    
+    id config = [self configWithTarget: _target type: kCBLReplicatorTypePush continuous: NO];
     [self run: config reset: NO errorCode: 0 errorDomain: nil onReplicatorReady: ^(CBLReplicator* r) {
         id<CBLListenerToken> token = [r addDocumentReplicationListener: ^(CBLDocumentReplication *docReplication) {
             [exp fulfill];
@@ -791,8 +795,8 @@
     }];
     
     // Push:
-    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
-    id config = [self configWithTarget: target type: kCBLReplicatorTypePush continuous: NO];
+    
+    id config = [self configWithTarget: _target type: kCBLReplicatorTypePush continuous: NO];
     
     __block id<CBLListenerToken> docReplToken;
     __block CBLReplicator* replicator;
@@ -836,25 +840,29 @@
     
     // replicator with pull filter
     NSMutableSet<NSString*>* docIds = [NSMutableSet set];
-    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
-    CBLReplicatorConfiguration* config = [self configWithTarget: target
-                                                           type: kCBLReplicatorTypePull
-                                                     continuous: isContinuous];
-    config.pullFilter = ^BOOL(CBLDocument* document, CBLDocumentFlags flags) {
-        AssertNotNil(document.id);
-        AssertNotNil(document.revisionID);
-        BOOL isAccessRemoved = (flags & kCBLDocumentFlagsAccessRemoved) == kCBLDocumentFlagsAccessRemoved;
-        if (isAccessRemoved) {
-            [docIds addObject: document.id];
-            
-            // if access removed only allow  `docID = pass` is allowed.
-            return [document.id isEqualToString: @"pass"];
-        }
-        // allow all docs with `name = pass`
-        return [[document stringForKey: @"name"] isEqualToString: @"pass"];
-    };
     
-    [self run: config errorCode: 0 errorDomain: nil];
+    CBLReplicatorConfiguration* rConfig = [self configForCollection: self.defaultCollection
+                                                             target: _target
+                                                        configBlock:^(CBLCollectionConfiguration* config) {
+        config.pullFilter = ^BOOL(CBLDocument* document, CBLDocumentFlags flags) {
+            AssertNotNil(document.id);
+            AssertNotNil(document.revisionID);
+            BOOL isAccessRemoved = (flags & kCBLDocumentFlagsAccessRemoved) == kCBLDocumentFlagsAccessRemoved;
+            if (isAccessRemoved) {
+                [docIds addObject: document.id];
+                
+                // if access removed only allow  `docID = pass` is allowed.
+                return [document.id isEqualToString: @"pass"];
+            }
+            // allow all docs with `name = pass`
+            return [[document stringForKey: @"name"] isEqualToString: @"pass"];
+        };
+    }];
+    
+    rConfig.replicatorType = kCBLReplicatorTypePull;
+    rConfig.continuous = isContinuous;
+    
+    [self run: rConfig errorCode: 0 errorDomain: nil];
     AssertEqual(docIds.count, 0u);
     
     // Update the `_removed` flag
@@ -867,7 +875,7 @@
     Assert([self.otherDBDefaultCollection saveDocument: doc2 error: &error]);
     
     // pull replication again...
-    [self run: config errorCode: 0 errorDomain: nil];
+    [self run: rConfig errorCode: 0 errorDomain: nil];
     
     AssertEqual(docIds.count, 2u);
     
@@ -907,26 +915,30 @@
     
     // Create replicator with push filter:
     NSMutableSet<NSString*>* docIds = [NSMutableSet set];
-    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
-    CBLReplicatorConfiguration* config = [self configWithTarget: target
-                                                           type: kCBLReplicatorTypePush
-                                                     continuous: isContinuous];
-    config.pushFilter = ^BOOL(CBLDocument* document, CBLDocumentFlags flags) {
-        AssertNotNil(document.id);
-        AssertNotNil(document.revisionID);
-        
-        BOOL isDeleted = (flags & kCBLDocumentFlagsDeleted) == kCBLDocumentFlagsDeleted;
-        if (isDeleted) {
-            [docIds addObject: document.id];
-            
-            // if deleted only allow  `docID = pass` is allowed.
-            return [document.id isEqualToString: @"pass"];
-        }
-        // allow all docs with `name = pass`
-        return [[document stringForKey: @"name"] isEqualToString: @"pass"];
-    };
     
-    [self run: config errorCode: 0 errorDomain: nil];
+    CBLReplicatorConfiguration* rConfig = [self configForCollection: self.defaultCollection
+                                                             target: _target
+                                                        configBlock:^(CBLCollectionConfiguration* config) {
+        config.pushFilter = ^BOOL(CBLDocument* document, CBLDocumentFlags flags) {
+            AssertNotNil(document.id);
+            AssertNotNil(document.revisionID);
+            
+            BOOL isDeleted = (flags & kCBLDocumentFlagsDeleted) == kCBLDocumentFlagsDeleted;
+            if (isDeleted) {
+                [docIds addObject: document.id];
+                
+                // if deleted only allow  `docID = pass` is allowed.
+                return [document.id isEqualToString: @"pass"];
+            }
+            // allow all docs with `name = pass`
+            return [[document stringForKey: @"name"] isEqualToString: @"pass"];
+        };
+    }];
+    
+    rConfig.replicatorType = kCBLReplicatorTypePush;
+    rConfig.continuous = isContinuous;
+    
+    [self run: rConfig errorCode: 0 errorDomain: nil];
     AssertEqual(docIds.count, 0u);
     
     // Check replicated documents:
@@ -936,7 +948,7 @@
     Assert([self.defaultCollection deleteDocument: doc1 error: &error]);
     Assert([self.defaultCollection deleteDocument: doc2 error: &error]);
     
-    [self run: config errorCode: 0 errorDomain: nil];
+    [self run: rConfig errorCode: 0 errorDomain: nil];
     
     AssertEqual(docIds.count, 2u);
     Assert([docIds containsObject: @"doc1"]);
@@ -959,26 +971,30 @@
     Assert([self.otherDBDefaultCollection saveDocument: pass error: &error]);
     
     NSMutableSet<NSString*>* docIds = [NSMutableSet set];
-    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
-    CBLReplicatorConfiguration* config = [self configWithTarget: target
-                                                           type: kCBLReplicatorTypePull
-                                                     continuous: isContinuous];
-    config.pullFilter = ^BOOL(CBLDocument* document, CBLDocumentFlags flags) {
-        AssertNotNil(document.id);
-        AssertNotNil(document.revisionID);
-        
-        BOOL isDeleted = (flags & kCBLDocumentFlagsDeleted) == kCBLDocumentFlagsDeleted;
-        if (isDeleted) {
-            [docIds addObject: document.id];
-            
-            // if deleted only allow  `docID = pass` is allowed.
-            return [document.id isEqualToString: @"pass"];
-        }
-        // allow all docs with `name = pass`
-        return [[document stringForKey: @"name"] isEqualToString: @"pass"];
-    };
     
-    [self run: config errorCode: 0 errorDomain: nil];
+    CBLReplicatorConfiguration* rConfig = [self configForCollection: self.defaultCollection
+                                                             target: _target
+                                                        configBlock:^(CBLCollectionConfiguration* config) {
+        config.pullFilter = ^BOOL(CBLDocument* document, CBLDocumentFlags flags) {
+            AssertNotNil(document.id);
+            AssertNotNil(document.revisionID);
+            
+            BOOL isDeleted = (flags & kCBLDocumentFlagsDeleted) == kCBLDocumentFlagsDeleted;
+            if (isDeleted) {
+                [docIds addObject: document.id];
+                
+                // if deleted only allow  `docID = pass` is allowed.
+                return [document.id isEqualToString: @"pass"];
+            }
+            // allow all docs with `name = pass`
+            return [[document stringForKey: @"name"] isEqualToString: @"pass"];
+        };
+    }];
+    
+    rConfig.replicatorType = kCBLReplicatorTypePull;
+    rConfig.continuous = isContinuous;
+    
+    [self run: rConfig errorCode: 0 errorDomain: nil];
     AssertEqual(docIds.count, 0u);
     
     // should replicate all docs with `name = pass`
@@ -990,7 +1006,7 @@
     Assert([self.otherDBDefaultCollection deleteDocument: doc1 error: &error]);
     Assert([self.otherDBDefaultCollection deleteDocument: pass error: &error]);
     
-    [self run: config errorCode: 0 errorDomain: nil];
+    [self run: rConfig errorCode: 0 errorDomain: nil];
     
     // Check documents passed to the filter:
     AssertEqual(docIds.count, 2u);
@@ -1014,20 +1030,24 @@
     Assert([self.defaultCollection saveDocument: doc1 error: &error]);
     
     NSMutableSet<NSString*>* docIds = [NSMutableSet set];
-    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
-    CBLReplicatorConfiguration* config = [self configWithTarget: target
-                                                           type: kCBLReplicatorTypePush
-                                                     continuous: YES];
-    config.pushFilter = ^BOOL(CBLDocument* document, CBLDocumentFlags flags) {
-        AssertNotNil(document.id);
-        AssertNotNil(document.revisionID);
-        [docIds addObject: document.id];
-        
-        // allow all docs with `name = pass`
-        return [[document stringForKey: @"name"] isEqualToString: @"pass"];
-    };
     
-    repl = [[CBLReplicator alloc] initWithConfig: config];
+    CBLReplicatorConfiguration* rConfig = [self configForCollection: self.defaultCollection
+                                                             target: _target
+                                                        configBlock:^(CBLCollectionConfiguration* config) {
+        config.pushFilter = ^BOOL(CBLDocument* document, CBLDocumentFlags flags) {
+            AssertNotNil(document.id);
+            AssertNotNil(document.revisionID);
+            [docIds addObject: document.id];
+            
+            // allow all docs with `name = pass`
+            return [[document stringForKey: @"name"] isEqualToString: @"pass"];
+        };
+    }];
+    
+    rConfig.replicatorType = kCBLReplicatorTypePush;
+    rConfig.continuous = YES;
+    
+    repl = [[CBLReplicator alloc] initWithConfig: rConfig];
     [self runWithReplicator: repl errorCode: 0 errorDomain: nil];
     AssertEqual(docIds.count, 1u);
     AssertEqual(self.defaultCollection.count, 1u);
@@ -1068,21 +1088,25 @@
     Assert([self.otherDBDefaultCollection saveDocument: doc1 error: &error]);
     
     NSMutableSet<NSString*>* docIds = [NSMutableSet set];
-    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
-    CBLReplicatorConfiguration* config = [self configWithTarget: target
-                                                           type: kCBLReplicatorTypePull
-                                                     continuous: YES];
-    config.pullFilter = ^BOOL(CBLDocument* document, CBLDocumentFlags flags) {
-        AssertNotNil(document.id);
-        AssertNotNil(document.revisionID);
-        
-        [docIds addObject: document.id];
-        
-        // allow all docs with `name = pass`
-        return [[document stringForKey: @"name"] isEqualToString: @"pass"];
-    };
     
-    repl = [[CBLReplicator alloc] initWithConfig: config];
+    CBLReplicatorConfiguration* rConfig = [self configForCollection: self.defaultCollection
+                                                             target: _target
+                                                        configBlock:^(CBLCollectionConfiguration* config) {
+        config.pullFilter = ^BOOL(CBLDocument* document, CBLDocumentFlags flags) {
+            AssertNotNil(document.id);
+            AssertNotNil(document.revisionID);
+            
+            [docIds addObject: document.id];
+            
+            // allow all docs with `name = pass`
+            return [[document stringForKey: @"name"] isEqualToString: @"pass"];
+        };
+    }];
+    
+    rConfig.replicatorType = kCBLReplicatorTypePull;
+    rConfig.continuous = YES;
+    
+    repl = [[CBLReplicator alloc] initWithConfig: rConfig];
     [self runWithReplicator: repl errorCode: 0 errorDomain: nil];
     AssertEqual(docIds.count, 1u);
     AssertEqual(self.defaultCollection.count, 1u);
@@ -1129,37 +1153,41 @@
     // Create replicator with push filter:
     NSMutableSet<NSString*>* pushDocIds = [NSMutableSet set];
     NSMutableSet<NSString*>* pullDocIds = [NSMutableSet set];
-    id target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
-    CBLReplicatorConfiguration* config = [self configWithTarget: target
-                                                           type: kCBLReplicatorTypePushAndPull
-                                                     continuous: false];
-    config.pushFilter = ^BOOL(CBLDocument* document, CBLDocumentFlags flags) {
-        AssertNotNil(document.id);
-        AssertNotNil(document.revisionID);
-        
-        [self expectException: @"NSInternalInconsistencyException" in:^{
-            [document toMutable];
-        }];
-        
-        // Gather document ID:
-        [pushDocIds addObject: document.id];
-        return YES;
-    };
     
-    config.pullFilter = ^BOOL(CBLDocument* document, CBLDocumentFlags flags) {
-        AssertNotNil(document.id);
-        AssertNotNil(document.revisionID);
+    CBLReplicatorConfiguration* rConfig = [self configForCollection: self.defaultCollection
+                                                             target: _target
+                                                        configBlock:^(CBLCollectionConfiguration* config) {
+        config.pushFilter = ^BOOL(CBLDocument* document, CBLDocumentFlags flags) {
+            AssertNotNil(document.id);
+            AssertNotNil(document.revisionID);
+            
+            [self expectException: @"NSInternalInconsistencyException" in:^{
+                [document toMutable];
+            }];
+            
+            // Gather document ID:
+            [pushDocIds addObject: document.id];
+            return YES;
+        };
         
-        [self expectException: @"NSInternalInconsistencyException" in:^{
-            [document toMutable];
-        }];
-        
-        // Gather document ID:
-        [pullDocIds addObject: document.id];
-        return YES;
-    };
+        config.pullFilter = ^BOOL(CBLDocument* document, CBLDocumentFlags flags) {
+            AssertNotNil(document.id);
+            AssertNotNil(document.revisionID);
+            
+            [self expectException: @"NSInternalInconsistencyException" in:^{
+                [document toMutable];
+            }];
+            
+            // Gather document ID:
+            [pullDocIds addObject: document.id];
+            return YES;
+        };
+    }];
     
-    [self run: config errorCode: 0 errorDomain: nil];
+    rConfig.replicatorType = kCBLReplicatorTypePushAndPull;
+    rConfig.continuous = NO;
+    
+    [self run: rConfig errorCode: 0 errorDomain: nil];
     
     // Check documents passed to the filter:
     AssertEqual(pullDocIds.count, 1u);
@@ -1246,44 +1274,7 @@
     freeifaddrs(ifaddrs);
 }
 
-#endif // COUCHBASE_ENTERPRISE
-
 #pragma mark - Replicator Config
-
-- (void) testConfigFilters {
-    id target = [[CBLURLEndpoint alloc] initWithURL:[NSURL URLWithString:@"ws://foo.couchbase.com/db"]];
-    CBLReplicatorConfiguration* config = [self configWithTarget: target
-                                                           type: kCBLReplicatorTypePush
-                                                     continuous: YES];
-    id pushFilter = ^BOOL(CBLDocument* document, CBLDocumentFlags flags) {
-        AssertNotNil(document.id);
-        AssertNotNil(document.revisionID);
-        return (flags & kCBLDocumentFlagsDeleted) == kCBLDocumentFlagsDeleted;
-    };
-    id pullFilter = ^BOOL(CBLDocument* document, CBLDocumentFlags flags) {
-        AssertNotNil(document.id);
-        AssertNotNil(document.revisionID);
-        return [[document valueForKey: @"someKey"] isEqualToString: @"pass"];
-    };
-    config.pushFilter = pushFilter;
-    config.pullFilter = pullFilter;
-    repl = [[CBLReplicator alloc] initWithConfig: config];
-    AssertEqualObjects(repl.config.pushFilter, pushFilter);
-    AssertEqualObjects(repl.config.pullFilter, pullFilter);
-    AssertFalse([repl.config.pushFilter isEqual: pullFilter]);
-    AssertFalse([repl.config.pullFilter isEqual: pushFilter]);
-    
-    // tries to reverse the filter, so that no exception is thrown
-    repl.config.pushFilter = pullFilter;
-    repl.config.pullFilter = pushFilter;
-    AssertEqualObjects(repl.config.pushFilter, pullFilter);
-    AssertEqualObjects(repl.config.pullFilter, pushFilter);
-    Assert([repl.config.pushFilter isEqual: pullFilter]);
-    Assert([repl.config.pullFilter isEqual: pushFilter]);
-    
-    // Cleanup:
-    repl = nil;
-}
 
 - (void) testReplicationConfigSetterMethods {
     CBLBasicAuthenticator* basic = [[CBLBasicAuthenticator alloc] initWithUsername: @"abcd"
@@ -1301,12 +1292,6 @@
     
     [temp setContinuous: YES];
     [temp setAuthenticator: basic];
-    
-    NSArray* channels = [NSArray arrayWithObjects: @"channel1", @"channel2", @"channel3", nil];
-    [temp setChannels: channels];
-    
-    NSArray* docIds = [NSArray arrayWithObjects: @"docID1", @"docID2", nil];
-    [temp setDocumentIDs: docIds];
     
     NSDictionary* headers = [NSDictionary dictionaryWithObjectsAndKeys:
                              @"someObject", @"someKey", nil];
@@ -1326,8 +1311,6 @@
     AssertEqualObjects([self getCertificateID: cert],
                        [self getCertificateID: config.pinnedServerCertificate]);
     AssertEqualObjects(headers, config.headers);
-    AssertEqualObjects(docIds, config.documentIDs);
-    AssertEqualObjects(channels, config.channels);
     AssertEqual(config.heartbeat, kCBLDefaultReplicatorHeartbeat);
 #ifdef COUCHBASE_ENTERPRISE
     AssertEqual(temp.acceptOnlySelfSignedServerCertificate, YES);
@@ -1336,8 +1319,7 @@
 }
 
 - (void) testReplicatorConfigDefaultValues {
-    id target = [[CBLURLEndpoint alloc] initWithURL: [NSURL URLWithString: @"ws://foo.cb.com/db"]];
-    CBLReplicatorConfiguration* config = [[CBLReplicatorConfiguration alloc] initWithTarget: target];
+    CBLReplicatorConfiguration* config = [[CBLReplicatorConfiguration alloc] initWithDefaults];
     
     AssertEqual(config.replicatorType, kCBLDefaultReplicatorType);
     AssertEqual(config.continuous, kCBLDefaultReplicatorContinuous);
@@ -1595,7 +1577,5 @@
     [self waitForExpectations: @[exp1, exp2] timeout: kExpTimeout];
     [token1 remove];
 }
-
-#pragma clang diagnostic pop
 
 @end

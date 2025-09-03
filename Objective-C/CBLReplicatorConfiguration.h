@@ -36,12 +36,6 @@ NS_ASSUME_NONNULL_BEGIN
 @interface CBLReplicatorConfiguration: NSObject
 
 /**
- The local database to replicate with the target endpoint.
- */
-@property (nonatomic, readonly) CBLDatabase* database
-__deprecated_msg("Use collectionConfigs instead");
-
-/**
  The replication endpoint to replicate with.
  */
 @property (nonatomic, readonly) id<CBLEndpoint> target;
@@ -49,7 +43,7 @@ __deprecated_msg("Use collectionConfigs instead");
 /**
  The collection configurations used for the replication. Each configuration specifies a collection and its configuration.
  */
-@property (nonatomic, readonly) NSArray<CBLCollectionConfiguration*>* collectionConfigs;
+@property (nonatomic, readonly) NSArray<CBLCollectionConfiguration*>* collections;
 
 /**
  Replication type indicating the direction of the replication. The default value is
@@ -98,39 +92,6 @@ __deprecated_msg("Use collectionConfigs instead");
  which means that the parent-domain cookies are not permitted to save by default.
  */
 @property (nonatomic) BOOL acceptParentDomainCookies;
-
-/**
- A set of Sync Gateway channel names to pull from for the default collection. Ignored for push replication.
- 
- @Note: Channels are not supported in Peer-to-Peer and Database-to-Database replication.
- */
-@property (nonatomic, nullable) NSArray<NSString*>* channels
-__deprecated_msg("Use -initWithCollections:target: instead.");
-
-/**
- A set of document IDs to filter by for the default collection. If given, only documents with these IDs will be pushed and/or pulled.
- */
-@property (nonatomic, nullable) NSArray<NSString*>* documentIDs
-__deprecated_msg("Use -initWithCollections:target: instead.");
-
-/**
- A push filter for the default collection. Only documents for which the filter returns true are replicated.
- */
-@property (nonatomic, nullable) CBLReplicationFilter pushFilter
-__deprecated_msg("Use -initWithCollections:target: instead.");
-
-/**
- A pull filter for the default collection. Only documents for which the closure returns true are replicated.
- */
-@property (nonatomic, nullable) CBLReplicationFilter pullFilter
-__deprecated_msg("Use -initWithCollections:target: instead.");
-
-/**
- The custom conflict resolver for the default collection. If this value is not set, or set to nil,
- the default conflict resolver will be applied.
- */
-@property (nonatomic, nullable) id<CBLConflictResolver> conflictResolver
-__deprecated_msg("Use -initWithCollections:target: instead.");
 
 #if TARGET_OS_IPHONE
 /**
@@ -197,45 +158,8 @@ __deprecated_msg("Use -initWithCollections:target: instead.");
  */
 @property (nonatomic) BOOL enableAutoPurge;
 
-/**
- The collections used for the replication.
- */
-@property (nonatomic, readonly) NSArray<CBLCollection*>* collections
-__deprecated_msg("Use collectionConfigs instead.");
-
 /** Not available */
 - (instancetype) init NS_UNAVAILABLE;
-
-/**
- Initializes a CBLReplicatorConfiguration with the given database and the target's endpoint.
- 
- When using this initializer, the default collection of the given database will be automatically
- included in the configuration.
- 
- If you do not intend to replicate the default collection, use -initWithCollections:target: instead to
- explicity specifiy the intended collections.
- 
- @param database The database.
- @param target The target endpoint.
- @return The CBLReplicatorConfiguration object.
- */
-- (instancetype) initWithDatabase: (CBLDatabase*)database
-                           target: (id <CBLEndpoint>)target
-__deprecated_msg("Use -initWithCollections:target: instead.");
-
-/**
- Initializes a CBLReplicatorConfiguration with the target’s endpoint.
- 
- After the ReplicatorConfiguration object is created, use addCollection(_ collection:, config:)
- or addCollections(_ collections:, config:) to specify and configure the collections used for
- replicating with the target. If there are no collections specified, the replicator will fail
- to start with a no collections specified error.
- 
- @param target The target endpoint.
- @return The CBLReplicatorConfiguration object.
- */
-- (instancetype) initWithTarget: (id <CBLEndpoint>)target
-__deprecated_msg("Use -initWithCollections:target: instead.");
 
 /**
  Initializes a CBLReplicatorConfiguration with the specified collection configurations and target's endpoint.
@@ -255,52 +179,6 @@ __deprecated_msg("Use -initWithCollections:target: instead.");
  @return The CBLReplicatorConfiguration object.
  */
 - (instancetype) initWithConfig: (CBLReplicatorConfiguration*)config;
-
-/**
- Add a collection used for the replication with an optional collection configuration.
- If the collection has been added before, the previous added and its configuration if specified
- will be replaced.
- If a null configuration is specified, a default empty configuration will be applied.
- 
- @param collection The collection to be added.
- @param config Configuration for the collection, if nil, default config
- */
-- (void) addCollection: (CBLCollection*)collection
-                config: (nullable CBLCollectionConfiguration*)config
-__deprecated_msg("Use -initWithCollections:target: instead.");
-
-/**
- Add multiple collections used for the replication with an optional shared collection configuration.
- If any of the collections have been added before, the previously added collections and their
- configuration if specified will be replaced. Adding an empty collection array will be no-ops. if
- specified will be replaced.
- 
- If a null configuration is specified, a default empty configuration will be applied.
-    
- @param collections The collections to be added.
- @param config Respective configuration for the collections, if nil, default config
- */
-- (void) addCollections: (NSArray*)collections
-                 config: (nullable CBLCollectionConfiguration*)config
-__deprecated_msg("Use -initWithCollections:target: instead.");
-
-/**
- Remove the collection. If the collection doesn’t exist, this operation will be no ops.
- 
- @param collection The collection to be removed.
- */
-- (void) removeCollection: (CBLCollection*)collection
-__deprecated_msg("Use -initWithCollections:target: instead.");
-
-/**
- Get a copy of the collection’s config. If the config needs to be changed for the collection, the
- collection will need to be re-added with the updated config.
- 
- @param collection The collection whose config is needed.
- @return The collection configuration, or nil if config doesn't exist
- */
-- (nullable CBLCollectionConfiguration*) collectionConfig: (CBLCollection*)collection
-__deprecated_msg("Use collectionConfigs instead.");
 
 @end
 

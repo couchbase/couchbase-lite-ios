@@ -33,10 +33,6 @@
     [super tearDown];
 }
 
-// TODO: Remove https://issues.couchbase.com/browse/CBL-3206
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-
 #pragma mark - helper methods
 
 // Two replicators, replicates docs to the listener; validates connection status
@@ -204,7 +200,7 @@
 
     // start listener#1 and listener#2
     NSError* err;
-    Config* config = [[Config alloc] initWithDatabase: self.otherDB];
+    Config* config = [[Config alloc] initWithCollections: @[self.otherDBDefaultCollection]];
     Listener* listener1 = [[Listener alloc] initWithConfig: config];
     Listener* listener2 = [[Listener alloc] initWithConfig: config];
     Assert([listener1 startWithError: &err]);
@@ -217,9 +213,10 @@
     doc =  [self createDocument: @"other-db-doc"];
     Assert([self.otherDBDefaultCollection saveDocument: doc error: &err], @"Fail to save otherDB %@", err);
     
-    // start replicator
-    CBLReplicatorConfiguration* rConfig = [[CBLReplicatorConfiguration alloc] initWithDatabase: self.db
-                                                                                        target: listener1.localEndpoint];
+    CBLReplicatorConfiguration* rConfig = [self configForCollection: self.defaultCollection
+                                                             target: listener1.localEndpoint
+                                                        configBlock: nil];
+                                                                                          
     rConfig.continuous = YES;
     rConfig.pinnedServerCertificate = (__bridge SecCertificateRef) listener1.tlsIdentity.certs[0];
     CBLReplicator* replicator = [[CBLReplicator alloc] initWithConfig: rConfig];
@@ -251,7 +248,7 @@
 #pragma mark - Tests
 
 - (void) testDefaultProperties {
-    Config* config = [[Config alloc] initWithDatabase: self.otherDB];
+    Config* config = [[Config alloc] initWithCollections: @[self.otherDBDefaultCollection]];
     
     // disable TLS
     AssertEqual(config.disableTLS, kCBLDefaultListenerDisableTls);
@@ -275,7 +272,7 @@
 
 - (void) testPort {
     // initialize a listener
-    Config* config = [[Config alloc] initWithDatabase: self.otherDB];
+    Config* config = [[Config alloc] initWithCollections: @[self.otherDBDefaultCollection]];
     config.port = kWsPort;
     config.disableTLS = YES;
     Listener* listener = [[Listener alloc] initWithConfig: config];
@@ -294,7 +291,7 @@
 
 - (void) testEmptyPort {
     // initialize a listener
-    Config* config = [[Config alloc] initWithDatabase: self.otherDB];
+    Config* config = [[Config alloc] initWithCollections: @[self.otherDBDefaultCollection]];
     config.port = 0;
     config.disableTLS = YES;
     Listener* listener = [[Listener alloc] initWithConfig: config];
@@ -315,7 +312,7 @@
     [self listenWithTLS: NO];
     
     // initialize a listener at same port
-    Config* config = [[Config alloc] initWithDatabase: self.otherDB];
+    Config* config = [[Config alloc] initWithCollections: @[self.otherDBDefaultCollection]];
     config.port = _listener.config.port;
     config.disableTLS = YES;
     Listener* listener2 = [[Listener alloc] initWithConfig: config];
@@ -335,7 +332,7 @@
 - (void) testURLs {
     if (!self.keyChainAccessAllowed) return;
     
-    Config* config = [[Config alloc] initWithDatabase: self.otherDB];
+    Config* config = [[Config alloc] initWithCollections: @[self.otherDBDefaultCollection]];
     _listener = [[Listener alloc] initWithConfig: config];
     AssertNil(_listener.urls);
     
@@ -354,7 +351,7 @@
     XCTestExpectation* replicatorStop = [self expectationWithDescription: @"Replicator Stopped"];
     XCTestExpectation* pullFilterBusy = [self expectationWithDescription: @"Pull filter busy"];
     
-    Config* config = [[Config alloc] initWithDatabase: self.otherDB];
+    Config* config = [[Config alloc] initWithCollections: @[self.otherDBDefaultCollection]];
     config.port = kWsPort;
     config.disableTLS = YES;
     _listener = [[Listener alloc] initWithConfig: config];
@@ -372,18 +369,21 @@
     CBLMutableDocument* doc = [self createDocument];
     Assert([self.otherDBDefaultCollection saveDocument: doc error: &err], @"Failed to save %@", err);
     
-    CBLReplicatorConfiguration* rConfig = [self configWithTarget: _listener.localEndpoint
-                                                            type: kCBLReplicatorTypePull
-                                                      continuous: NO];
     __block Listener* weakListener = _listener;
     __block uint64_t maxConnectionCount = 0, maxActiveCount = 0;
-    [rConfig setPullFilter: ^BOOL(CBLDocument * _Nonnull document, CBLDocumentFlags flags) {
-        Listener* strongListener = weakListener;
-        maxConnectionCount = MAX(strongListener.status.connectionCount, maxConnectionCount);
-        maxActiveCount = MAX(strongListener.status.activeConnectionCount, maxActiveCount);
-        [pullFilterBusy fulfill];
-        return true;
+    CBLReplicatorConfiguration* rConfig = [self configForCollection: self.defaultCollection
+                                                             target: _listener.localEndpoint
+                                                        configBlock: ^(CBLCollectionConfiguration* colConfig) {
+        [colConfig setPullFilter: ^BOOL(CBLDocument * _Nonnull document, CBLDocumentFlags flags) {
+            Listener* strongListener = weakListener;
+            maxConnectionCount = MAX(strongListener.status.connectionCount, maxConnectionCount);
+            maxActiveCount = MAX(strongListener.status.activeConnectionCount, maxActiveCount);
+            [pullFilterBusy fulfill];
+            return true;
+        }];
     }];
+    rConfig.replicatorType = kCBLReplicatorTypePull;
+    
     CBLReplicator* replicator = [[CBLReplicator alloc] initWithConfig: rConfig];
     id token = [replicator addChangeListener: ^(CBLReplicatorChange* change) {
         if (change.status.activity == kCBLReplicatorStopped)
@@ -411,7 +411,7 @@
     CBLMutableDocument* doc = [self createDocument];
     Assert([self.otherDBDefaultCollection saveDocument: doc error: &error], @"Fail to save otherDB %@", error);
     
-    Config* config = [[Config alloc] initWithDatabase: self.otherDB];
+    Config* config = [[Config alloc] initWithCollections: @[self.otherDBDefaultCollection]];
     Listener* listener = [[Listener alloc] initWithConfig: config];
     AssertNil(listener.tlsIdentity);
     
@@ -458,7 +458,7 @@
     Assert([self.otherDBDefaultCollection saveDocument: doc error: &error], @"Fail to save otherDB %@", error);
     
     CBLTLSIdentity* tlsIdentity = [self tlsIdentity: YES];
-    Config* config = [[Config alloc] initWithDatabase: self.otherDB];
+    Config* config = [[Config alloc] initWithCollections: @[self.otherDBDefaultCollection]];
     config.tlsIdentity = tlsIdentity;
     Listener* listener = [[Listener alloc] initWithConfig: config];
     AssertNil(listener.tlsIdentity);
@@ -838,7 +838,8 @@
         
         // separate replicator instance
         id end = [[CBLURLEndpoint alloc] initWithURL: url];
-        id rConfig = [[CBLReplicatorConfiguration alloc] initWithDatabase: db target: end];
+        id rConfig = [ self configForCollection: self.defaultCollection target: end configBlock: nil];
+
         [rConfig setPinnedServerCertificate: (SecCertificateRef)(_listener.tlsIdentity.certs.firstObject)];
         [self run: rConfig errorCode: 0 errorDomain: nil];
         
@@ -848,7 +849,7 @@
     
     AssertEqual(self.otherDBDefaultCollection.count, notLinkLocal.count);
     CBLQuery* q = [CBLQueryBuilder select: @[[CBLQuerySelectResult all]]
-                                     from: [CBLQueryDataSource database: self.otherDB]];
+                                     from: [CBLQueryDataSource collection:self.otherDBDefaultCollection]];
     CBLQueryResultSet* rs = [q execute: &err];
     AssertNil(err);
     NSMutableArray* result = [NSMutableArray arrayWithCapacity: notLinkLocal.count];
@@ -860,7 +861,7 @@
     AssertEqualObjects(result, notLinkLocal);
     
     // validate 0.0.0.0 meta-address should return same empty response.
-    Config* config = [[Config alloc] initWithDatabase: self.otherDB];
+    Config* config = [[Config alloc] initWithCollections: @[self.otherDBDefaultCollection]];
     config.networkInterface = @"0.0.0.0";
     config.port = kWssPort;
     [self listen: config];
@@ -872,7 +873,7 @@
 - (void) testUnavailableNetworkInterface {
     if (!self.keyChainAccessAllowed) return;
     
-    Config* config = [[Config alloc] initWithDatabase: self.otherDB];
+    Config* config = [[Config alloc] initWithCollections: @[self.otherDBDefaultCollection]];
     config.networkInterface = @"1.1.1.256";
     [self ignoreException:^{
         [self listen: config errorCode: CBLErrorUnknownHost errorDomain: CBLErrorDomain];
@@ -889,7 +890,7 @@
     
     NSArray* interfaces = [Listener allInterfaceNames];
     for (NSString* i in interfaces) {
-        Config* config = [[Config alloc] initWithDatabase: self.otherDB];
+        Config* config = [[Config alloc] initWithCollections: @[self.otherDBDefaultCollection]];
         config.networkInterface = i;
         
         [self listen: config];
@@ -903,7 +904,7 @@
 - (void) testMultipleListenersOnSameDatabase {
     if (!self.keyChainAccessAllowed) return;
     
-    Config* config = [[Config alloc] initWithDatabase: self.otherDB];
+    Config* config = [[Config alloc] initWithCollections: @[self.otherDBDefaultCollection]];
     Listener* listener1 = [[Listener alloc] initWithConfig: config];
     Listener* listener2 = [[Listener alloc] initWithConfig: config];
     
@@ -949,7 +950,7 @@
 - (void) testMultipleReplicatorsOnReadOnlyListener {
     if (!self.keyChainAccessAllowed) return;
     
-    Config* config = [[Config alloc] initWithDatabase: self.otherDB];
+    Config* config = [[Config alloc] initWithCollections: @[self.otherDBDefaultCollection]];
     config.readOnly = YES;
     [self listen: config];
     
@@ -972,7 +973,7 @@
     CBLMutableDocument* doc1 =  [self createDocument];
     Assert([self.defaultCollection saveDocument: doc1 error: &err], @"Fail to save db1 %@", err);
     
-    Config* config = [[Config alloc] initWithDatabase: self.otherDB];
+    Config* config = [[Config alloc] initWithCollections: @[self.otherDBDefaultCollection]];
     config.readOnly = YES;
     [self listen: config];
     
@@ -1207,7 +1208,7 @@
     }];
     AssertEqual(identity.certs.count, 2);
     
-    Config* config = [[Config alloc] initWithDatabase: self.otherDB];
+    Config* config = [[Config alloc] initWithCollections: @[self.otherDBDefaultCollection]];
     config.tlsIdentity = identity;
     _listener = [[Listener alloc] initWithConfig: config];
     AssertNil(_listener.tlsIdentity);
@@ -1305,7 +1306,7 @@
            error: &error];
     }];
     AssertEqual(identity.certs.count, 2);
-    Config* config = [[Config alloc] initWithDatabase: self.otherDB];
+    Config* config = [[Config alloc] initWithCollections: @[self.otherDBDefaultCollection]];
     config.tlsIdentity = identity;
     
     // Ignore the exception from signing using the imported private key
@@ -1428,7 +1429,7 @@
            error: &error];
     }];
     AssertEqual(identity.certs.count, 2);
-    Config* config = [[Config alloc] initWithDatabase: self.otherDB];
+    Config* config = [[Config alloc] initWithCollections: @[self.otherDBDefaultCollection]];
     config.tlsIdentity = identity;
     
     // Ignore the exception from signing using the imported private key
@@ -1476,7 +1477,5 @@
 - (void) testDeleteWithActiveReplicatorAndURLEndpointListeners {
     [self validateActiveReplicatorAndURLEndpointListeners: YES];
 }
-
-#pragma clang diagnostic pop
 
 @end
