@@ -110,7 +110,7 @@
                                                                                           target: endpoint];
     
     AssertEqual(config.collections.count, 2);
-    Assert([(@[@"colA", @"colB"]) containsObject: config.collectionConfigs[0].collection.name]);
+    Assert([(@[@"colA", @"colB"]) containsObject: config.collections[0].collection.name]);
     Assert([(@[@"colA", @"colB"]) containsObject: config.collections[1].collection.name]);
     Assert([config.collections[0].collection.scope.name isEqualToString: @"scopeA"]);
     Assert([config.collections[1].collection.scope.name isEqualToString: @"scopeA"]);
