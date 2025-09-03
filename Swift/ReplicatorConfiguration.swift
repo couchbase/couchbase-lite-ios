@@ -203,7 +203,7 @@ public struct ReplicatorConfiguration {
     ///   - target: The target endpoint
     public init(collections: [CollectionConfiguration], target: Endpoint) {
         self.target = target
-        
+        Precondition.assertNotEmpty(collections, name: "collections")
         for config in collections {
             let collection = config.collection
             if self.db == nil {

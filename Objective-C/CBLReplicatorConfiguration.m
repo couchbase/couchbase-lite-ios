@@ -203,11 +203,6 @@
 }
 
 - (CBLDatabase*) database {
-    if (![_collectionConfigMap allKeys].count) {
-        // This is called only on un/registerReplicator, so the error raised is correct.
-        [NSException raise: NSInternalInconsistencyException
-                    format: @"%@", kCBLErrorMessageAccessDBWithoutCollection];
-    }
     return _database;
 }
 
