@@ -51,15 +51,10 @@
     [super tearDown];
 }
 
-- (void) testCreateReplicatorWithNilConfig {
-    [self expectException: NSInternalInconsistencyException in:^{
-        CBLReplicatorConfiguration* config = nil;
-        (void) [[CBLReplicator alloc] initWithConfig: config];
-    }];
-}
-
 - (void) testStopContinuousReplicator {
-    id config = [self configWithTarget: _target type: kCBLReplicatorTypePushAndPull continuous: YES];
+    id config = [self configWithTarget: _target
+                                  type: kCBLReplicatorTypePushAndPull
+                            continuous: YES];
     CBLReplicator* r = [[CBLReplicator alloc] initWithConfig: config];
     
     NSArray* stopWhen = @[@(kCBLReplicatorConnecting), @(kCBLReplicatorBusy),

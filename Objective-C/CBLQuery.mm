@@ -52,16 +52,14 @@ using namespace fleece;
 }
 
 @synthesize database=_database;
-@synthesize JSONRepresentation=_json;
+@synthesize json=_json;
 @synthesize parameters=_parameters;
 @synthesize expressions=_expressions;
 @synthesize c4query=_c4Query;
 
 #pragma mark - JSON representation
 
-- (instancetype) initWithDatabase: (CBLDatabase*)database
-               JSONRepresentation: (NSData*)json
-{
+- (instancetype) initWithDatabase: (CBLDatabase*)database json: (NSData*)json {
     Assert(database);
     Assert(json);
     self = [super init];
@@ -197,7 +195,7 @@ using namespace fleece;
                     format: @"%@", kCBLErrorMessageQueryFromInvalidDB];
     }
     
-    return [self initWithDatabase: db JSONRepresentation: json];
+    return [self initWithDatabase: db json: json];
 }
 
 - (void) dealloc {    
@@ -226,7 +224,7 @@ using namespace fleece;
             }
             
             _parameters = [[CBLQueryParameters alloc] initWithParameters: parameters readonly: YES];
-            [self.database safeBlock:^{
+            [self.database safeBlock: ^{
                 c4query_setParameters(self->_c4Query, {params.bytes, params.length});
             }];
         }
@@ -245,10 +243,9 @@ using namespace fleece;
 }
 
 - (nullable CBLQueryResultSet*) execute: (NSError**)outError {
-    
     __block C4QueryEnumerator* e;
     __block C4Error c4Err;
-    [self.database safeBlock:^{
+    [self.database safeBlock: ^{
         e = c4query_run(self->_c4Query, kC4SliceNull, &c4Err);
     }];
     
@@ -316,9 +313,17 @@ using namespace fleece;
 
 - (instancetype) copyWithZone: (NSZone*)zone {
     CBL_LOCK(self) {
-        CBLQuery* q =  [[[self class] alloc] initWithDatabase: _database JSONRepresentation: _json];
-        q.parameters = _parameters;
-        return q;
+        CBLQuery* query = nil;
+        if (_language == kC4JSONQuery) {
+            query = [[[self class] alloc] initWithDatabase: _database json: _json];
+        } else {
+            query = [[[self class] alloc] initWithDatabase: _database
+                                               expressions: _expressions
+                                                     error: nil];
+            assert(query);
+        }
+        query.parameters = _parameters;
+        return query;
     }
 }
 
@@ -338,15 +343,24 @@ using namespace fleece;
 
 - (BOOL) compile: (NSError**)outError {
     CBL_LOCK(self) {
-        if (_c4Query)
+        if (_c4Query) {
             return YES;
-        
-        [self.database mustBeOpenLocked];
+        }
         
         // Compile JSON query:
-        __block C4Error c4Err;
-        __block C4Query* query;
-        [self.database safeBlock:^{
+        __block C4Error c4Err {};
+        __block C4Query* query = nil;
+        __block NSError* openError = nil;
+        [self.database safeBlock: ^{
+            // Note:
+            // The logic to check open is an optional extra safeguard here as LiteCore
+            // should already handle it. Also for improvement, checking whether database
+            // is open is better to be done inside the database with a method such as
+            // - (BOOL) withLockedOpenDatabase: (NSError **)outError
+            //                           block: (BOOL (^)(CBLDatabase *db, NSError **blockError))block;
+            if (![self.database mustBeOpen: &openError]) {
+                return;
+            }
             if (self->_language == kC4JSONQuery) {
                 assert(self->_json);
                 query = c4query_new2(self.database.c4db,
@@ -359,7 +373,11 @@ using namespace fleece;
         }];
         
         if (!query) {
-            convertError(c4Err, outError);
+            if (openError) {
+                if (outError) *outError = openError;
+            } else {
+                convertError(c4Err, outError);
+            }
             return NO;
         }
         

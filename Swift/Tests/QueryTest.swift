@@ -1525,7 +1525,7 @@ class QueryTest: CBLTestCase {
 
         let q1 = QueryBuilder.select(kDOCID).from(DataSource.collection(defaultCollection!)).where(
             Expression.property("string").is(Expression.string("string")))
-        let json = q1.JSONRepresentation
+        let json = q1.json
 
         let q = Query(database: db, JSONRepresentation: json)
 

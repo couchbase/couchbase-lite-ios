@@ -550,6 +550,8 @@
     
 #if TARGET_OS_OSX
     SecCertificateRef cert = (__bridge SecCertificateRef)(identity.certs[0]);
+    AssertNotNil((__bridge id)cert);
+    if (!cert) { return; } // Satisfy static analysis for null value could be passed to SecCertificateCopyValues.
     NSDictionary* certAttrs = CFBridgingRelease(SecCertificateCopyValues(cert, NULL, NULL));
     NSDictionary* expInfo = certAttrs[(id)kSecOIDX509V1ValidityNotAfter];
     NSNumber* expValue = expInfo[(id)kSecPropertyKeyValue];

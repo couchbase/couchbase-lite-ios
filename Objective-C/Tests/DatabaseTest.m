@@ -377,8 +377,10 @@
 - (void) testDeleteTwice {
     NSError* error;
     Assert([self.db delete: &error]);
-    [self expectException: @"NSInternalInconsistencyException" in: ^{
-        [self.db delete: nil];
+    AssertNil(error);
+    
+    [self expectError: CBLErrorDomain code: CBLErrorNotOpen in: ^BOOL(NSError** err) {
+        return [self.db delete: err];
     }];
 }
 

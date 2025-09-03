@@ -53,6 +53,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (readonly, nonatomic) dispatch_queue_t queryQueue;
 @property (readonly, nonatomic) FLSharedKeys sharedKeys;
 
+- (BOOL) mustBeOpen: (NSError**)outError;
 - (void) mustBeOpenLocked;
 - (BOOL) isClosedLocked;
 
@@ -68,11 +69,6 @@ NS_ASSUME_NONNULL_BEGIN
 // This is currently used for creating a CBLDictionary as an input of the predict()
 // method of the PredictiveModel.
 - (instancetype) initWithC4Database: (C4Database*)c4db;
-
-- (CBLCollection*) defaultCollectionOrThrow;
-- (BOOL) withDefaultCollectionAndError: (NSError**)error block: (BOOL (^)(CBLCollection*, NSError**))block;
-- (nullable id) withDefaultCollectionForObjectAndError: (NSError**)error
-                                                 block: (id _Nullable (^)(CBLCollection*, NSError**))block;
 
 - (id) mutex;
 

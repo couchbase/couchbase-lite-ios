@@ -38,9 +38,8 @@
 - (XCTestExpectation *) waitForListenerIdle: (CBLMessageEndpointListener*)listener {
     XCTestExpectation* x = [self expectationWithDescription:@"Listener idle"];
     __block id token = nil;
-    __weak CBLMessageEndpointListener* wListener = listener;
     token = [listener addChangeListener:^(CBLMessageEndpointListenerChange* change) {
-        if(change.status.activity == kCBLReplicatorIdle) {
+        if (change.status.activity == kCBLReplicatorIdle) {
             [x fulfill];
             [token remove];
         }
@@ -52,9 +51,8 @@
 - (XCTestExpectation *) waitForListenerStopped: (CBLMessageEndpointListener*)listener {
     XCTestExpectation* x = [self expectationWithDescription:@"Listener stop"];
     __block id token = nil;
-    __weak CBLMessageEndpointListener* wListener = listener;
     token = [listener addChangeListener: ^(CBLMessageEndpointListenerChange * change) {
-        if(change.status.activity == kCBLReplicatorStopped) {
+        if (change.status.activity == kCBLReplicatorStopped) {
             [x fulfill];
             [token remove];
         }

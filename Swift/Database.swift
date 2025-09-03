@@ -317,10 +317,6 @@ public final class Database {
         lock.unlock()
     }
     
-    static func throwNotOpenError() -> Never {
-        fatalError("The database was closed or released, or the default collection was deleted.");
-    }
-    
     let impl: CBLDatabase
     
     private var lock = NSRecursiveLock()
