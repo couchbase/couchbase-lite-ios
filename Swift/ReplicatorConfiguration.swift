@@ -206,11 +206,11 @@ public struct ReplicatorConfiguration {
         Precondition.assertNotEmpty(collections, name: "collections")
         for config in collections {
             let collection = config.collection
-            if self.db == nil {
-                self.db = collection.database
+            if self.database == nil {
+                self.database = collection.database
             } else {
                 Precondition.assert(
-                    self.db!.impl == collection.database.impl,
+                    self.database!.impl == collection.database.impl,
                     message: "Collection \(collection.fullName) belongs to a different database instance.")
             }
             self.collectionConfigMap[collection] = config
@@ -221,7 +221,7 @@ public struct ReplicatorConfiguration {
     ///
     /// - Parameter config: The configuration object.
     public init(config: ReplicatorConfiguration) {
-        self.db = config.db
+        self.database = config.database
         self.target = config.target
         self.replicatorType = config.replicatorType
         self.continuous = config.continuous
@@ -280,7 +280,7 @@ public struct ReplicatorConfiguration {
     
     var collectionConfigMap = [Collection: CollectionConfiguration]()
     
-    var db: Database?
+    var database: Database?
     
     fileprivate var didMaxAttemptUpdate: Bool = false
 }

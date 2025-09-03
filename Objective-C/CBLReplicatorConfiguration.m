@@ -202,10 +202,6 @@
     _enableAutoPurge = enableAutoPurge;
 }
 
-- (CBLDatabase*) database {
-    return _database;
-}
-
 - (NSArray<CBLCollectionConfiguration*>*) collections {
     return [_collectionConfigMap allValues];
 }

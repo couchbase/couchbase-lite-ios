@@ -272,7 +272,7 @@ public final class Replicator {
     func registerActiveReplicator() {
         lock.lock()
         if listenerToken == nil {
-            config.db!.addReplicator(self)
+            config.database!.addReplicator(self)
             listenerToken = impl.addChangeListener({ [unowned self] (change) in
                 if change.status.activity == kCBLReplicatorStopped {
                     self.unregisterActiveReplicator()
@@ -286,7 +286,7 @@ public final class Replicator {
         lock.lock()
         if let token = listenerToken {
             impl.removeChangeListener(with: token)
-            config.db!.removeReplicator(self)
+            config.database!.removeReplicator(self)
             listenerToken = nil
         }
         lock.unlock()
