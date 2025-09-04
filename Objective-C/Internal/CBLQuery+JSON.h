@@ -26,7 +26,7 @@ NS_ASSUME_NONNULL_BEGIN
  Encoded representation of the query. Can be used to re-create the query by calling
  -initWithDatabase:JSONRepresentation:.
  */
-@property (nonatomic, readonly) NSData* JSONRepresentation;
+@property (nonatomic, readonly) NSData* json;
 
 
 /**
@@ -35,8 +35,7 @@ NS_ASSUME_NONNULL_BEGIN
  @param database  The database to query.
  @param json  JSON data representing an encoded query description.
  */
-- (instancetype) initWithDatabase: (CBLDatabase*)database
-               JSONRepresentation: (NSData*)json NS_DESIGNATED_INITIALIZER;
+- (instancetype) initWithDatabase: (CBLDatabase*)database json: (NSData*)json NS_DESIGNATED_INITIALIZER;
 
 @end
 

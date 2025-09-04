@@ -33,6 +33,7 @@
 #import "CBLLog+Internal.h"
 #import "CBLLogSinks+Internal.h"
 #import "CBLMisc.h"
+#import "CBLPrecondition.h"
 #import "CBLQuery+Internal.h"
 #import "CBLQuery+N1QL.h"
 #import "CBLScope+Internal.h"
@@ -63,7 +64,7 @@ static NSString* kBlobDataProperty = @kC4BlobDataProperty;
 static NSString* kBlobLengthProperty = @"length";
 static NSString* kBlobContentTypeProperty = @"content_type";
 
-// this variable defines the state of database
+// This variable defines the state of database
 typedef enum {
     kCBLDatabaseStateClosed = 0,
     kCBLDatabaseStateClosing,
@@ -181,7 +182,9 @@ static const C4DatabaseConfig2 kDBConfig = {
 
 - (void) dealloc {
     if (!_shellMode) {
-        [self freeC4DB];
+        CBL_LOCK(_mutex) {
+            [self freeC4DB];
+        }
     }
 }
 
@@ -237,9 +240,12 @@ static const C4DatabaseConfig2 kDBConfig = {
 #pragma mark - BATCH OPERATION
 
 - (BOOL) inBatch: (NSError**)outError usingBlockWithError: (void (NS_NOESCAPE ^)(NSError**))block {
-    CBLAssertNotNil(block);
+    [CBLPrecondition assertNotNil: block name: @"block"];
     
     CBL_LOCK(_mutex) {
+        if (![self mustBeOpen: outError])
+            return false;
+        
         [self mustBeOpen];
         
         C4Transaction transaction(_c4db);
@@ -267,16 +273,17 @@ static const C4DatabaseConfig2 kDBConfig = {
 }
 
 - (BOOL) inBatch: (NSError**)outError usingBlock: (void (NS_NOESCAPE ^)())block {
-    CBLAssertNotNil(block);
+    [CBLPrecondition assertNotNil: block name: @"block"];
     
     return [self inBatch: outError usingBlockWithError: ^(NSError **) { block(); }];
 }
 
 - (BOOL) maybeBatch: (NSError**)outError usingBlockWithError: (BOOL (NS_NOESCAPE ^)(NSError**))block {
-    CBLAssertNotNil(block);
+    [CBLPrecondition assertNotNil: block name: @"block"];
     
     CBL_LOCK(_mutex) {
-        [self mustBeOpen];
+        if (![self mustBeOpen: outError])
+            return false;
         
         C4Transaction transaction(_c4db);
         if (outError)
@@ -313,27 +320,31 @@ static const C4DatabaseConfig2 kDBConfig = {
     NSArray* activeServices = nil;
     
     CBL_LOCK(_mutex) {
-        if ([self isClosed])
+        if ([self isClosed]) {
             return YES;
+        }
+        
+        if (_state == kCBLDatabaseStateClosing) {
+            CBLLogInfo(Database, @"%@: Database at path %@ is already closing, ignoring request",
+                       self, self.path);
+            return NO;
+        }
         
         CBLLogInfo(Database, @"%@: Closing database at path %@", self, self.path);
         
-        if (_state != kCBLDatabaseStateClosing) {
-            _state = kCBLDatabaseStateClosing;
-            
-            if (!_closeCondition)
-                _closeCondition = [[NSCondition alloc] init];
-            
-            activeServices = [_activeServices allObjects];
+        if (!_closeCondition) {
+            _closeCondition = [[NSCondition alloc] init];
         }
+        
+        activeServices = [_activeServices allObjects];
     }
     
-    // Stop all active services:
+    // Stop services outside of lock to avoid deadlocks:
     for (id<CBLDatabaseService> service in activeServices) {
         [service stop];
     }
     
-    // Wait for all active replicators and live queries to stop:
+    // Wait until all services report they’re done:
     [_closeCondition lock];
     while (![self isReadyToClose]) {
         [_closeCondition wait];
@@ -341,20 +352,26 @@ static const C4DatabaseConfig2 kDBConfig = {
     [_closeCondition unlock];
     
     CBL_LOCK(_mutex) {
-        if ([self isClosed])
-            return YES;
-        
         // Close database:
-        BOOL success = YES;
         C4Error err;
-        if (!c4db_close(_c4db, &err))
-            success = convertError(err, outError);
-        
-        // Release database:
-        if (success)
-            [self freeC4DB];
-        
-        return success;
+        if (!c4db_close(_c4db, &err)) {
+            NSError* error = nil;
+            convertError(err, &error);
+            if (outError) {
+                *outError = error;
+            }
+            
+            CBLWarnError(Database, @"%@: Failed to close database at path %@, error %@",
+                         self, self.path, error);
+            
+            // Reset state:
+            _state = kCBLDatabaseStateOpened;
+            return NO;
+        }
+          
+        // Success, free and set closed state
+        [self freeC4DB];
+        return YES;
     }
 }
 
@@ -366,11 +383,14 @@ static const C4DatabaseConfig2 kDBConfig = {
 
 - (BOOL) delete: (NSError**)outError {
     CBL_LOCK(_mutex) {
-        [self mustBeOpen];
+        if (![self mustBeOpen: outError]) {
+            return NO;
+        }
     }
     
-    if (![self close: outError])
-        return false;
+    if (![self close: outError]) {
+        return NO;
+    }
     
     return [self.class deleteDatabase: self.name
                           inDirectory: self.config.directory
@@ -379,20 +399,23 @@ static const C4DatabaseConfig2 kDBConfig = {
 
 - (BOOL) performMaintenance: (CBLMaintenanceType)type error: (NSError**)outError {
     CBL_LOCK(_mutex) {
-        [self mustBeOpen];
+        if (![self mustBeOpen: outError]) {
+            return NO;
+        }
         
         C4Error err;
-        if (!c4db_maintenance(_c4db, (C4MaintenanceType)type, &err))
+        if (!c4db_maintenance(_c4db, (C4MaintenanceType)type, &err)) {
             return convertError(err, outError);
+        }
+        
         return YES;
     }
 }
 
 + (BOOL) deleteDatabase: (NSString*)name
             inDirectory: (nullable NSString*)directory
-                  error: (NSError**)outError
-{
-    CBLAssertNotNil(name);
+                  error: (NSError**)outError {
+    [CBLPrecondition assertNotNil: name name: @"name"];
     
     C4Error err;
     CBLStringBytes n(name);
@@ -403,7 +426,7 @@ static const C4DatabaseConfig2 kDBConfig = {
 + (BOOL) databaseExists: (NSString*)name
             inDirectory: (nullable NSString*)directory
 {
-    CBLAssertNotNil(name);
+    [CBLPrecondition assertNotNil: name name: @"name"];
     
     NSString* path = databasePath(name, directory ?: defaultDirectory());
     return [[NSFileManager defaultManager] fileExistsAtPath: path];
@@ -414,8 +437,8 @@ static const C4DatabaseConfig2 kDBConfig = {
            withConfig: (nullable CBLDatabaseConfiguration*)config
                 error: (NSError**)outError
 {
-    CBLAssertNotNil(path);
-    CBLAssertNotNil(name);
+    [CBLPrecondition assertNotNil: path name: @"path"];
+    [CBLPrecondition assertNotNil: name name: @"name"];
     
     NSString* dir = config.directory ?: defaultDirectory();
     if (!setupDatabaseDirectory(dir, outError))
@@ -537,55 +560,6 @@ static const C4DatabaseConfig2 kDBConfig = {
             _defaultCollection = [[CBLCollection alloc] initWithDB: self c4collection: c4col cached: YES];
         }
         return _defaultCollection;
-    }
-}
-
-- (CBLCollection*) defaultCollectionOrThrow {
-    CBL_LOCK(_mutex) {
-        [self mustBeOpen];
-        
-        NSError* error;
-        CBLCollection* col = [self defaultCollection: &error];
-        if (!col) {
-            throwIfNotOpenError(error);
-            // Not expect to happen but if it does, log a warning error before raising the exception:
-            CBLWarn(Database, @"%@: Failed to get default collection with error: %@", self, error);
-            [NSException raise: NSInternalInconsistencyException format: @"Unable to get the default collection"];
-        }
-        return col;
-    }
-}
-
-- (BOOL) withDefaultCollectionAndError: (NSError**)error block: (BOOL (^)(CBLCollection*, NSError**))block {
-    NSError* outError = nil;
-    BOOL result = block([self defaultCollectionOrThrow], &outError);
-    if (!result) {
-        throwIfNotOpenError(outError);
-        if (error) *error = outError;
-    }
-    return result;
-}
-
-- (nullable id) withDefaultCollectionForObjectAndError: (NSError**)error
-                                                 block: (id _Nullable (^)(CBLCollection*, NSError**))block
-{
-    NSError* outError = nil;
-    id result = block([self defaultCollectionOrThrow], &outError);
-    if (!result) {
-        throwIfNotOpenError(outError);
-        if (error) *error = outError;
-    }
-    return result;
-}
-
-static void throwNotOpen() {
-    [NSException raise: NSInternalInconsistencyException
-                format: @"The database was closed, or the default collection was deleted."];
-}
-
-static void throwIfNotOpenError(NSError* error) {
-    if (error && error.domain == CBLErrorDomain && error.code == CBLErrorNotOpen) {
-        throwNotOpen();
     }
 }
 
@@ -904,11 +878,15 @@ static C4DatabaseConfig2 c4DatabaseConfig2 (CBLDatabaseConfiguration *config) {
 }
 
 - (void) freeC4DB {
+    if (!_c4db) {
+        return;
+    }
+    
     c4db_release(_c4db);
     _c4db = nil;
     
-    _state = kCBLDatabaseStateClosed;
     _defaultCollection = nil;
+    _state = kCBLDatabaseStateClosed;
 }
 
 - (void) safeBlock:(void (^)())block {

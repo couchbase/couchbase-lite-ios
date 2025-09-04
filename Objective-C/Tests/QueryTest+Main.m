@@ -1648,17 +1648,19 @@
     
     NSData* json;
     {
+        CBLQueryExpression* expr = [[CBLQueryExpression property: @"string"] is:
+                                    [CBLQueryExpression string: @"string"]];
         CBLQuery* q = [CBLQueryBuilder select: @[kDOCID]
                                          from: [CBLQueryDataSource database: self.db]
-                                        where: [[CBLQueryExpression property: @"string"] is: [CBLQueryExpression string: @"string"]]];
-        json = q.JSONRepresentation;
+                                        where: expr];
+        json = q.json;
         Assert(json);
     }
     
     // Reconstitute query from JSON data:
-    CBLQuery* q = [[CBLQuery alloc] initWithDatabase: _db JSONRepresentation: json];
+    CBLQuery* q = [[CBLQuery alloc] initWithDatabase: _db json: json];
     Assert(q);
-    AssertEqualObjects(q.JSONRepresentation, json);
+    AssertEqualObjects(q.json, json);
     
     // Now test the reconstituted query:
     uint64_t numRows = [self verifyQuery: q
@@ -1811,13 +1813,12 @@
     NSError* error = nil;
     [self.db close: &error];
     
-    [self expectException: NSInternalInconsistencyException in: ^{
+    [self expectException: NSInvalidArgumentException in: ^{
         CBLQuery* q = [CBLQueryBuilder select: @[[CBLQuerySelectResult all]]
                                          from: [CBLQueryDataSource database: self.db]
                                         where: [[CBLQueryExpression property: @"string"]
                                                 isNot: [CBLQueryExpression string: @"string1"]]];
-        
-        NSLog(@" %@", q);
+        (void)q; // Suppress unused variable warning
     }];
 }
 

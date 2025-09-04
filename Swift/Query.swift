@@ -168,9 +168,9 @@ public class Query {
 
     /// Encoded JSON representation of the query.
     /// Can be used later to reconstruct an identical query.
-    var JSONRepresentation : Data {
+    var json : Data {
         prepareQuery()
-        return queryImpl!.jsonRepresentation
+        return queryImpl!.json
     }
 
     /// Initialize a Query given a JSON-encoded representation.
@@ -180,7 +180,7 @@ public class Query {
     ///           JSONRepresentation property.
     init(database: Database, JSONRepresentation json: Data) {
         self.database = database
-        queryImpl = CBLQuery(database: database.impl, jsonRepresentation: json)
+        queryImpl = CBLQuery(database: database.impl, json: json)
     }
     
     /// Creates a query, given the query string, as from the expression property.
