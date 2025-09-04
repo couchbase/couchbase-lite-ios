@@ -268,4 +268,4 @@ class PredictiveQueryWithCoreMLTest: CBLTestCase {
         
         Database.prediction.unregisterModel(withName: "MobileNet")
     }
-}
+}r
