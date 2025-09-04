@@ -23,20 +23,6 @@
 
 @implementation CBLQueryFullTextFunction
 
-+ (CBLQueryExpression*) rank: (NSString*)indexName {
-    CBLAssertNotNil(indexName);
-    
-    return [self rankWithIndex: [CBLQueryExpression fullTextIndex: indexName]];
-}
-
-+ (CBLQueryExpression*) matchWithIndexName: (NSString *)indexName query: (NSString *)query {
-    CBLAssertNotNil(indexName);
-    CBLAssertNotNil(query);
-    
-    return [self matchWithIndex: [CBLQueryExpression fullTextIndex: indexName]
-                          query: query];
-}
-
 + (CBLQueryExpression*) rankWithIndex: (id<CBLQueryIndexExpressionProtocol>)index {
     CBLAssertNotNil(index);
     

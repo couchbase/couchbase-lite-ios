@@ -81,7 +81,6 @@ FOUNDATION_EXPORT const unsigned char CouchbaseLiteVersionString[];
 #import <CouchbaseLite/CBLQueryExpression.h>
 #import <CouchbaseLite/CBLQueryFactory.h>
 #import <CouchbaseLite/CBLQueryFunction.h>
-#import <CouchbaseLite/CBLQueryFullTextExpression.h>
 #import <CouchbaseLite/CBLQueryFullTextFunction.h>
 #import <CouchbaseLite/CBLQueryIndex.h>
 #import <CouchbaseLite/CBLQueryJoin.h>

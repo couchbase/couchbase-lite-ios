@@ -30,25 +30,6 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @interface CBLQueryDataSource : NSObject
 
-/** 
- Create a database data source.
- 
- @param database The database used as the data source as the query.
- @return The CBLQueryDataSource instance for the database.
- */
-+ (instancetype) database: (CBLDatabase*)database
-__deprecated_msg("Use [DataSource collection: [database defaultCollection]]) instead.");
-
-/** 
- Create a database data source with the given alias name.
- 
- @param database The database used as the data source as the query.
- @param alias The alias name of the data source.
- @return The CBLQueryDataSource instance for the database.
- */
-+ (instancetype) database: (CBLDatabase*)database as: (nullable NSString*)alias
-__deprecated_msg("Use [DataSource collection: [database defaultCollection] as:]) instead.");
-
 /** Create a collection data source.
  
  @param collection The collection used as the data source as the query.
