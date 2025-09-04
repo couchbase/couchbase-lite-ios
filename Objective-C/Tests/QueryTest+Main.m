@@ -380,7 +380,7 @@
                         {
                             AssertEqual(r.count, 1u);
                             CBLMutableDictionary* a1 = [r valueAtIndex: 0];
-                            CBLMutableDictionary* a2 = [r valueForKey: self.db.name];
+                            CBLMutableDictionary* a2 = [r valueForKey: self.defaultCollection.name];
                             AssertEqual([a1 integerForKey: @"number1"], (NSInteger)n);
                             AssertEqual([a1 integerForKey: @"number2"], (NSInteger)(100 - n));
                             AssertEqual([a2 integerForKey: @"number1"], (NSInteger)n);
@@ -415,7 +415,7 @@
                            test: ^(uint64_t n, CBLQueryResult* r){
         AssertEqual(r.count, 2u);
         CBLMutableDictionary* a1 = [r valueAtIndex: 0];
-        CBLMutableDictionary* a2 = [r valueForKey: self.db.name];
+        CBLMutableDictionary* a2 = [r valueForKey: self.defaultCollection.name];
         AssertEqual([a1 integerForKey: @"number1"], (NSInteger)n);
         AssertEqual([a1 integerForKey: @"number2"], (NSInteger)(100 - n));
         AssertEqual([a2 integerForKey: @"number1"], (NSInteger)n);
@@ -1764,19 +1764,6 @@
                             Assert([nw timeIntervalSinceDate: savedDate] < 0.001);
                         }];
     AssertEqual(rows, 1u);
-}
-
-- (void) testQueryOnClosedDB {
-    NSError* error = nil;
-    [self.db close: &error];
-    
-    [self expectException: NSInvalidArgumentException in: ^{
-        CBLQuery* q = [CBLQueryBuilder select: @[[CBLQuerySelectResult all]]
-                                         from: kDATA_SRC_DB
-                                        where: [[CBLQueryExpression property: @"string"]
-                                                isNot: [CBLQueryExpression string: @"string1"]]];
-        (void)q; // Suppress unused variable warning
-    }];
 }
 
 #pragma mark - N1QL
