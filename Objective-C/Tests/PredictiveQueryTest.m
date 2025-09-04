@@ -55,10 +55,6 @@
 
 @implementation PredictiveQueryTest
 
-// TODO: Remove https://issues.couchbase.com/browse/CBL-3206
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-
 - (void) setUp {
     [super setUp];
     [CBLDatabase.prediction unregisterModelWithName: [CBLAggregateModel name]];
@@ -1140,7 +1136,5 @@
     [output setInteger: sc forKey: @"sc"];
     return output;
 }
-
-#pragma clang diagnostic pop
 
 @end

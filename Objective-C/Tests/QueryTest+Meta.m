@@ -25,10 +25,6 @@
 
 @implementation QueryTestWithMeta
 
-// TODO: Remove https://issues.couchbase.com/browse/CBL-3206
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-
 #pragma mark - id & isDeleted
 
 - (void) testMeta {
@@ -346,7 +342,5 @@
         AssertEqualObjects([r stringAtIndex: 0], doc.revisionID);
     }];
 }
-
-#pragma clang diagnostic pop
 
 @end

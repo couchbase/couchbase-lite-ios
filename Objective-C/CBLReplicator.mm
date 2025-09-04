@@ -487,7 +487,7 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
 #pragma mark delegate(CBLRemovableListenerToken)
 
 - (void) removeToken: (id)token {
-    [self removeChangeListenerWithToken: token];
+    [token remove];
 }
 
 - (void) setProgressLevel: (CBLReplicatorProgressLevel)level {

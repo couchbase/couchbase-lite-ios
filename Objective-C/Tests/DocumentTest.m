@@ -32,10 +32,6 @@
 
 @implementation DocumentTest
 
-// TODO: Remove https://issues.couchbase.com/browse/CBL-3206
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-
 - (void) populateData: (CBLMutableDocument*)doc {
     [doc setValue: @(YES) forKey: @"true"];
     [doc setValue: @(NO) forKey: @"false"];
@@ -2376,7 +2372,5 @@
     doc = [[self.defaultCollection documentWithID: @"doc1" error: &err] toMutable];
     Assert(doc._getRevisionHistory);
 }
-
-#pragma clang diagnostic pop
 
 @end

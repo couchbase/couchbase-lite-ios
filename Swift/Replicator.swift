@@ -193,6 +193,7 @@ public final class Replicator {
     /// Removes a change listener with the given listener token.
     ///
     /// - Parameter token: The listener token.
+    @available(*, deprecated, message: "Use token.remove() instead.")
     public func removeChangeListener(withToken token: ListenerToken) {
         impl.removeChangeListener(with: token.impl)
     }
