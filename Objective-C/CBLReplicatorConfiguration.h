@@ -48,6 +48,7 @@ __deprecated_msg("Use collectionConfigs instead");
 
 /**
  The collection configurations used for the replication. Each configuration specifies a collection and its configuration.
+ @note Will be renamed to `collections` in the next major release.
  */
 @property (nonatomic, readonly) NSArray<CBLCollectionConfiguration*>* collectionConfigs;
 
@@ -199,6 +200,7 @@ __deprecated_msg("Use -initWithCollections:target: instead.");
 
 /**
  The collections used for the replication.
+ @note Will be reintroduced, as array of CBLCollectionConfiguration, in the next major release.
  */
 @property (nonatomic, readonly) NSArray<CBLCollection*>* collections
 __deprecated_msg("Use collectionConfigs instead.");

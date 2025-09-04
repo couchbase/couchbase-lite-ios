@@ -69,9 +69,9 @@ public struct ReplicatorConfiguration {
     /// The replication target to replicate with.
     public let target: Endpoint
     
-    /**
-     The collection configurations used for the replication. Each configuration specifies a collection and its configuration.
-     */
+    /// The collection configurations used for the replication. Each configuration specifies a collection and its configuration.
+    /// - Note: Will be renamed to `collections` in the next major release.
+    
     public var collectionConfigs: [CollectionConfiguration] {
         return Array(self.collectionConfigMap.values)
     }
@@ -262,9 +262,12 @@ public struct ReplicatorConfiguration {
     /// they will not receive the events.
     ///
     /// - Note: Auto purge will not be performed when documentIDs filter is specified.
+
     public var enableAutoPurge: Bool = ReplicatorConfiguration.defaultEnableAutoPurge
     
     /// The collections used for the replication.
+    /// - Note: Will be reintroduced, as [CollectionConfiguration], in the next major release.
+
     @available(*, deprecated, message: "Use collectionConfigs instead.")
     public var collections: [Collection] {
         return Array(self.collectionConfigMap.keys)
