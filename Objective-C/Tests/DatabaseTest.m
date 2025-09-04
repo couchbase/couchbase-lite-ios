@@ -246,12 +246,10 @@
     XCTestExpectation* change1 = [self expectationWithDescription: @"changes 1"];
     XCTestExpectation* change2 = [self expectationWithDescription: @"changes 2"];
     
-    CBLQueryDataSource* ds = [CBLQueryDataSource collection: self.defaultCollection];
-    
-    CBLQuery* q1 = [CBLQueryBuilder select: @[[CBLQuerySelectResult all]] from: ds];
+    CBLQuery* q1 = [CBLQueryBuilder select: @[[CBLQuerySelectResult all]] from: kDATA_SRC_DB];
     [q1 addChangeListener: ^(CBLQueryChange *ch) { [change1 fulfill]; }];
     
-    CBLQuery* q2 = [CBLQueryBuilder select: @[[CBLQuerySelectResult all]] from: ds];
+    CBLQuery* q2 = [CBLQueryBuilder select: @[[CBLQuerySelectResult all]] from: kDATA_SRC_DB];
     [q2 addChangeListener: ^(CBLQueryChange *ch) { [change2 fulfill]; }];
     
     [self waitForExpectations: @[change1, change2] timeout: kExpTimeout];
@@ -305,12 +303,10 @@
     XCTestExpectation* change1 = [self expectationWithDescription: @"changes 1"];
     XCTestExpectation* change2 = [self expectationWithDescription: @"changes 2"];
     
-    CBLQueryDataSource* ds = [CBLQueryDataSource collection: self.defaultCollection];
-    
-    CBLQuery* q1 = [CBLQueryBuilder select: @[[CBLQuerySelectResult all]] from: ds];
+    CBLQuery* q1 = [CBLQueryBuilder select: @[[CBLQuerySelectResult all]] from: kDATA_SRC_DB];
     [q1 addChangeListener: ^(CBLQueryChange *ch) { [change1 fulfill]; }];
     
-    CBLQuery* q2 = [CBLQueryBuilder select: @[[CBLQuerySelectResult all]] from: ds];
+    CBLQuery* q2 = [CBLQueryBuilder select: @[[CBLQuerySelectResult all]] from: kDATA_SRC_DB];
     [q2 addChangeListener: ^(CBLQueryChange *ch) { [change2 fulfill]; }];
     
     [self waitForExpectations: @[change1, change2] timeout: kExpTimeout];
@@ -473,12 +469,10 @@
     XCTestExpectation* change1 = [self expectationWithDescription: @"changes 1"];
     XCTestExpectation* change2 = [self expectationWithDescription: @"changes 2"];
     
-    CBLQueryDataSource* ds = [CBLQueryDataSource collection: self.defaultCollection];
-    
-    CBLQuery* q1 = [CBLQueryBuilder select: @[[CBLQuerySelectResult all]] from: ds];
+    CBLQuery* q1 = [CBLQueryBuilder select: @[[CBLQuerySelectResult all]] from: kDATA_SRC_DB];
     [q1 addChangeListener: ^(CBLQueryChange *ch) { [change1 fulfill]; }];
     
-    CBLQuery* q2 = [CBLQueryBuilder select: @[[CBLQuerySelectResult all]] from: ds];
+    CBLQuery* q2 = [CBLQueryBuilder select: @[[CBLQuerySelectResult all]] from: kDATA_SRC_DB];
     [q2 addChangeListener: ^(CBLQueryChange *ch) { [change2 fulfill]; }];
     
     [self waitForExpectations: @[change1, change2] timeout: kExpTimeout];
@@ -532,12 +526,10 @@
     XCTestExpectation* change1 = [self expectationWithDescription: @"changes 1"];
     XCTestExpectation* change2 = [self expectationWithDescription: @"changes 2"];
     
-    CBLQueryDataSource* ds = [CBLQueryDataSource collection: self.defaultCollection];
-    
-    CBLQuery* q1 = [CBLQueryBuilder select: @[[CBLQuerySelectResult all]] from: ds];
+    CBLQuery* q1 = [CBLQueryBuilder select: @[[CBLQuerySelectResult all]] from: kDATA_SRC_DB];
     [q1 addChangeListener: ^(CBLQueryChange *ch) { [change1 fulfill]; }];
     
-    CBLQuery* q2 = [CBLQueryBuilder select: @[[CBLQuerySelectResult all]] from: ds];
+    CBLQuery* q2 = [CBLQueryBuilder select: @[[CBLQuerySelectResult all]] from: kDATA_SRC_DB];
     [q2 addChangeListener: ^(CBLQueryChange *ch) { [change2 fulfill]; }];
     
     [self waitForExpectations: @[change1, change2] timeout: kExpTimeout];
@@ -793,7 +785,7 @@
     
     // Check if the index is used:
     CBLQuery* q = [CBLQueryBuilder select: @[[CBLQuerySelectResult expression: key]]
-                                     from: [CBLQueryDataSource collection: self.defaultCollection]
+                                     from: kDATA_SRC_DB
                                     where: [key greaterThan: [CBLQueryExpression integer: 9]]];
     
     Assert([self isUsingIndexNamed: @"KeyIndex" forQuery: q]);

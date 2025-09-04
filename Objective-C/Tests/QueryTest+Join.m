@@ -46,18 +46,18 @@
     CBLQueryExpression* propNum2 = [CBLQueryExpression property: @"number2" from: @"main"];
     CBLQueryExpression* propTheOne = [CBLQueryExpression property: @"theone" from: @"secondary"];
     
-    CBLQueryJoin* join = [CBLQueryJoin join: [CBLQueryDataSource database: self.db as: @"secondary"]
+    CBLQueryJoin* join = [CBLQueryJoin join: [CBLQueryDataSource collection: self.defaultCollection as: @"secondary"]
                                          on: [propNum1 equalTo: propTheOne]];
     
     // there is no particular reason for using inner-join and join. Just for the sake of using
     // two different statement with same result only.
     CBLQueryJoin* innerJoin;
-    innerJoin = [CBLQueryJoin innerJoin: [CBLQueryDataSource database: self.db as: @"secondary"]
+    innerJoin = [CBLQueryJoin innerJoin: [CBLQueryDataSource collection: self.defaultCollection as: @"secondary"]
                                      on: [propNum1 equalTo: propTheOne]];
     
     // select from join: this should return 2 similar rows with same value.
     CBLQuery* q = [CBLQueryBuilder select: @[[CBLQuerySelectResult expression: propNum2]]
-                                     from: [CBLQueryDataSource database: self.db as: @"main"]
+                                     from: [CBLQueryDataSource collection: self.defaultCollection as: @"main"]
                                      join: @[join]];
     Assert(q);
     uint64_t numRows = 0;
@@ -69,7 +69,7 @@
     
     // select distinct from join: this should return only single row!!
     q = [CBLQueryBuilder selectDistinct: @[[CBLQuerySelectResult expression: propNum1]]
-                                   from: [CBLQueryDataSource database: self.db as: @"main"]
+                                   from: [CBLQueryDataSource collection: self.defaultCollection as: @"main"]
                                    join: @[innerJoin]];
     Assert(q);
     numRows = [self verifyQuery: q randomAccess: YES test: ^(uint64_t n, CBLQueryResult* r) {
@@ -98,10 +98,10 @@
     
     CBLQueryExpression* on = [[CBLQueryExpression property: @"number1" from: @"main"]
                               equalTo: [CBLQueryExpression property:@"theone" from:@"secondary"]];
-    CBLQueryJoin* join = [CBLQueryJoin join: [CBLQueryDataSource database: self.db as: @"secondary"]
+    CBLQueryJoin* join = [CBLQueryJoin join: [CBLQueryDataSource collection: self.defaultCollection as: @"secondary"]
                                          on: on];
     CBLQuery* q = [CBLQueryBuilder select: @[MAIN_DOC_ID]
-                                     from: [CBLQueryDataSource database: self.db as: @"main"]
+                                     from: [CBLQueryDataSource collection: self.defaultCollection as: @"main"]
                                      join: @[join]
                                     where: [[CBLQueryExpression property: @"number1"
                                                                     from: @"main"]
@@ -119,7 +119,7 @@
     q = [CBLQueryBuilder selectDistinct: @[[CBLQuerySelectResult
                                             expression: [CBLQueryExpression property: @"number1"
                                                                                 from: @"main"]]]
-                                   from: [CBLQueryDataSource database: self.db as: @"main"]
+                                   from: [CBLQueryDataSource collection: self.defaultCollection as: @"main"]
                                    join: @[join]
                                   where: [[CBLQueryExpression property: @"number1"
                                                                   from: @"main"]
@@ -157,10 +157,10 @@
     
     CBLQueryExpression* on = [[CBLQueryExpression property: @"number1" from: @"main"]
                               equalTo: [CBLQueryExpression property:@"theone" from:@"secondary"]];
-    CBLQueryJoin* join = [CBLQueryJoin join: [CBLQueryDataSource database: self.db as: @"secondary"]
+    CBLQueryJoin* join = [CBLQueryJoin join: [CBLQueryDataSource collection: self.defaultCollection as: @"secondary"]
                                          on: on];
     CBLQuery* q = [CBLQueryBuilder select: @[MAIN_DOC_ID, [CBLQuerySelectResult expression: COUNT as: @"count"]]
-                                     from: [CBLQueryDataSource database: self.db as: @"main"]
+                                     from: [CBLQueryDataSource collection: self.defaultCollection as: @"main"]
                                      join: @[join]
                                     where: nil
                                   groupBy: @[[CBLQueryExpression property: @"theone" from: @"secondary"]]
@@ -176,7 +176,7 @@
     CBLQueryExpression* NAME  = [CBLQueryExpression property: @"name" from: @"secondary"];
     CBLQuerySelectResult* S_NAME = [CBLQuerySelectResult expression: NAME];
     q = [CBLQueryBuilder selectDistinct: @[S_NAME, [CBLQuerySelectResult expression: COUNT as: @"count"]]
-                                   from: [CBLQueryDataSource database: self.db as: @"main"]
+                                   from: [CBLQueryDataSource collection: self.defaultCollection as: @"main"]
                                    join: @[join]
                                   where: nil
                                 groupBy: @[[CBLQueryExpression property: @"theone" from: @"secondary"]]
@@ -215,10 +215,10 @@
     
     CBLQueryExpression* on = [[CBLQueryExpression property: @"number1" from: @"main"]
                               equalTo: [CBLQueryExpression property:@"theone" from:@"secondary"]];
-    CBLQueryJoin* join = [CBLQueryJoin join: [CBLQueryDataSource database: self.db as: @"secondary"]
+    CBLQueryJoin* join = [CBLQueryJoin join: [CBLQueryDataSource collection: self.defaultCollection as: @"secondary"]
                                          on: on];
     CBLQuery* q = [CBLQueryBuilder select: @[MAIN_DOC_ID, [CBLQuerySelectResult expression: numb]]
-                                     from: [CBLQueryDataSource database: self.db as: @"main"]
+                                     from: [CBLQueryDataSource collection: self.defaultCollection as: @"main"]
                                      join: @[join]
                                     where: nil
                                   orderBy: @[[CBLQueryOrdering expression: numb]]];
@@ -230,7 +230,7 @@
     AssertEqual(allResults.count, 3u);
     
     q = [CBLQueryBuilder selectDistinct: @[MAIN_DOC_ID, [CBLQuerySelectResult expression: numb]]
-                                   from: [CBLQueryDataSource database: self.db as: @"main"]
+                                   from: [CBLQueryDataSource collection: self.defaultCollection as: @"main"]
                                    join: @[join]
                                   where: nil
                                 orderBy: @[[CBLQueryOrdering expression: numb]]];
@@ -266,12 +266,12 @@
     
     CBLQueryExpression* on = [[CBLQueryExpression property: @"number1" from: @"main"]
                               equalTo: [CBLQueryExpression property:@"theone" from:@"secondary"]];
-    CBLQueryJoin* join = [CBLQueryJoin join: [CBLQueryDataSource database: self.db as: @"secondary"]
+    CBLQueryJoin* join = [CBLQueryJoin join: [CBLQueryDataSource collection: self.defaultCollection as: @"secondary"]
                                          on: on];
     CBLQuery* q = [CBLQueryBuilder select: @[MAIN_DOC_ID,
                                              [CBLQuerySelectResult expression: numb],
                                              [CBLQuerySelectResult expression: COUNT as: @"count"]]
-                                     from: [CBLQueryDataSource database: self.db as: @"main"]
+                                     from: [CBLQueryDataSource collection: self.defaultCollection as: @"main"]
                                      join: @[join]
                                     where: nil
                                   groupBy: @[[CBLQueryExpression property: @"theone"
@@ -290,7 +290,7 @@
     CBLQuerySelectResult* S_NAME = [CBLQuerySelectResult expression: NAME];
     q = [CBLQueryBuilder selectDistinct: @[S_NAME,
                                            [CBLQuerySelectResult expression: COUNT as: @"count"]]
-                                   from: [CBLQueryDataSource database: self.db as: @"main"]
+                                   from: [CBLQueryDataSource collection: self.defaultCollection as: @"main"]
                                    join: @[join]
                                   where: nil
                                 groupBy: @[[CBLQueryExpression property: @"theone"
@@ -315,7 +315,7 @@
     CBLQueryExpression* on = [[CBLQueryExpression property: @"number1" from: @"main"]
                               equalTo: [CBLQueryExpression property:@"theone" from:@"secondary"]];
     
-    CBLQueryJoin* join = [CBLQueryJoin leftJoin: [CBLQueryDataSource database: self.db as: @"secondary"]
+    CBLQueryJoin* join = [CBLQueryJoin leftJoin: [CBLQueryDataSource collection: self.defaultCollection as: @"secondary"]
                                              on: on];
     
     CBLQueryExpression* NUMBER1  = [CBLQueryExpression property: @"number2" from:@"main"];
@@ -325,7 +325,7 @@
                          [CBLQuerySelectResult expression: NUMBER2]];
     
     CBLQuery* q = [CBLQueryBuilder select: results
-                                     from: [CBLQueryDataSource database: self.db as: @"main"]
+                                     from: [CBLQueryDataSource collection: self.defaultCollection as: @"main"]
                                      join: @[join]];
     Assert(q);
     
@@ -354,14 +354,14 @@
     CBLQueryExpression* on = [[CBLQueryExpression property: @"number1" from: @"main"]
                               equalTo: [CBLQueryExpression property:@"theone" from:@"secondary"]];
     
-    CBLQueryJoin* join = [CBLQueryJoin leftJoin: [CBLQueryDataSource database: self.db as: @"secondary"]
+    CBLQueryJoin* join = [CBLQueryJoin leftJoin: [CBLQueryDataSource collection: self.defaultCollection as: @"secondary"]
                                              on: on];
     
     NSArray* results = @[[CBLQuerySelectResult allFrom: @"main"],
                          [CBLQuerySelectResult allFrom: @"secondary"]];
     
     CBLQuery* q = [CBLQueryBuilder select: results
-                                     from: [CBLQueryDataSource database: self.db as: @"main"]
+                                     from: [CBLQueryDataSource collection: self.defaultCollection as: @"main"]
                                      join: @[join]];
     Assert(q);
     uint64_t numRows = [self verifyQuery: q randomAccess: YES
@@ -384,7 +384,7 @@
 - (void) testCrossJoin {
     [self loadNumbers: 10];
     
-    CBLQueryJoin* join = [CBLQueryJoin crossJoin: [CBLQueryDataSource database: self.db as: @"secondary"]];
+    CBLQueryJoin* join = [CBLQueryJoin crossJoin: [CBLQueryDataSource collection: self.defaultCollection as: @"secondary"]];
     
     CBLQueryExpression* NUMBER1  = [CBLQueryExpression property: @"number1" from:@"main"];
     CBLQueryExpression* NUMBER2  = [CBLQueryExpression property: @"number2" from:@"secondary"];
@@ -395,7 +395,7 @@
     
     
     CBLQuery* q = [CBLQueryBuilder select: results
-                                     from: [CBLQueryDataSource database: self.db as: @"main"]
+                                     from: [CBLQueryDataSource collection: self.defaultCollection as: @"main"]
                                      join: @[join]];
     Assert(q);
     
@@ -421,8 +421,8 @@
     [self saveDocument: doc1 collection: self.defaultCollection];
     
     // datasources
-    CBLQueryDataSource* mainDS = [CBLQueryDataSource database: self.db as: @"main"];
-    CBLQueryDataSource* secondaryDS = [CBLQueryDataSource database: self.db as: @"secondary"];
+    CBLQueryDataSource* mainDS = [CBLQueryDataSource collection: self.defaultCollection as: @"main"];
+    CBLQueryDataSource* secondaryDS = [CBLQueryDataSource collection: self.defaultCollection as: @"secondary"];
     
     // create the join statement
     CBLQueryExpression* mainPropExpr = [CBLQueryMeta idFrom: @"main"];
@@ -485,10 +485,10 @@
                               satisfies: [CATEGORYITEMVAR equalTo: ITEMID]];
     
     
-    CBLQueryJoin* join = [CBLQueryJoin join: [CBLQueryDataSource database: self.db as: @"itemDS"]
+    CBLQueryJoin* join = [CBLQueryJoin join: [CBLQueryDataSource collection: self.defaultCollection as: @"itemDS"]
                                          on: on];
     CBLQuery* q = [CBLQueryBuilder select: @[ITEM_DOC_ID, CATEGORY_DOC_ID]
-                                     from: [CBLQueryDataSource database: self.db as: @"categoryDS"]
+                                     from: [CBLQueryDataSource collection: self.defaultCollection as: @"categoryDS"]
                                      join: @[join]];
     Assert(q);
     NSError* error;

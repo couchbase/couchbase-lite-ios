@@ -168,14 +168,14 @@
 - (void) verifyQueryResultCount: (NSUInteger)count deletedCount: (NSUInteger)deletedCount {
     NSError* error;
     CBLQuery* q = [CBLQueryBuilder select: @[kDOCID]
-                                     from: [CBLQueryDataSource collection: self.defaultCollection]];
+                                     from: kDATA_SRC_DB];
     AssertNotNil(q);
     NSEnumerator* rs = [q execute: &error];
     AssertNil(error);
     AssertEqual([[rs allObjects] count], count);
     
     q = [CBLQueryBuilder select: @[kDOCID]
-                           from: [CBLQueryDataSource collection: self.defaultCollection]
+                           from: kDATA_SRC_DB
                           where: [CBLQueryMeta isDeleted]];
     AssertNotNil(q);
     rs = [q execute: &error];

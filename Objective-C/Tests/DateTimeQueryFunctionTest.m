@@ -28,10 +28,6 @@
 
 @implementation DateTimeQueryFunctionTest
 
-// TODO: Remove https://issues.couchbase.com/browse/CBL-3206
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-
 #pragma mark - Tests
 
 - (void) testStringToMillis {
@@ -130,7 +126,7 @@
     // convert
     CBLQueryExpression* query = [CBLQueryFunction stringToMillis: [CBLQueryExpression property: key]];
     CBLQuery* q = [CBLQueryBuilder select: @[[CBLQuerySelectResult expression: query]]
-                                     from: [CBLQueryDataSource database: self.db]];
+                                     from: kDATA_SRC_DB];
     CBLQueryResultSet* rs = [q execute: &error];
     Assert(rs, @"Query failed: %@", error);
     CBLQueryResult* result = [[rs allObjects] firstObject];
@@ -154,7 +150,7 @@
     // convert
     CBLQueryExpression* query = [CBLQueryFunction stringToUTC: [CBLQueryExpression property: key]];
     CBLQuery* q = [CBLQueryBuilder select: @[[CBLQuerySelectResult expression: query]]
-                                     from: [CBLQueryDataSource database: self.db]];
+                                     from: kDATA_SRC_DB];
     CBLQueryResultSet* rs = [q execute: &error];
     Assert(rs, @"Query failed: %@", error);
     CBLQueryResult* result = [[rs allObjects] firstObject];
@@ -178,7 +174,7 @@
     // convert
     CBLQueryExpression* query = [CBLQueryFunction millisToString: [CBLQueryExpression property: key]];
     CBLQuery* q = [CBLQueryBuilder select: @[[CBLQuerySelectResult expression: query]]
-                                     from: [CBLQueryDataSource database: self.db]];
+                                     from: kDATA_SRC_DB];
     CBLQueryResultSet* rs = [q execute: &error];
     Assert(rs, @"Query failed: %@", error);
     CBLQueryResult* result = [[rs allObjects] firstObject];
@@ -202,7 +198,7 @@
     // convert
     CBLQueryExpression* query = [CBLQueryFunction millisToUTC: [CBLQueryExpression property: key]];
     CBLQuery* q = [CBLQueryBuilder select: @[[CBLQuerySelectResult expression: query]]
-                                     from: [CBLQueryDataSource database: self.db]];
+                                     from: kDATA_SRC_DB];
     CBLQueryResultSet* rs = [q execute: &error];
     Assert(rs, @"Query failed: %@", error);
     CBLQueryResult* result = [[rs allObjects] firstObject];
@@ -214,7 +210,5 @@
     Assert([self.defaultCollection purgeDocumentWithID: doc.id error: &error]);
     AssertNil(error);
 }
-
-#pragma clang diagnostic pop
 
 @end

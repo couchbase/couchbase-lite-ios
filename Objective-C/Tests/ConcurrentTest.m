@@ -99,7 +99,7 @@
 - (void) verifyWhere: (nullable CBLQueryExpression*)expr
                 test: (void (^)(uint64_t n, CBLQueryResult *row))block {
     CBLQuery* q = [CBLQueryBuilder select: @[[CBLQuerySelectResult expression: [CBLQueryMeta id]]]
-                                     from: [CBLQueryDataSource collection: self.defaultCollection]
+                                     from: kDATA_SRC_DB
                                     where: expr];
     NSError* error;
     NSEnumerator* e = [q execute: &error];

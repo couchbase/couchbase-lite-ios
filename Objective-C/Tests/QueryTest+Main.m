@@ -41,10 +41,6 @@
 
 @implementation QueryTest_Main
 
-// TODO: Remove https://issues.couchbase.com/browse/CBL-3206
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-
 - (void) tearDown {
 #ifdef DEBUG
     [CBLQueryObserver setC4QueryObserverCallbackDelayInterval: 0.0];
@@ -58,7 +54,7 @@
     [self loadJSONResource: @"names_100"];
     
     CBLQuery* q = [CBLQueryBuilder select: @[kDOCID, kSEQUENCE]
-                                     from: [CBLQueryDataSource database: self.db]];
+                                     from: kDATA_SRC_DB];
     Assert(q);
     
     uint64_t numRows = [self verifyQuery: q randomAccess: YES
@@ -141,18 +137,6 @@
     CBLQueryExpression* work = [CBLQueryExpression property: @"work"];
     
     NSArray* tests = @[
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-                       @[[name isNullOrMissing],     @[]],
-                       @[[name notNullOrMissing],    @[doc1, doc2]],
-                       @[[address isNullOrMissing],  @[doc1]],
-                       @[[address notNullOrMissing], @[doc2]],
-                       @[[age isNullOrMissing],      @[doc1]],
-                       @[[age notNullOrMissing],     @[doc2]],
-                       @[[work isNullOrMissing],     @[doc1, doc2]],
-                       @[[work notNullOrMissing],    @[]],
-#pragma clang diagnostic pop
-                       
                        @[[name isNotValued],         @[]],
                        @[[name isValued],            @[doc1, doc2]],
                        @[[address isNotValued],      @[doc1]],
@@ -167,7 +151,7 @@
         CBLQueryExpression* exp = test[0];
         NSArray* expectedDocs = test[1];
         CBLQuery *q = [CBLQueryBuilder select: @[kDOCID]
-                                         from: [CBLQueryDataSource database: self.db]
+                                         from: kDATA_SRC_DB
                                         where: exp];
         uint64_t numRows = [self verifyQuery: q randomAccess: YES
                                         test: ^(uint64_t n, CBLQueryResult* r) {
@@ -190,7 +174,7 @@
     Assert([self.defaultCollection saveDocument: doc1 error: &error], @"Error when creating a document: %@", error);
     
     CBLQuery* q = [CBLQueryBuilder select: @[kDOCID]
-                                     from: [CBLQueryDataSource database: self.db]
+                                     from: kDATA_SRC_DB
                                     where: [[CBLQueryExpression property: @"string"] is: [CBLQueryExpression string: @"string"]]];
     
     Assert(q);
@@ -207,7 +191,7 @@
     AssertEqual(numRows, 1u);
     
     q = [CBLQueryBuilder select: @[kDOCID]
-                           from: [CBLQueryDataSource database: self.db]
+                           from: kDATA_SRC_DB
                           where: [[CBLQueryExpression property: @"string"] isNot: [CBLQueryExpression string: @"string1"]]];
     
     Assert(q);
@@ -243,7 +227,7 @@
                        [CBLQueryExpression string: @"Maryjo"]];
     CBLQueryExpression* firstName = [CBLQueryExpression property: @"name.first"];
     CBLQuery* q = [CBLQueryBuilder select: @[kDOCID]
-                                     from: [CBLQueryDataSource database: self.db]
+                                     from: kDATA_SRC_DB
                                     where: [firstName in: names]
                                   orderBy: @[[CBLQuerySortOrder property: @"name.first"]]];
     uint64_t numRows = [self verifyQuery: q randomAccess: YES
@@ -262,7 +246,7 @@
     
     CBLQueryExpression* where = [[CBLQueryExpression property: @"name.first"] like: [CBLQueryExpression string: @"%Mar%"]];
     CBLQuery* q = [CBLQueryBuilder select: @[kDOCID]
-                                     from: [CBLQueryDataSource database: self.db]
+                                     from: kDATA_SRC_DB
                                     where: where
                                   orderBy: @[[[CBLQueryOrdering property: @"name.first"] ascending]]];
     
@@ -285,7 +269,7 @@
     
     CBLQueryExpression* where = [[CBLQueryExpression property: @"name.first"] regex: [CBLQueryExpression string: @"^Mar.*"]];
     CBLQuery* q = [CBLQueryBuilder select: @[kDOCID]
-                                     from: [CBLQueryDataSource database: self.db]
+                                     from: kDATA_SRC_DB
                                     where: where
                                   orderBy: @[[[CBLQueryOrdering property: @"name.first"] ascending]]];
     
@@ -303,39 +287,9 @@
     AssertEqual(firstNames.count, 5u);
 }
 
-// remove this when deprecated
-- (void) testWhereMatch {
-    [self loadJSONResource: @"sentences"];
-    
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-    CBLQueryFullTextExpression* SENTENCE = [CBLQueryFullTextExpression indexWithName: @"sentence"];
-#pragma clang diagnostic pop
-    CBLQuerySelectResult* S_SENTENCE = [CBLQuerySelectResult property: @"sentence"];
-    
-    NSError* error;
-    CBLFullTextIndex* index = [CBLIndexBuilder fullTextIndexWithItems: @[[CBLFullTextIndexItem property: @"sentence"]]];
-    Assert([self.defaultCollection createIndex: index name: @"sentence" error: &error],
-           @"Error when creating the index: %@", error);
-    
-    CBLQueryExpression* where = [SENTENCE match: @"'Dummie woman'"];
-    CBLQueryOrdering* order = [[CBLQueryOrdering expression: [CBLQueryFullTextFunction rank: @"sentence"]]
-                               descending];
-    CBLQuery* q = [CBLQueryBuilder select: @[kDOCID, S_SENTENCE]
-                                     from: [CBLQueryDataSource database: self.db]
-                                    where: where
-                                  orderBy: @[order]];
-    uint64_t numRows = [self verifyQuery: q
-                            randomAccess: YES
-                                    test:^(uint64_t n, CBLQueryResult* r) { }];
-    AssertEqual(numRows, 2u);
-}
-
 - (void) testWhereFullTextFunctionMatch {
     [self loadJSONResource: @"sentences"];
-    
-    CBLQueryExpression* exp = [CBLQueryFullTextFunction matchWithIndexName: @"sentence"
-                                                                     query: @"'Dummie woman'"];
+
     CBLQuerySelectResult* S_SENTENCE = [CBLQuerySelectResult property: @"sentence"];
     
     NSError* error;
@@ -343,10 +297,14 @@
     Assert([self.defaultCollection createIndex: index name: @"sentence" error: &error],
            @"Error when creating the index: %@", error);
     
-    CBLQueryOrdering* order = [[CBLQueryOrdering expression: [CBLQueryFullTextFunction rank: @"sentence"]]
-                               descending];
+    id plainIndex = [CBLQueryExpression fullTextIndex: @"sentence"];
+    
+    CBLQueryOrdering* order = [[CBLQueryOrdering expression: [CBLQueryFullTextFunction rankWithIndex: plainIndex]] descending];
+    
+    CBLQueryExpression* exp = [CBLQueryFullTextFunction matchWithIndex: plainIndex
+                                                                 query: @"'Dummie woman'"];
     CBLQuery* q = [CBLQueryBuilder select: @[kDOCID, S_SENTENCE]
-                                     from: [CBLQueryDataSource database: self.db]
+                                     from: kDATA_SRC_DB
                                     where: exp
                                   orderBy: @[order]];
     uint64_t numRows = [self verifyQuery: q
@@ -354,6 +312,7 @@
                                     test:^(uint64_t n, CBLQueryResult* r) { }];
     AssertEqual(numRows, 2u);
 }
+
 
 #pragma mark - Select
 
@@ -371,7 +330,7 @@
     CBLQuerySelectResult* S_NUMBER = [CBLQuerySelectResult expression: NUMBER];
     
     CBLQuery* q = [CBLQueryBuilder selectDistinct: @[S_NUMBER]
-                                             from: [CBLQueryDataSource database: self.db]];
+                                             from: kDATA_SRC_DB];
     Assert(q);
     uint64_t numRows = [self verifyQuery: q randomAccess: YES
                                     test: ^(uint64_t n, CBLQueryResult* r)
@@ -390,7 +349,7 @@
     
     CBLQueryExpression* whereExp = [[CBLQueryExpression property: @"number"] lessThan: [CBLQueryExpression value: @(30)]];
     q = [CBLQueryBuilder selectDistinct: @[S_NUMBER]
-                                   from: [CBLQueryDataSource database: self.db]
+                                   from: kDATA_SRC_DB
                                   where: whereExp];
     Assert(q);
     numRows = [self verifyQuery: q
@@ -415,7 +374,7 @@
     
     // SELECT *
     CBLQuery* q = [CBLQueryBuilder select: @[S_STAR]
-                                     from: [CBLQueryDataSource database: self.db]];
+                                     from: kDATA_SRC_DB];
     
     uint64_t numRows = [self verifyQuery: q randomAccess: YES test: ^(uint64_t n, CBLQueryResult* r)
                         {
@@ -431,7 +390,7 @@
     
     // SELECT testdb.*
     q = [CBLQueryBuilder select: @[S_TESTDB_STAR]
-                           from: [CBLQueryDataSource database: self.db as: @"testdb"]];
+                           from: [CBLQueryDataSource collection: self.defaultCollection as: @"testdb"]];
     
     numRows = [self verifyQuery: q
                    randomAccess: YES
@@ -449,7 +408,7 @@
     
     // SELECT *, number1
     q = [CBLQueryBuilder select: @[S_STAR, S_NUMBER1]
-                           from: [CBLQueryDataSource database: self.db]];
+                           from: kDATA_SRC_DB];
     
     numRows = [self verifyQuery: q
                    randomAccess: YES
@@ -469,7 +428,7 @@
     
     // SELECT testdb.*, testdb.number1
     q = [CBLQueryBuilder select: @[S_TESTDB_STAR, S_TESTDB_NUMBER1]
-                           from: [CBLQueryDataSource database: self.db as: @"testdb"]];
+                           from: [CBLQueryDataSource collection: self.defaultCollection as: @"testdb"]];
     
     numRows = [self verifyQuery: q
                    randomAccess: YES
@@ -503,12 +462,12 @@
     CBLQueryExpression* propNum1 = [CBLQueryExpression property: @"number1" from: @"main"];
     CBLQueryExpression* propTheOne = [CBLQueryExpression property: @"theone" from: @"secondary"];
     
-    CBLQueryJoin* join = [CBLQueryJoin join: [CBLQueryDataSource database: self.db as: @"secondary"]
+    CBLQueryJoin* join = [CBLQueryJoin join: [CBLQueryDataSource collection: self.defaultCollection as: @"secondary"]
                                          on: [propNum1 equalTo: propTheOne]];
     
     CBLQuery* q = [CBLQueryBuilder selectDistinct: @[[CBLQuerySelectResult allFrom: @"main"],
                                                      [CBLQuerySelectResult allFrom: @"secondary"]]
-                                             from: [CBLQueryDataSource database: self.db as: @"main"]
+                                             from: [CBLQueryDataSource collection: self.defaultCollection as: @"main"]
                                              join: @[join]];
     Assert(q);
     uint64_t numRows = 0;
@@ -539,7 +498,7 @@
         }
         
         CBLQuery* q = [CBLQueryBuilder select: @[kDOCID]
-                                         from: [CBLQueryDataSource database: self.db]
+                                         from: kDATA_SRC_DB
                                         where: nil
                                       orderBy: @[order]];
         Assert(q);
@@ -564,7 +523,7 @@
         
         // selectDistinctFromWhereOrderBy
         CBLQuery* distinctQ = [CBLQueryBuilder selectDistinct: @[[CBLQuerySelectResult property: @"contact.address.state"]]
-                                                         from: [CBLQueryDataSource database: self.db]
+                                                         from: kDATA_SRC_DB
                                                         where: nil
                                                       orderBy: @[orderByState]];
         Assert(distinctQ);
@@ -601,7 +560,7 @@
                          [CBLQuerySelectResult expression: MAXZIP]];
     
     CBLQuery* q = [CBLQueryBuilder select: results
-                                     from: [CBLQueryDataSource database: self.db]
+                                     from: kDATA_SRC_DB
                                     where: [GENDER equalTo: [CBLQueryExpression string: @"female"]]
                                   groupBy: @[STATE]
                                    having: nil
@@ -630,7 +589,7 @@
     expectedMaxZips = @[@"94153", @"50801",  @"47952"];
     
     q = [CBLQueryBuilder select: results
-                           from: [CBLQueryDataSource database: self.db]
+                           from: kDATA_SRC_DB
                           where: [GENDER equalTo: [CBLQueryExpression string: @"female"]]
                         groupBy: @[STATE]
                          having: [COUNT greaterThan: [CBLQueryExpression integer: 1]]
@@ -664,7 +623,7 @@
     
     // selectFromWhereGroupBy
     CBLQuery* q = [CBLQueryBuilder select: results
-                                     from: [CBLQueryDataSource database: self.db]
+                                     from: kDATA_SRC_DB
                                     where: [GENDER equalTo: [CBLQueryExpression string: @"female"]]
                                   groupBy: @[STATE]];
     NSError* error;
@@ -673,7 +632,7 @@
     
     // selectFromWhereGroupByHaving
     q = [CBLQueryBuilder select: results
-                           from: [CBLQueryDataSource database: self.db]
+                           from: kDATA_SRC_DB
                           where: [GENDER equalTo: [CBLQueryExpression string: @"female"]]
                         groupBy: @[STATE]
                          having: [COUNT greaterThan: [CBLQueryExpression integer: 2]]];
@@ -718,7 +677,7 @@
     
     // selectDistinctFromWhereGroupBy
     CBLQuery* q = [CBLQueryBuilder selectDistinct: @[S_NUMBER, S_NAME]
-                                             from: [CBLQueryDataSource database: self.db]
+                                             from: kDATA_SRC_DB
                                             where: nil
                                           groupBy: @[NAME]];
     Assert(q);
@@ -727,7 +686,7 @@
     
     //selectDistinctFromWhereGroupByHaving
     q = [CBLQueryBuilder selectDistinct: @[S_COUNT, S_NUMBER, S_NAME]
-                                   from: [CBLQueryDataSource database: self.db]
+                                   from: kDATA_SRC_DB
                                   where: nil
                                 groupBy: @[NAME]
                                  having: [COUNT greaterThan: [CBLQueryExpression integer: 1]]];
@@ -737,7 +696,7 @@
     
     // selectDistinctFromWhereGroupByHavingOrderByLimit
     q = [CBLQueryBuilder selectDistinct: @[S_NUMBER, S_NAME]
-                                   from: [CBLQueryDataSource database: self.db]
+                                   from: kDATA_SRC_DB
                                   where: nil
                                 groupBy: @[NAME]
                                  having: [COUNT lessThan: [CBLQueryExpression integer: 2]]
@@ -782,7 +741,7 @@
                                   andExpression: qIsFullTime]
                                  andExpression: qStartDate];
     CBLQuery* q = [CBLQueryBuilder select: @[[CBLQuerySelectResult all]]
-                                     from: [CBLQueryDataSource database: self.db]
+                                     from: kDATA_SRC_DB
                                     where: where];
     
     CBLQueryParameters* params = [[CBLQueryParameters alloc] init];
@@ -837,7 +796,7 @@
                                         equalTo: PARAM_ASSIGNMENTS];
     CBLQueryExpression* qPhone = [[CBLQueryExpression property: @"phone"] equalTo: PARAM_PHONE];
     CBLQuery* q = [CBLQueryBuilder select: @[[CBLQuerySelectResult all]]
-                                     from: [CBLQueryDataSource database: self.db]
+                                     from: kDATA_SRC_DB
                                     where: [qAssignments andExpression: qPhone]];
     
     CBLQueryParameters* params = [[CBLQueryParameters alloc] init];
@@ -860,7 +819,7 @@
     CBLQueryExpression* NUMBER1  = [CBLQueryExpression property: @"number1"];
     
     CBLQuery* q= [CBLQueryBuilder select: @[[CBLQuerySelectResult expression: NUMBER1]]
-                                    from: [CBLQueryDataSource database: self.db]
+                                    from: kDATA_SRC_DB
                                    where: nil groupBy: nil having: nil
                                  orderBy: @[[CBLQueryOrdering expression: NUMBER1]]
                                    limit: [CBLQueryLimit limit: [CBLQueryExpression integer: 5]]];
@@ -874,7 +833,7 @@
     AssertEqual(numRows, 5u);
     
     q = [CBLQueryBuilder select: @[[CBLQuerySelectResult expression: NUMBER1]]
-                           from: [CBLQueryDataSource database: self.db]
+                           from: kDATA_SRC_DB
                           where: nil groupBy: nil having: nil
                         orderBy: @[[CBLQueryOrdering expression: NUMBER1]]
                           limit: [CBLQueryLimit limit: [CBLQueryExpression parameterNamed: @"LIMIT_NUM"]]];
@@ -900,7 +859,7 @@
     CBLQueryExpression* NUMBER1  = [CBLQueryExpression property: @"number1"];
     
     CBLQuery* q = [CBLQueryBuilder select: @[[CBLQuerySelectResult expression: NUMBER1]]
-                                     from: [CBLQueryDataSource database: self.db]
+                                     from: kDATA_SRC_DB
                                     where: nil groupBy: nil having: nil
                                   orderBy: @[[CBLQueryOrdering expression: NUMBER1]]
                                     limit: [CBLQueryLimit limit: [CBLQueryExpression integer: 5]
@@ -915,7 +874,7 @@
     AssertEqual(numRows, 5u);
     
     q = [CBLQueryBuilder select: @[[CBLQuerySelectResult expression: NUMBER1]]
-                           from: [CBLQueryDataSource database: self.db]
+                           from: kDATA_SRC_DB
                           where: nil groupBy: nil having: nil
                         orderBy: @[[CBLQueryOrdering expression: NUMBER1]]
                           limit: [CBLQueryLimit limit: [CBLQueryExpression parameterNamed: @"LIMIT_NUM"]
@@ -955,7 +914,7 @@
                          [CBLQuerySelectResult expression: SUM]];
     
     CBLQuery* q = [CBLQueryBuilder select: results
-                                     from: [CBLQueryDataSource database: self.db]];
+                                     from: kDATA_SRC_DB];
     
     uint64_t numRows = [self verifyQuery: q
                             randomAccess: YES
@@ -981,7 +940,7 @@
     CBLQueryExpression* ARRAY_LENGTH = [CBLQueryArrayFunction length:
                                         [CBLQueryExpression property: @"array"]];
     CBLQuery* q = [CBLQueryBuilder select: @[[CBLQuerySelectResult expression: ARRAY_LENGTH]]
-                                     from: [CBLQueryDataSource database: self.db]];
+                                     from: kDATA_SRC_DB];
     uint64_t numRows = [self verifyQuery: q randomAccess: YES test: ^(uint64_t n, CBLQueryResult* r)
                         {
                             AssertEqual([r integerAtIndex: 0], 2);
@@ -994,7 +953,7 @@
                                                                     value: [CBLQueryExpression string: @"650-123-0003"]];
     q = [CBLQueryBuilder select: @[[CBLQuerySelectResult expression: ARRAY_CONTAINS1],
                                    [CBLQuerySelectResult expression: ARRAY_CONTAINS2]]
-                           from: [CBLQueryDataSource database: self.db]];
+                           from: kDATA_SRC_DB];
     
     numRows = [self verifyQuery: q
                    randomAccess: YES
@@ -1062,7 +1021,7 @@
     int index = 0;
     for (CBLQueryExpression *f in functions) {
         CBLQuery* q = [CBLQueryBuilder select: @[[CBLQuerySelectResult expression: f]]
-                                         from: [CBLQueryDataSource database: self.db]];
+                                         from: kDATA_SRC_DB];
         
         uint64_t numRows = [self verifyQuery: q
                                 randomAccess: YES
@@ -1092,7 +1051,7 @@
                                                                            as: @"withoutPrecision"],
                                              [CBLQuerySelectResult expression: withPrecision
                                                                            as: @"withPrecision"]]
-                                     from: [CBLQueryDataSource database: self.db]];
+                                     from: kDATA_SRC_DB];
     uint64_t numRows = [self verifyQuery: q
                             randomAccess: YES
                                     test: ^(uint64_t n, CBLQueryResult* r) {
@@ -1115,7 +1074,7 @@
     CBLQueryExpression* CONTAINS2 = [CBLQueryFunction contains: p substring: [CBLQueryExpression string: @"9"]];
     CBLQuery* q = [CBLQueryBuilder select: @[[CBLQuerySelectResult expression: CONTAINS1],
                                              [CBLQuerySelectResult expression: CONTAINS2]]
-                                     from: [CBLQueryDataSource database: self.db]];
+                                     from: kDATA_SRC_DB];
     
     uint64_t numRows = [self verifyQuery: q
                             randomAccess: YES
@@ -1128,7 +1087,7 @@
     // Length:
     CBLQueryExpression* LENGTH = [CBLQueryFunction length: p];
     q = [CBLQueryBuilder select: @[[CBLQuerySelectResult expression: LENGTH]]
-                           from: [CBLQueryDataSource database: self.db]];
+                           from: kDATA_SRC_DB];
     
     numRows = [self verifyQuery: q
                    randomAccess: YES
@@ -1149,7 +1108,7 @@
                                    [CBLQuerySelectResult expression: RTRIM],
                                    [CBLQuerySelectResult expression: TRIM],
                                    [CBLQuerySelectResult expression: UPPER]]
-                           from: [CBLQueryDataSource database: self.db]];
+                           from: kDATA_SRC_DB];
     
     numRows = [self verifyQuery: q
                    randomAccess: YES
@@ -1175,7 +1134,7 @@
     
     // ANY:
     CBLQuery* q = [CBLQueryBuilder select: @[S_DOC_ID]
-                                     from: [CBLQueryDataSource database: self.db]
+                                     from: kDATA_SRC_DB
                                     where: [CBLQueryArrayExpression any: LIKE
                                                                      in: LIKES
                                                               satisfies: [LIKE equalTo: [CBLQueryExpression string: @"climbing"]]]];
@@ -1194,7 +1153,7 @@
     
     // EVERY:
     q = [CBLQueryBuilder select: @[S_DOC_ID]
-                           from: [CBLQueryDataSource database: self.db]
+                           from: kDATA_SRC_DB
                           where: [CBLQueryArrayExpression every: LIKE
                                                              in: LIKES
                                                       satisfies: [LIKE equalTo: [CBLQueryExpression string: @"taxes"]]]];
@@ -1208,7 +1167,7 @@
     
     // ANY AND EVERY
     q = [CBLQueryBuilder select: @[S_DOC_ID]
-                           from: [CBLQueryDataSource database: self.db]
+                           from: kDATA_SRC_DB
                           where: [CBLQueryArrayExpression anyAndEvery: LIKE
                                                                    in: LIKES
                                                             satisfies: [LIKE equalTo: [CBLQueryExpression string: @"taxes"]]]];
@@ -1247,7 +1206,7 @@
                                                    satisfies: [PATH_CITY equalTo: [CBLQueryExpression string: @"San Francisco"]]];
     
     CBLQuery* q = [CBLQueryBuilder select: @[S_DOC_ID]
-                                     from: [CBLQueryDataSource database: self.db]
+                                     from: kDATA_SRC_DB
                                     where: where];
     
     NSArray* expected = @[@"doc-0", @"doc-2"];
@@ -1308,7 +1267,7 @@
                                                              ignoreCase: NO
                                                           ignoreAccents: NO];
     CBLQuery* q = [CBLQueryBuilder select: @[S_STRING]
-                                     from: [CBLQueryDataSource database: self.db]
+                                     from: kDATA_SRC_DB
                                     where: nil
                                   orderBy: @[[CBLQueryOrdering expression: [STRING collate: NO_LOCALE]]]];
     
@@ -1326,7 +1285,7 @@
                                                                ignoreCase: NO
                                                             ignoreAccents: NO];
     q = [CBLQueryBuilder select: @[S_STRING]
-                           from: [CBLQueryDataSource database: self.db]
+                           from: kDATA_SRC_DB
                           where: nil
                         orderBy: @[[CBLQueryOrdering expression: [STRING collate: WITH_LOCALE]]]];
     
@@ -1423,7 +1382,7 @@
         // NSLog(@"Compare %@ and %@, result = %@", data[0], data[1], data[2]);
         
         CBLQuery* q = [CBLQueryBuilder select: @[]
-                                         from: [CBLQueryDataSource database: self.db]
+                                         from: kDATA_SRC_DB
                                         where: comparison];
         uint64_t numRows = [self verifyQuery: q
                                 randomAccess: NO
@@ -1466,7 +1425,7 @@
     
     CBLQuery* q = [CBLQueryBuilder select: @[S_FNAME, S_LNAME, S_EMAIL, S_ADDRESS, S_CODE, S_YEAR,
                                              S_ID, S_SCORE, S_IS_FULLTIME, S_START_DATE, S_GPA]
-                                     from: [CBLQueryDataSource database: self.db]];
+                                     from: kDATA_SRC_DB];
     
     NSSet* keys = [NSSet setWithObjects: @"lastname", @"email", @"address", @"firstname", @"code",
                    @"year", @"id", @"score", @"isFullTime", @"startDate", @"gpa", nil];
@@ -1508,7 +1467,7 @@
                          [CBLQuerySelectResult expression: SUM as: @"sum"]];
     
     CBLQuery* q = [CBLQueryBuilder select: results
-                                     from: [CBLQueryDataSource database: self.db]];
+                                     from: kDATA_SRC_DB];
     Assert(q);
     uint64_t numRows = [self verifyQuery: q
                             randomAccess: YES
@@ -1527,7 +1486,7 @@
 - (void) testResultSetEnumeration {
     [self loadNumbers: 5];
     CBLQuery* q = [CBLQueryBuilder select: @[kDOCID]
-                                     from: [CBLQueryDataSource database: self.db]
+                                     from: kDATA_SRC_DB
                                     where: nil
                                   orderBy: @[[CBLQueryOrdering property: @"number1"]]];
     NSError* error;
@@ -1566,7 +1525,7 @@
 - (void) testGetAllResults {
     [self loadNumbers: 5];
     CBLQuery* q = [CBLQueryBuilder select: @[kDOCID]
-                                     from: [CBLQueryDataSource database: self.db]
+                                     from: kDATA_SRC_DB
                                     where: nil
                                   orderBy: @[[CBLQueryOrdering property: @"number1"]]];
     
@@ -1616,7 +1575,7 @@
     CBLQuery *q = [CBLQueryBuilder select: @[[CBLQuerySelectResult property: @"name"],
                                              [CBLQuerySelectResult property: @"address"],
                                              [CBLQuerySelectResult property: @"age"]]
-                                     from: [CBLQueryDataSource database: self.db]];
+                                     from: kDATA_SRC_DB];
     
     NSError* error;
     CBLQueryResultSet* rs = [q execute: &error];
@@ -1651,7 +1610,7 @@
         CBLQueryExpression* expr = [[CBLQueryExpression property: @"string"] is:
                                     [CBLQueryExpression string: @"string"]];
         CBLQuery* q = [CBLQueryBuilder select: @[kDOCID]
-                                         from: [CBLQueryDataSource database: self.db]
+                                         from: kDATA_SRC_DB
                                         where: expr];
         json = q.json;
         Assert(json);
@@ -1677,7 +1636,7 @@
 - (void) testQueryResultArray {
     [self loadNumbers: 5];
     CBLQuery* q = [CBLQueryBuilder select: @[kDOCID]
-                                     from: [CBLQueryDataSource database: self.db]
+                                     from: kDATA_SRC_DB
                                     where: nil
                                   orderBy: @[[CBLQueryOrdering property: @"number1"]]];
     NSError* error;
@@ -1716,7 +1675,7 @@
                                              [CBLQuerySelectResult property: @"aka"],
                                              [CBLQuerySelectResult property: @"family"],
                                              [CBLQuerySelectResult property: @"origin"]]
-                                     from: [CBLQueryDataSource database: self.db]
+                                     from: kDATA_SRC_DB
                                     where: nil];
     
     CBLQueryResultSet* rs = [q execute: &error];
@@ -1774,7 +1733,7 @@
     notMiss = [[CBLUnaryExpression alloc] initWithExpression: propNow type: CBLUnaryTypeNotMissing];
     
     CBLQuery* q = [CBLQueryBuilder select: @[[CBLQuerySelectResult all]]
-                                     from: [CBLQueryDataSource database: self.db]
+                                     from: kDATA_SRC_DB
                                     where: [notNull orExpression: notMiss]];
     uint64_t rows = [self verifyQuery: q randomAccess: YES
                                  test: ^(uint64_t n, CBLQueryResult * _Nonnull result) {
@@ -1784,13 +1743,11 @@
                                  }];
     AssertEqual(rows, 1u);
     
-    // check same result is produced with notNullOrMissing.
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+    // check same result is produced with isValued.
     q = [CBLQueryBuilder select: @[[CBLQuerySelectResult all]]
-                           from: [CBLQueryDataSource database: self.db]
-                          where: [propNow notNullOrMissing]];
-#pragma clang diagnostic pop
+                           from: kDATA_SRC_DB
+                          where: [propNow isValued]];
+
     rows = [self verifyQuery: q randomAccess: YES
                         test: ^(uint64_t n, CBLQueryResult * _Nonnull result) {
                             NSDate* savedDate = [[result dictionaryAtIndex: 0] dateForKey: @"now"];
@@ -1799,7 +1756,7 @@
     AssertEqual(rows, 1u);
     
     q = [CBLQueryBuilder select: @[[CBLQuerySelectResult all]]
-                           from: [CBLQueryDataSource database: self.db]
+                           from: kDATA_SRC_DB
                           where: [propNow isValued]];
     rows = [self verifyQuery: q randomAccess: YES
                         test: ^(uint64_t n, CBLQueryResult * _Nonnull result) {
@@ -1815,7 +1772,7 @@
     
     [self expectException: NSInvalidArgumentException in: ^{
         CBLQuery* q = [CBLQueryBuilder select: @[[CBLQuerySelectResult all]]
-                                         from: [CBLQueryDataSource database: self.db]
+                                         from: kDATA_SRC_DB
                                         where: [[CBLQueryExpression property: @"string"]
                                                 isNot: [CBLQueryExpression string: @"string1"]]];
         (void)q; // Suppress unused variable warning
@@ -1873,7 +1830,7 @@
     XCTestExpectation* first = [self expectationWithDescription: @"1st change"];
     XCTestExpectation* second = [self expectationWithDescription: @"2nd change"];
     CBLQuery* q = [CBLQueryBuilder select: @[kDOCID]
-                                     from: [CBLQueryDataSource database: self.db]
+                                     from: kDATA_SRC_DB
                                     where: [[CBLQueryExpression property: @"number1"] lessThan: [CBLQueryExpression integer: 10]]
                                   orderBy: @[[CBLQueryOrdering property: @"number1"]]];
     
@@ -1907,7 +1864,7 @@
     __block int count = 0;
     XCTestExpectation* first = [self expectationWithDescription: @"1st change"];
     CBLQuery* q = [CBLQueryBuilder select: @[]
-                                     from: [CBLQueryDataSource database: self.db]
+                                     from: kDATA_SRC_DB
                                     where: [[CBLQueryExpression property: @"number1"] lessThan: [CBLQueryExpression integer: 10]]
                                   orderBy: @[[CBLQueryOrdering property: @"number1"]]];
     
@@ -1981,7 +1938,7 @@
 - (void) testLiveQuerySecondListenerReturnsResultsImmediately {
     [self createDocNumbered: 7 of: 10];
     CBLQuery* q = [CBLQueryBuilder select: @[[CBLQuerySelectResult property: @"number1"]]
-                                     from: [CBLQueryDataSource database: self.db]
+                                     from: kDATA_SRC_DB
                                     where: [[CBLQueryExpression property: @"number1"] lessThan: [CBLQueryExpression integer: 10]]
                                   orderBy: @[[CBLQueryOrdering property: @"number1"]]];
     
@@ -2015,7 +1972,7 @@
 
 - (void) testLiveQueryReturnsEmptyResultSet {
     CBLQuery* q = [CBLQueryBuilder select: @[[CBLQuerySelectResult property: @"number1"]]
-                                     from: [CBLQueryDataSource database: self.db]];
+                                     from: kDATA_SRC_DB];
     XCTestExpectation* first = [self expectationWithDescription: @"1st change"];
     id token = [q addChangeListener: ^(CBLQueryChange* change) {
         NSArray<CBLQueryResult*>* rows = [change.results allObjects];
@@ -2034,7 +1991,7 @@
 - (void) testLiveQueryMultipleListenersReturnIndependentResultSet {
     [self loadNumbers: 100];
     CBLQuery* q = [CBLQueryBuilder select: @[[CBLQuerySelectResult property: @"number1"]]
-                                     from: [CBLQueryDataSource database: self.db]
+                                     from: kDATA_SRC_DB
                                     where: [[CBLQueryExpression property: @"number1"] lessThan: [CBLQueryExpression integer: 10]]
                                   orderBy: @[[CBLQueryOrdering property: @"number1"]]];
     
@@ -2096,7 +2053,7 @@
 - (void) testLiveQueryUpdateQueryParam {
     [self loadNumbers: 100];
     CBLQuery* q = [CBLQueryBuilder select: @[kDOCID]
-                                     from: [CBLQueryDataSource database: self.db]
+                                     from: kDATA_SRC_DB
                                     where: [[CBLQueryExpression property: @"number1"] lessThan: [CBLQueryExpression parameterNamed: @"param1"]]
                                   orderBy: @[[CBLQueryOrdering property: @"number1"]]];
     // set the param
@@ -2266,7 +2223,5 @@
 }
 
 #endif
-
-#pragma clang diagnostic pop
 
 @end
