@@ -24,13 +24,16 @@ import CouchbaseLiteSwift_Private
 public class Log {
     
     /// Console logger writing log messages to the system console.
+    @available(*, deprecated, message: "Use LogSinks.console instead.")
     public let console = ConsoleLogger()
     
     /// File logger writing log messages to files.
+    @available(*, deprecated, message: "Use LogSinks.file instead.")
     public let file = FileLogger()
     
     /// For setting a custom logger. Changing the log level of the assigned custom logger will
     /// require the custom logger to be reassigned so that the change can be affected.
+    @available(*, deprecated, message: "Use LogSinks.custom instead.")
     public var custom: Logger? {
         didSet {
             if let logger = custom {
