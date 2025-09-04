@@ -33,7 +33,7 @@ public class Document : DictionaryProtocol, Equatable, Hashable, Sequence {
         return impl.revisionID
     }
     
-    public var timestamp: TimeInterval {
+    public var timestamp: UInt64 {
         return impl.timestamp
     }
     
