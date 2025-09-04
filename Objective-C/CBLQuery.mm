@@ -309,7 +309,7 @@ using namespace fleece;
 #pragma mark delegate(CBLRemovableListenerToken)
 
 - (void) removeToken: (id)token {
-    [self removeChangeListenerWithToken: token];
+    [token remove];
 }
 
 #pragma mark - Internal
