@@ -135,7 +135,8 @@ the replicator change notification.
  
  @param token The listener token;
  */
-- (void) removeChangeListenerWithToken: (id<CBLListenerToken>)token;
+- (void) removeChangeListenerWithToken: (id<CBLListenerToken>)token
+__deprecated_msg("Use [ListenerToken remove] instead.");
 
 /**
  Get pending document ids for the given collection. If the given collection is not part of
