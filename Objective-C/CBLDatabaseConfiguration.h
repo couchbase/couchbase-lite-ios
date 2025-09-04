@@ -44,15 +44,6 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic) BOOL fullSync;
 
 /**
- Enables or disables memory-mapped I/O. By default, memory-mapped I/O is enabled.
- Disabling it may affect database performance. Typically, there is no need to modify this setting.
-
- @note: Memory-mapped I/O is always disabled to prevent database corruption on macOS.
- As a result, setting this configuration has no effect on the macOS platform.
- */
-@property (nonatomic) BOOL mmapEnabled;
-
-/**
  Initializes the CBLDatabaseConfiguration object.
  */
 - (instancetype) init;

@@ -38,12 +38,6 @@ public struct DatabaseConfiguration {
     /// is very safe but it is also dramatically slower.
     public var fullSync: Bool = defaultFullSync
     
-    /// Enables or disables memory-mapped I/O. By default, memory-mapped I/O is enabled.
-    /// Disabling it may affect database performance. Typically, there is no need to modify this setting.
-    /// - Note: Memory-mapped I/O is always disabled to prevent database corruption on macOS.
-    ///         As a result, setting this configuration has no effect on the macOS platform.
-    public var mmapEnabled: Bool = defaultMmapEnabled;
-    
     #if COUCHBASE_ENTERPRISE
     /// The key to encrypt the database with.
     public var encryptionKey: EncryptionKey?
@@ -59,7 +53,6 @@ public struct DatabaseConfiguration {
         if let c = config {
             self.directory = c.directory
             self.fullSync = c.fullSync
-            self.mmapEnabled = c.mmapEnabled
             
             #if COUCHBASE_ENTERPRISE
             self.encryptionKey = c.encryptionKey
@@ -73,7 +66,6 @@ public struct DatabaseConfiguration {
         let config = CBLDatabaseConfiguration()
         config.directory = self.directory
         config.fullSync = self.fullSync
-        config.mmapEnabled = self.mmapEnabled
         
         #if COUCHBASE_ENTERPRISE
         config.encryptionKey = self.encryptionKey?.impl
