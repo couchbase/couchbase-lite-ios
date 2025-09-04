@@ -45,7 +45,7 @@
     CBLQuerySelectResult* S_NUMBER1 = [CBLQuerySelectResult expression: NUMBER1];
     
     CBLQuery* q = [CBLQueryBuilder select: @[S_DOC_ID, S_DOC_SEQ, S_DOC_REVID, S_NUMBER1]
-                                     from: [CBLQueryDataSource database: self.db]
+                                     from: kDATA_SRC_DB
                                     where: nil
                                   orderBy: @[[CBLQueryOrdering expression: DOC_SEQ]]];
     
@@ -82,7 +82,7 @@
 - (void) testIsDeletedExpressionEmpty {
     // fetch is-deleted condition should return empty
     CBLQuery* q = [CBLQueryBuilder select: @[kDOCID]
-                                     from: [CBLQueryDataSource database: self.db]
+                                     from: kDATA_SRC_DB
                                     where: [CBLQueryMeta isDeleted]];
     
     AssertNotNil(q);
@@ -102,7 +102,7 @@
     
     // get no-of-deleted docs & make sure its empty
     CBLQuery* q = [CBLQueryBuilder select: @[kDOCID]
-                                     from: [CBLQueryDataSource database: self.db]
+                                     from: kDATA_SRC_DB
                                     where: [CBLQueryMeta isDeleted]];
     
     AssertNotNil(q);
@@ -118,7 +118,7 @@
     
     // get no-of-deleted docs & make sure its NOT empty
     q = [CBLQueryBuilder select: @[kDOCID]
-                           from: [CBLQueryDataSource database: self.db]
+                           from: kDATA_SRC_DB
                           where: [CBLQueryMeta isDeleted]];
     
     AssertNotNil(q);
@@ -148,7 +148,7 @@
     
     // validate deleted docs are empty
     CBLQuery* q = [CBLQueryBuilder select: @[kDOCID]
-                                     from: [CBLQueryDataSource database: self.db]
+                                     from: kDATA_SRC_DB
                                     where: [CBLQueryMeta isDeleted]];
     AssertNotNil(q);
     NSError* error;
@@ -171,7 +171,7 @@
     
     // validate the total deleted doc count
     q = [CBLQueryBuilder select: @[kDOCID]
-                           from: [CBLQueryDataSource database: self.db]
+                           from: kDATA_SRC_DB
                           where: [CBLQueryMeta isDeleted]];
     
     AssertNotNil(q);
@@ -184,7 +184,7 @@
 
 - (void) testExpiredExpressionOnEmptyDB {
     CBLQuery* q = [CBLQueryBuilder select: @[kDOCID]
-                                     from: [CBLQueryDataSource database: self.db]
+                                     from: kDATA_SRC_DB
                                     where: [[CBLQueryMeta expiration]
                                             greaterThan: [CBLQueryExpression double: 0]]];
     
@@ -212,7 +212,7 @@
     
     NSTimeInterval future = [expiryDate dateByAddingTimeInterval: 1].timeIntervalSince1970 * 1000;
     CBLQuery* q = [CBLQueryBuilder select: @[kDOCID]
-                                     from: [CBLQueryDataSource database: self.db]
+                                     from: kDATA_SRC_DB
                                     where: [[CBLQueryMeta expiration]
                                             lessThan: [CBLQueryExpression double: future]]];
     
@@ -237,7 +237,7 @@
     
     NSTimeInterval earlier = [expiryDate dateByAddingTimeInterval: -1].timeIntervalSince1970 * 1000;
     CBLQuery* q = [CBLQueryBuilder select: @[kDOCID]
-                                     from: [CBLQueryDataSource database: self.db]
+                                     from: kDATA_SRC_DB
                                     where: [[CBLQueryMeta expiration]
                                             lessThan: [CBLQueryExpression double: earlier]]];
     
@@ -263,7 +263,7 @@
     
     NSTimeInterval earlier =  [expiryDate dateByAddingTimeInterval: -180].timeIntervalSince1970 * 1000;
     CBLQuery* q = [CBLQueryBuilder select: @[kDOCID]
-                                     from: [CBLQueryDataSource database: self.db]
+                                     from: kDATA_SRC_DB
                                     where: [[CBLQueryMeta expiration]
                                             greaterThan: [CBLQueryExpression double: earlier]]];
     
@@ -288,7 +288,7 @@
     
     NSTimeInterval future = expiryDate.timeIntervalSince1970 * 1000;
     CBLQuery* q = [CBLQueryBuilder select: @[kDOCID]
-                                     from: [CBLQueryDataSource database: self.db]
+                                     from: kDATA_SRC_DB
                                     where: [[CBLQueryMeta expiration]
                                             greaterThan: [CBLQueryExpression longLong: (long long)future]]];
     
@@ -306,7 +306,7 @@
     AssertNil(error);
     
     CBLQuery* q = [CBLQueryBuilder select: @[kREVID]
-                                     from: [CBLQueryDataSource database: self.db]
+                                     from: kDATA_SRC_DB
                                     where: [[CBLQueryMeta id] equalTo:
                                             [CBLQueryExpression string: doc.id]]];
     
@@ -325,7 +325,7 @@
     
     // Use meta.revisionID in WHERE clause
     q = [CBLQueryBuilder select: @[kDOCID]
-                                 from: [CBLQueryDataSource database: self.db]
+                                 from: kDATA_SRC_DB
                                 where: [[CBLQueryMeta revisionID] equalTo:
                                         [CBLQueryExpression string: doc.revisionID]]];
     
@@ -338,7 +338,7 @@
     AssertNil(error);
     
     q = [CBLQueryBuilder select: @[kREVID]
-                           from: [CBLQueryDataSource database: self.db]
+                           from: kDATA_SRC_DB
                           where: [[CBLQueryMeta isDeleted] equalTo:
                                   [CBLQueryExpression boolean: YES]]];
     

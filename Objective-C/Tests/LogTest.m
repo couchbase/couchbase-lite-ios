@@ -342,7 +342,7 @@
     AssertNil(error);
     
     CBLQuery* q = [CBLQueryBuilder select: @[[CBLQuerySelectResult all]]
-                                     from: [CBLQueryDataSource collection: self.defaultCollection]];
+                                     from: kDATA_SRC_DB];
     AssertNotNil(q);
     NSEnumerator* rs = [q execute:&error];
     AssertNil(error);

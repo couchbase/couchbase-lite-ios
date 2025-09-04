@@ -30,29 +30,6 @@ NS_ASSUME_NONNULL_BEGIN
 @interface CBLQueryFullTextFunction : NSObject
 
 /**
- Creates a full-text rank function with the given full-text index name.
- The rank function indicates how well the current query result matches
- the full-text query when performing the match comparison.
- 
- @param indexName The full-text index name.
- @return The full-text rank function.
- */
-+ (CBLQueryExpression*) rank: (NSString*)indexName
-__deprecated_msg("Use [CBLQueryFullTextFunction rankWithIndex:] instead.")
-NS_SWIFT_NAME(rank(withIndexName:));
-
-/**
- Creates a full-text match expression with the given full-text index name and the query text
-
- @param indexName The full-text index name.
- @param query The query string.
- @return The full-text match expression.
- */
-+ (CBLQueryExpression*) matchWithIndexName: (NSString*)indexName query: (NSString*)query
-__deprecated_msg("Use [CBLQueryFullTextFunction matchWithIndex: query:] instead.")
-NS_SWIFT_NAME(match(withIndexName:query:));
-
-/**
  Creates a full-text rank() function with the given full-text index expression.
  
  The rank function indicates how well the current query result matches

@@ -21,10 +21,6 @@
 
 @implementation QueryTest
 
-// TODO: Remove https://issues.couchbase.com/browse/CBL-3206
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-
 #pragma mark - Helper methods
 
 - (CBLMutableDocument*) createDocNumbered: (NSInteger)i of: (NSInteger)num {
@@ -154,7 +150,7 @@
 - (void) runTestWithNumbers: (NSArray*)numbers cases: (NSArray*)cases {
     for (NSArray* c in cases) {
         CBLQuery* q = [CBLQueryBuilder select: @[kDOCID]
-                                         from: [CBLQueryDataSource database: self.db]
+                                         from: kDATA_SRC_DB
                                         where: c[0]];
         NSPredicate* p = [NSPredicate predicateWithFormat: c[1]];
         NSMutableArray* result = [[numbers filteredArrayUsingPredicate: p] mutableCopy];
@@ -172,7 +168,5 @@
         AssertEqual(rows, total);
     }
 }
-
-#pragma clang diagnostic pop
 
 @end

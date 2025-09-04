@@ -200,7 +200,7 @@ static constexpr auto kInterTestSleep = milliseconds(0);
 -  (CBLQueryResultSet*) queryAllDocuments {
     auto select = [CBLQuerySelectResult expression: [CBLQueryMeta id]];
     return [[CBLQueryBuilder select: @[select]
-                               from: [CBLQueryDataSource database: self.db]
+                               from: [CBLQueryDataSource collection: self.defaultCollection]
                               where: nil] execute: NULL];
 }
 
@@ -284,7 +284,7 @@ static constexpr auto kInterTestSleep = milliseconds(0);
         auto compilation = [CBLQueryExpression property: @"Compilation"];
         auto cd = [CBLQueryCollation unicodeWithLocale: nil ignoreCase: YES ignoreAccents: YES];
         CBLQuery* query = [CBLQueryBuilder select: @[[CBLQuerySelectResult expression: artist]]
-                                             from: [CBLQueryDataSource database: self.db]
+                                             from: [CBLQueryDataSource collection: self.defaultCollection]
                                             where: [[artist isValued] andExpression: [compilation isNotValued]]
                                           groupBy: @[[artist collate: cd]] having: nil
                                           orderBy: @[[CBLQueryOrdering expression: [artist collate: cd]]]
@@ -329,7 +329,7 @@ static constexpr auto kInterTestSleep = milliseconds(0);
         auto album = [CBLQueryExpression property: @"Album"];
         auto cd = [CBLQueryCollation unicodeWithLocale: nil ignoreCase: YES ignoreAccents: YES];
         CBLQuery* query = [CBLQueryBuilder select: @[[CBLQuerySelectResult expression: album]]
-                                             from: [CBLQueryDataSource database: self.db]
+                                             from: [CBLQueryDataSource collection: self.defaultCollection]
                                             where: [[[artist collate: cd] equalTo: [CBLQueryExpression parameterNamed: @"ARTIST"]]
                                                     andExpression: [compilation isNotValued]]
                                           groupBy: @[[album collate: cd]]
@@ -377,11 +377,13 @@ static constexpr auto kInterTestSleep = milliseconds(0);
         auto name = [CBLQueryExpression property: @"Name"];
         auto album = [CBLQueryExpression property: @"Album"];
         auto cd = [CBLQueryCollation unicodeWithLocale: nil ignoreCase: YES ignoreAccents: YES];
+        
+        id plainIndex = [CBLQueryExpression fullTextIndex: @"name"];
         CBLQuery* query = [CBLQueryBuilder select: @[[CBLQuerySelectResult expression: name],
                                                      [CBLQuerySelectResult expression: artist],
                                                      [CBLQuerySelectResult expression: album]]
-                                             from: [CBLQueryDataSource database: self.db]
-                                            where: [CBLQueryFullTextFunction matchWithIndexName: @"name" query: @"'Rock'"]
+                                             from: [CBLQueryDataSource collection: self.defaultCollection]
+                                            where: [CBLQueryFullTextFunction matchWithIndex: plainIndex query: @"'Rock'"]
                                           orderBy: @[[CBLQueryOrdering expression: [artist collate: cd]],
                                                      [CBLQueryOrdering expression: [album collate: cd]]]];
         VerboseLog(2, @"%@", [query explain: NULL]);

@@ -23,28 +23,6 @@ import CouchbaseLiteSwift_Private
 /// Full-text function factory.
 public final class FullTextFunction {
     
-    /// Creates a full-text rank function with the given full-text index name.
-    /// The rank function indicates how well the current query result matches
-    /// the full-text query when performing the match comparison.
-    ///
-    /// - Parameter indexName: The index name.
-    /// - Returns: The full-text rank function.
-    @available(*, deprecated, message: "Use FullTextFunction.rank(withIndex:) instead.")
-    public static func rank(_ indexName: String) -> ExpressionProtocol {
-        return rank(Expression.fullTextIndex(indexName))
-    }
-    
-    /// Creates a full-text match expression with the given full-text index name and the query text
-    ///
-    /// - Parameters:
-    ///   - indexName: The index name.
-    ///   - query: The query string.
-    /// - Returns: The full-text match function expression.
-    @available(*, deprecated, message: "Use FullTextFunction.match(withIndex:query) instead.")
-    public static func match(indexName: String, query: String) -> ExpressionProtocol {
-        return match(Expression.fullTextIndex(indexName), query: query)
-    }
-    
     /// Creates a full-text rank() function with the given full-text index expression.
     ///
     /// The rank function indicates how well the current query result matches

@@ -157,7 +157,7 @@
      [self loadJSONResource: @"names_100" toCollection: self.defaultCollection];
 
      CBLQuery* q = [CBLQueryBuilder select: @[[CBLQuerySelectResult property: @"name.first"]]
-                                      from: [CBLQueryDataSource collection: self.defaultCollection]
+                                      from: kDATA_SRC_DB
                                      where: nil
                                    groupBy: nil
                                     having: nil
@@ -415,7 +415,7 @@
     [self saveDocument: mdoc2 collection: self.defaultCollection];
     
     NSArray<CBLQueryDataSource*>* froms = @[
-        [CBLQueryDataSource collection: self.defaultCollection],
+        kDATA_SRC_DB,
         [CBLQueryDataSource collection: flowersCol],
         [CBLQueryDataSource collection: flowersCol as: @"f"]
     ];

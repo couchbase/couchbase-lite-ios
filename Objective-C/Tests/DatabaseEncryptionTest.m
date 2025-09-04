@@ -29,10 +29,6 @@
     CBLCollection* _seekritCollection;
 }
 
-// TODO: Remove https://issues.couchbase.com/browse/CBL-3206
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-
 - (void) tearDown {
     [self reset];
     [super tearDown];
@@ -251,7 +247,7 @@
     // Query documents:
     CBLQueryExpression* SEQ = [CBLQueryExpression property: @"seq"];
     CBLQuery* query = [CBLQueryBuilder select: @[[CBLQuerySelectResult expression: SEQ]]
-                                         from: [CBLQueryDataSource database: _seekrit]
+                                         from: [CBLQueryDataSource collection: _seekritCollection]
                                         where: [SEQ isValued]
                                       orderBy: @[[CBLQueryOrdering expression: SEQ]]];
     CBLQueryResultSet* rs = [query execute: &error];
@@ -263,7 +259,5 @@
         AssertEqual([r integerAtIndex: 0], i++);
     }
 }
-
-#pragma clang diagnostic pop
 
 @end

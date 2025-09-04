@@ -47,7 +47,7 @@
 #define SEL_PROP(P)             [CBLQuerySelectResult property: (P)]
 #define kMETA_ID                [CBLQuerySelectResult expression: [CBLQueryMeta id]]
 #define kMETA_SEQ               [CBLQuerySelectResult expression: [CBLQueryMeta sequence]]
-#define kDATA_SRC_DB            [CBLQueryDataSource database: self.db]
+#define kDATA_SRC_DB            [CBLQueryDataSource collection: self.defaultCollection]
 
 #ifdef COUCHBASE_ENTERPRISE
 

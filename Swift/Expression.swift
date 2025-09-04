@@ -135,20 +135,6 @@ public protocol ExpressionProtocol {
     
     // MARK: NULL check operators.
     
-    /// Creates an IS NULL OR MISSING expression that evaluates whether or not the current
-    /// expression is null or missing.
-    ///
-    /// - Returns: An IS NULL expression.
-    @available(*, deprecated, message: "Use isNotValued() instead.")
-    func isNullOrMissing() -> ExpressionProtocol
-    
-    /// Creates an IS NOT NULL OR MISSING expression that evaluates whether or not the current
-    /// expression is NOT null or missing.
-    ///
-    /// - Returns: An IS NOT NULL expression.
-    @available(*, deprecated, message: "Use isValued() instead.")
-    func notNullOrMissing() -> ExpressionProtocol
-    
     /// Creates an IS VALUED expression that evaluates whether or not the current expression
     /// is NOT null or missing.
     ///
@@ -511,24 +497,6 @@ public final class Expression {
     /// - Returns: An IS NOT expression.
     public func isNot(_ expression: ExpressionProtocol) -> ExpressionProtocol {
         return QueryExpression(self.impl.isNot(expression.toImpl()))
-    }
-    
-    // MARK: NULL check operators.
-    
-    /// Creates an IS NULL OR MISSING expression that evaluates whether or not the current
-    /// expression is null or missing.
-    ///
-    /// - Returns: An IS NULL expression.
-    public func isNullOrMissing() -> ExpressionProtocol {
-        return QueryExpression(self.impl.isNullOrMissing())
-    }
-    
-    /// Creates an IS NOT NULL OR MISSING expression that evaluates whether or not the current
-    /// expression is NOT null or missing.
-    ///
-    /// - Returns: An IS NOT NULL expression.
-    public func notNullOrMissing() -> ExpressionProtocol {
-        return QueryExpression(self.impl.notNullOrMissing())
     }
     
     // MARK: isValued() and isNotValued()

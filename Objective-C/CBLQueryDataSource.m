@@ -56,19 +56,6 @@
     return nil;
 }
 
-+ (instancetype) database: (CBLDatabase*)database {
-    CBLAssertNotNil(database);
-    
-    return [CBLQueryDataSource database: database as: nil];
-}
-
-+ (instancetype) database: (CBLDatabase*)database as: (nullable NSString*)alias {
-    CBLAssertNotNil(database);
-    
-    return [[CBLQueryDataSource alloc] initWithDataSource: database
-                                                       as: alias];
-}
-
 + (instancetype) collection:(CBLCollection *)collection {
     CBLAssertNotNil(collection);
     

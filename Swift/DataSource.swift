@@ -41,17 +41,6 @@ public protocol DataSourceAs: DataSourceProtocol {
 /// The current data source supported is the database.
 public final class DataSource {
     
-    /// Create a database data source.
-    ///
-    /// - Parameter database: The database object.
-    /// - Returns: The database data source.
-    @available(*, deprecated,
-                message: "Use DataSource.collection(database.defaultCollection()) instead.")
-    public static func database(_ database: Database) -> DataSourceAs {
-        return DatabaseSourceAs(impl: CBLQueryDataSource.database(database.impl),
-                                source: database)
-    }
-    
     public static func collection(_ collection: Collection) -> DataSourceAs {
         return DatabaseSourceAs(impl: CBLQueryDataSource.collection(collection.impl),
                                 source: collection)
@@ -75,14 +64,10 @@ public final class DataSource {
     }
     
     func source() -> Any {
-        switch dataSource.self {
-        case is Database:
-            return dataSource as! Database
-        case is Collection:
-            return dataSource as! Collection
-        default:
+        guard let col = dataSource as? Collection else {
             fatalError("Unknown datasource type detected!")
         }
+        return col
     }
     
 }
@@ -90,21 +75,10 @@ public final class DataSource {
 /* internal */ class DatabaseSourceAs: DatabaseSource, DataSourceAs {
 
     public func `as`(_ alias: String) -> DataSourceProtocol {
-        
-        // TODO: Remove the database source, since its deprecated!
-        
-        switch dataSource.self {
-        case is Database:
-            let db = dataSource as! Database
-            return DatabaseSource(impl: CBLQueryDataSource.database(db.impl, as: alias),
-                                  source: db)
-        case is Collection:
-            let collection = dataSource as! Collection
-            return DatabaseSource(impl: CBLQueryDataSource.collection(collection.impl, as: alias),
-                                  source: collection)
-        default:
+        guard let collection = dataSource as? Collection else {
             fatalError("Unknown datasource type!")
         }
+        return DatabaseSource(impl: CBLQueryDataSource.collection(collection.impl, as: alias), source: collection)
     }
 }
 
@@ -118,16 +92,10 @@ extension DataSourceProtocol {
     }
     
     var database: Database {
-        guard let o = self as? DatabaseSource else {
-            fatalError("Unsupported data source.");
+        guard let o = self as? DatabaseSource,
+              let colSource = o.source() as? Collection else {
+            fatalError("Unsupported data source.")
         }
-        
-        if let colSource = o.source() as? Collection {
-            return colSource.database
-        } else if let s = o.source() as? Database {
-            return s
-        }
-        
-        fatalError("Unsupported data source.")
+        return colSource.database
     }
 }

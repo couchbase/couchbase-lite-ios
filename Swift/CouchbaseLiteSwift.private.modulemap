@@ -79,7 +79,6 @@ framework module CouchbaseLiteSwift_Private {
     header "CBLQueryExpression.h"
     header "CBLQueryFactory.h"
     header "CBLQueryFunction.h"
-    header "CBLQueryFullTextExpression.h"
     header "CBLQueryFullTextFunction.h"
     header "CBLQueryIndex.h"
     header "CBLQueryJoin.h"
