@@ -1386,8 +1386,8 @@ class DatabaseTest: CBLTestCase {
         let change1 = expectation(description: "changes 1")
         let change2 = expectation(description: "changes 2")
         
-        let ds = DataSource.database(db)
-        
+        let ds = DataSource.collection(defaultCollection!)
+
         let q1 = QueryBuilder.select().from(ds)
         q1.addChangeListener { (ch) in change1.fulfill() }
         
