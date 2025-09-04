@@ -33,9 +33,6 @@
 /** [NO] Full sync is off by default because the performance hit is seldom worth the benefit */
 extern const BOOL kCBLDefaultDatabaseFullSync;
 
-/** [NO] Memory mapped database files are disabled by default. Always disabled for macOS. */
-extern const BOOL kCBLDefaultDatabaseMmapEnabled;
-
 #pragma mark - CBLLogFileConfiguration
 
 /** [NO] Plaintext is not used, and instead binary encoding is used in log files */
