@@ -35,10 +35,6 @@
 @synthesize disableDefaultServerCertPinning=_disableDefaultServerCertPinning;
 @synthesize crashWhenStoppedTimeoutOccurred=_crashWhenStoppedTimeoutOccurred;
 
-// TODO: Remove https://issues.couchbase.com/browse/CBL-3206
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-
 + (void) initialize {
     if (self == [ReplicatorTest class]) {
         // You can set environment variables to force use of a proxy:
@@ -517,8 +513,6 @@ onReplicatorReady: (nullable void (^)(CBLReplicator*))onReplicatorReady {
     
     return x;
 }
-
-#pragma clang diagnostic pop
 
 @end
 

@@ -30,10 +30,6 @@
 
 @implementation ArrayTest
 
-// TODO: Remove https://issues.couchbase.com/browse/CBL-3206
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-
 - (NSArray*) arrayOfAllTypes {
     NSMutableArray* array = [NSMutableArray array];
     [array addObject: @(YES)];
@@ -1105,7 +1101,5 @@
     blob = [doc blobForKey: @"origin"];
     AssertNotNil(blob.content);
 }
-
-#pragma clang diagnostic pop
 
 @end

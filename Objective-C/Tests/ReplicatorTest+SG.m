@@ -25,10 +25,6 @@
 
 @implementation ReplicatorTest_SG
 
-// TODO: Remove https://issues.couchbase.com/browse/CBL-3206
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-
 - (void) testAuthenticationFailure_SG {
     id target = [self remoteEndpointWithName: @"seekrit" secure: YES];
     if (!target)
@@ -282,7 +278,5 @@
     CBLDocument* savedDoc = [self.defaultCollection documentWithID: doc.id error: &error];
     AssertNil([savedDoc stringForKey: propertyKey]);
 }
-
-#pragma clang diagnostic pop
 
 @end

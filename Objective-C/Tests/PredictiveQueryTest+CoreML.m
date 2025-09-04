@@ -25,10 +25,6 @@
 
 @implementation PredictiveQueryWithCoreMLTest
 
-// TODO: Remove https://issues.couchbase.com/browse/CBL-3206
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-
 - (MLModel*) coreMLModel: (NSString*)name mustExist: (BOOL)mustExist {
     NSString* resource = [NSString stringWithFormat: @"mlmodels/%@", name];
     NSURL* modelURL = [self urlForResource: resource ofType: @"mlmodel"];
@@ -399,7 +395,5 @@
     
     [CBLDatabase.prediction unregisterModelWithName: @"MobileNet"];
 }
-
-#pragma clang diagnostic pop
 
 @end

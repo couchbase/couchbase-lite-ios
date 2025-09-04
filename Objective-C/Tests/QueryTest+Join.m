@@ -25,10 +25,6 @@
 
 @implementation QueryTestWithJoin
 
-// TODO: Remove https://issues.couchbase.com/browse/CBL-3206
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-
 #pragma mark - JOIN
 
 - (void) testJoin {
@@ -505,7 +501,5 @@
     }
     AssertEqual(i, 2);
 }
-
-#pragma clang diagnostic pop
 
 @end
