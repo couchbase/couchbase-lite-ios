@@ -27,8 +27,9 @@ typedef NS_OPTIONS(NSUInteger, CBLLogDomain) {
     kCBLLogDomainNetwork        = 1 << 3,       ///< Network domain.
     kCBLLogDomainListener       = 1 << 4,       ///< Listener domain.
     kCBLLogDomainPeerDiscovery  = 1 << 5,       ///< Peer Discovery domain.
-    kCBLLogDomainMultipeer      = 1 << 6,       ///< Multipeer Replication domain.
-    kCBLLogDomainAll            = (1 << 7) - 1  ///< All domains
+    kCBLLogDomainMDNS           = 1 << 6,       ///< mDNS specific logs used for DNS-SD peer discovery
+    kCBLLogDomainMultipeer      = 1 << 9,       ///< Multipeer Replication domain.
+    kCBLLogDomainAll            = (1 << 10) - 1 ///< All domains
 };
 
 /** Log level. */

@@ -75,7 +75,7 @@ public class LogSinks {
         
         func writeLog(with level: CBLLogLevel, domain: CBLLogDomain, message: String) {
             let logLevel = LogLevel.init(rawValue: UInt8(level.rawValue))!
-            let logDomain = LogDomain.init(rawValue: UInt8(domain.rawValue))!
+            let logDomain = LogDomain.init(rawValue: domain.rawValue)!
             logSink.writeLog(level:logLevel, domain: logDomain, message: message)
         }
     }
