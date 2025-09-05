@@ -70,6 +70,9 @@ static NSArray* logLevelNames = @[@"Debug", @"Verbose", @"Info", @"WARNING", @"E
         case kCBLLogDomainPeerDiscovery:
             return @"PeerDiscovery";
             break;
+        case kCBLLogDomainMDNS:
+            return @"mDNS";
+            break;
         case kCBLLogDomainMultipeer:
             return @"Multipeer";
             break;

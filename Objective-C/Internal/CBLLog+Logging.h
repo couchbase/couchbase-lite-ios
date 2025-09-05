@@ -40,6 +40,7 @@ extern C4LogDomain kCBL_LogDomainSync;
 extern C4LogDomain kCBL_LogDomainWebSocket;
 extern C4LogDomain kCBL_LogDomainListener;
 extern C4LogDomain kCBL_LogDomainDiscovery;
+extern C4LogDomain kCBL_LogDomainMDNS;
 extern C4LogDomain kCBL_LogDomainP2P;
     
 // Logging functions. For the domain, just use the part of the name between kCBL… and …LogDomain.
