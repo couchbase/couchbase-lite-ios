@@ -37,10 +37,6 @@ const NSTimeInterval kExpTimeout = 20.0;
 
 @synthesize db=_db, otherDB=_otherDB, disableObjectLeakCheck=_disableObjectLeakCheck;
 
-// TODO: Remove https://issues.couchbase.com/browse/CBL-3206
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-
 - (XCTestExpectation*) allowOverfillExpectationWithDescription:(NSString *)description {
     XCTestExpectation* e = [super expectationWithDescription: description];
     e.assertForOverFulfill = false;
@@ -482,7 +478,5 @@ const NSTimeInterval kExpTimeout = 20.0;
     
     return [self stringFromResource: @"rick_morty" ofType: @"json"];
 }
-
-#pragma clang diagnostic pop
 
 @end

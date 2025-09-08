@@ -39,10 +39,6 @@ static constexpr int kNumIterations = 10;
 static constexpr auto kInterTestSleep = milliseconds(0);
 #endif
 
-// TODO: Remove https://issues.couchbase.com/browse/CBL-3206
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-
 @implementation TunesPerfTest
 {
     NSArray* _tracks;
@@ -395,7 +391,5 @@ static constexpr auto kInterTestSleep = milliseconds(0);
         return (unsigned)results.count;
     }
 }
-
-#pragma clang diagnostic pop
 
 @end
