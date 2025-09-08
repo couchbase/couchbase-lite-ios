@@ -207,8 +207,8 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
             XCTAssertEqual(db2.count, count + 1); // existing docs + pulls one doc from db#1
         }
         
-        repl1.removeChangeListener(withToken: token1)
-        repl2.removeChangeListener(withToken: token2)
+        token1.remove()
+        token2.remove()
         
         try db1.close()
         try db2.close()
@@ -270,8 +270,8 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
         }
         
         wait(for: [stopExp1, stopExp2], timeout: expTimeout)
-        repl1.removeChangeListener(withToken: token1)
-        repl2.removeChangeListener(withToken: token2)
+        token1.remove()
+        token2.remove()
         try stopListener()
     }
     
@@ -318,7 +318,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
         wait(for: [stopExp], timeout: expTimeout)
         
         // cleanup
-        repl1.removeChangeListener(withToken: token1)
+        token1.remove()
         try stopListener(listener: listener1)
         try stopListener(listener: listener2)
     }
@@ -693,7 +693,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
         
         repl.start()
         wait(for: [pullFilterBusy, replicatorStop], timeout: expTimeout)
-        repl.removeChangeListener(withToken: token)
+        token.remove()
         
         XCTAssertEqual(maxConnectionCount, 1)
         XCTAssertEqual(maxActiveCount, 1)
