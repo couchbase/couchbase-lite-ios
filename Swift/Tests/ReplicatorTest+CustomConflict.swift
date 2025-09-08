@@ -318,7 +318,7 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
         // make sure only single listener event is fired when conflict occured.
         XCTAssertEqual(docIds.count, 1)
         XCTAssertEqual(docIds.first!, docID)
-        replicator.removeChangeListener(withToken: token)
+        token.remove()
         
         // resolve any un-resolved conflict through pull replication.
         run(config: getConfig(type: .pull), expectedError: nil)
@@ -363,7 +363,7 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
                 XCTAssertNil(docRepl.documents.first?.error)
             }
         })
-        replicator.removeChangeListener(withToken: token)
+        token.remove()
         
         // validate wrong doc-id is resolved successfully
         XCTAssertEqual(defaultCollection!.count, 1)
@@ -411,7 +411,7 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
         XCTAssertEqual(error.code, CBLError.conflict)
         XCTAssertEqual(error.domain, CBLError.domain)
         
-        replicator.removeChangeListener(withToken: token)
+        token.remove()
         resolver = TestConflictResolver() { (conflict) -> Document? in
             return conflict.remoteDocument
         }
@@ -461,7 +461,7 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
         }
         
         XCTAssertNotNil(error)
-        replicator.removeChangeListener(withToken: token)
+        token.remove()
         resolver = TestConflictResolver() { (conflict) -> Document? in
             return conflict.remoteDocument
         }
@@ -623,7 +623,7 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
                 XCTAssertNil(docRepl.documents.first?.error)
             })
         })
-        replicator.removeChangeListener(withToken: token)
+        token.remove()
         
         // using blob from remote document of user's- which is a different database
         let oDBDoc = try otherDB_defaultCollection!.document(id: docID)!
@@ -653,7 +653,7 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
         XCTAssert((error?.userInfo[NSLocalizedDescriptionKey] as! String) ==
             "A document contains a blob that was saved to a different " +
             "database. The save operation cannot complete.")
-        replicator.removeChangeListener(withToken: token)
+        token.remove()
     }
     
     func testNonBlockingDatabaseOperationConflictResolver() throws {
@@ -756,7 +756,7 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
         })
         XCTAssertNotNil(error)
         XCTAssertEqual(error?.code, CBLError.notFound)
-        replicator.removeChangeListener(withToken: token)
+        token.remove()
     }
     
     #endif
