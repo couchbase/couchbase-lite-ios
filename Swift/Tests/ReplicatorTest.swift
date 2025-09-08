@@ -150,7 +150,7 @@ class ReplicatorTest: CBLTestCase {
         if replicator.status.activity != .stopped {
             replicator.stop()
         }
-        replicator.removeChangeListener(withToken: token)
+        token.remove()
     }
 }
 
@@ -305,7 +305,7 @@ class ReplicatorTest_Main: ReplicatorTest {
         try defaultCollection!.save(document: doc4)
         
         // Remove document replication listener:
-        replicator.removeChangeListener(withToken: token)
+        token.remove()
         
         // Run the replicator again:
         self.run(replicator: replicator, expectedError: nil)
@@ -375,7 +375,7 @@ class ReplicatorTest_Main: ReplicatorTest {
         XCTAssertFalse(docs[0].flags.contains(.accessRemoved))
         
         // Remove document replication listener:
-        replicator.removeChangeListener(withToken: token)
+        token.remove()
     }
     
     func testDocumentReplicationEventWithPullConflict() throws {
@@ -414,7 +414,7 @@ class ReplicatorTest_Main: ReplicatorTest {
         XCTAssertFalse(docs[0].flags.contains(.accessRemoved))
         
         // Remove document replication listener:
-        replicator.removeChangeListener(withToken: token)
+        token.remove()
     }
     
     func testDocumentReplicationEventWithDeletion() throws {
@@ -451,7 +451,7 @@ class ReplicatorTest_Main: ReplicatorTest {
         XCTAssertFalse(docs[0].flags.contains(.accessRemoved))
         
         // Remove document replication listener:
-        replicator.removeChangeListener(withToken: token)
+        token.remove()
     }
     
     func testSingleShotPushFilter() throws {
@@ -639,7 +639,7 @@ class ReplicatorTest_Main: ReplicatorTest {
         
         waitForExpectations(timeout: 5.0)
         
-        replicator.removeChangeListener(withToken: docReplicationToken)
+        docReplicationToken.remove()
         docChangeToken.remove()
         
         XCTAssertEqual(self.defaultCollection!.count, 0)

@@ -130,13 +130,6 @@ the replicator change notification.
 - (id<CBLListenerToken>) addDocumentReplicationListenerWithQueue: (nullable dispatch_queue_t)queue
                                                         listener: (void (^)(CBLDocumentReplication*))listener;
 
-/** 
- Removes a change listener with the given listener token.
- 
- @param token The listener token;
- */
-- (void) removeChangeListenerWithToken: (id<CBLListenerToken>)token;
-
 /**
  Get pending document ids for the given collection. If the given collection is not part of
  the replication, an Illegal State Exception will be thrown.
