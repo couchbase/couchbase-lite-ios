@@ -293,7 +293,9 @@ using namespace fleece;
     }
 }
 
-- (void) removeChangeListenerWithToken: (id<CBLListenerToken>)token {
+#pragma mark delegate(CBLRemovableListenerToken)
+
+- (void) removeToken: (id)token {
     CBLAssertNotNil(token);
     
     CBL_LOCK(self) {
@@ -301,12 +303,6 @@ using namespace fleece;
         [(CBLQueryObserver*)t.context stop];
         [_changeNotifier removeChangeListenerWithToken: token];
     }
-}
-
-#pragma mark delegate(CBLRemovableListenerToken)
-
-- (void) removeToken: (id)token {
-    [self removeChangeListenerWithToken: token];
 }
 
 #pragma mark - Internal

@@ -475,19 +475,15 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
     }
 }
 
-- (void) removeChangeListenerWithToken: (id<CBLListenerToken>)token {
+#pragma mark delegate(CBLRemovableListenerToken)
+
+- (void) removeToken: (id)token {
     [_changeNotifier removeChangeListenerWithToken: token];
     
     CBL_LOCK(self) {
         if ([_docReplicationNotifier removeChangeListenerWithToken: token] == 0)
             [self setProgressLevel: kCBLProgressLevelOverall];
     }
-}
-
-#pragma mark delegate(CBLRemovableListenerToken)
-
-- (void) removeToken: (id)token {
-    [self removeChangeListenerWithToken: token];
 }
 
 - (void) setProgressLevel: (CBLReplicatorProgressLevel)level {
