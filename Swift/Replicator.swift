@@ -190,13 +190,6 @@ public final class Replicator {
         return ListenerToken(token)
     }
     
-    /// Removes a change listener with the given listener token.
-    ///
-    /// - Parameter token: The listener token.
-    public func removeChangeListener(withToken token: ListenerToken) {
-        impl.removeChangeListener(with: token.impl)
-    }
-    
     // MARK: Combine Publisher
     
     /// Returns a Combine publisher that emits `ReplicatorChange` events when
@@ -285,7 +278,7 @@ public final class Replicator {
     func unregisterActiveReplicator() {
         lock.lock()
         if let token = listenerToken {
-            impl.removeChangeListener(with: token)
+            token.remove()
             config.database!.removeReplicator(self)
             listenerToken = nil
         }
