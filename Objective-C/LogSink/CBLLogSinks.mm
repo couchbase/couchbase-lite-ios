@@ -27,9 +27,10 @@ C4LogDomain kCBL_LogDomainSync;
 C4LogDomain kCBL_LogDomainWebSocket;
 C4LogDomain kCBL_LogDomainListener;
 C4LogDomain kCBL_LogDomainDiscovery;
+C4LogDomain kCBL_LogDomainMDNS;
 C4LogDomain kCBL_LogDomainP2P;
 
-static NSArray* c4Domains = @[@"DB", @"Query", @"Sync", @"WS", @"Listener", @"Discovery", @"P2P"];
+static NSArray* c4Domains = @[@"DB", @"Query", @"Sync", @"WS", @"Listener", @"Discovery", @"mDNS", @"P2P"];
 static NSArray* platformDomains = @[@"BLIP", @"BLIPMessages", @"SyncBusy", @"TLS", @"Changes", @"Zip"];
 
 static CBLLogLevel _domainsLevel = kCBLLogLevelNone;
@@ -62,6 +63,7 @@ NSDictionary* domainDictionary = nil;
         kCBL_LogDomainWebSocket  = c4log_getDomain("WS", true);
         kCBL_LogDomainListener  = c4log_getDomain("Listener", true);
         kCBL_LogDomainDiscovery = c4log_getDomain("Discovery", true);
+        kCBL_LogDomainMDNS = c4log_getDomain("mDNS", true);
         kCBL_LogDomainP2P = c4log_getDomain("P2P", true);
         
         // Create the default warning console log:
@@ -182,6 +184,7 @@ static CBLLogDomain toCBLLogDomain(C4LogDomain domain) {
                               @"TLS": @(kCBLLogDomainNetwork),
                               @"Listener": @(kCBLLogDomainListener),
                               @"Discovery": @(kCBLLogDomainPeerDiscovery),
+                              @"mDNS": @(kCBLLogDomainMDNS),
                               @"P2P": @(kCBLLogDomainMultipeer)
         };
     }

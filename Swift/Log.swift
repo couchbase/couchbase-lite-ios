@@ -40,7 +40,7 @@ public class Log {
                 let logLevel = CBLLogLevel(rawValue: UInt(logger.level.rawValue))!
                 CBLDatabase.log().setCustomLoggerWith(logLevel) { (level, domain, message) in
                     let l = LogLevel(rawValue: UInt8(level.rawValue))!
-                    let d = LogDomain(rawValue: UInt8(domain.rawValue))!
+                    let d = LogDomain(rawValue: domain.rawValue)!
                     logger.log(level: l, domain: d, message: message)
                 }
             } else {

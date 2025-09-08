@@ -21,20 +21,30 @@ import Foundation
 import CouchbaseLiteSwift_Private
 
 /// Log domain.
-///
-/// database:   Database domain.
-/// query:      Query domain.
-/// replicator: Replicator domain.
-/// network:    Network domain.
-/// listener:   Listener domain.
-public enum LogDomain: UInt8 {
+public enum LogDomain: UInt {
+    /// Database domain.
     case database       = 1
+    
+    /// Query domain.
     case query          = 2
+    
+    /// Replicator domain.
     case replicator     = 4
+    
+    /// Network domain.
     case network        = 8
+    
+    /// Listener domain.
     case listener       = 16
+    
+    /// Peer Discovery domain.
     case peerDiscovery  = 32
-    case multipeer      = 64
+    
+    /// mDNS specific logs used for DNS-SD peer discovery
+    case mdns           = 64
+    
+    /// Multipeer Replication domain
+    case multipeer      = 512
 }
 
 /// Log level.

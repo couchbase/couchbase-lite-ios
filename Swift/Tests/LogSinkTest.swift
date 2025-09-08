@@ -399,7 +399,7 @@ class LogSinkTest: CBLTestCase {
             let logSink = TestCustomLogSink()
             LogSinks.custom = CustomLogSink(level: .debug, domains: domains[i], logSink: logSink)
             for j in 0..<domains.count {
-                Log.log(domain: LogDomain(rawValue: UInt8(domains[j].rawValue))!, level: .verbose, message: names[j])
+                Log.log(domain: LogDomain(rawValue: UInt(domains[j].rawValue))!, level: .verbose, message: names[j])
             }
             XCTAssertEqual(logSink.lines.count, 1)
             XCTAssertEqual(logSink.lines[0], names[i])
@@ -415,7 +415,7 @@ class LogSinkTest: CBLTestCase {
             let logSink = TestCustomLogSink()
             LogSinks.custom = CustomLogSink(level: .debug, domains: combined, logSink: logSink)
             for j in 0..<domains.count {
-                Log.log(domain: LogDomain(rawValue: UInt8(domains[j].rawValue))!, level: .verbose, message: names[j])
+                Log.log(domain: LogDomain(rawValue: UInt(domains[j].rawValue))!, level: .verbose, message: names[j])
             }
             
             XCTAssertEqual(logSink.lines.count, i + 1)
@@ -428,7 +428,7 @@ class LogSinkTest: CBLTestCase {
         let logSink = TestCustomLogSink()
         LogSinks.custom = CustomLogSink(level: .debug, domains: .all, logSink: logSink)
         for i in 0..<domains.count {
-            Log.log(domain: LogDomain(rawValue: UInt8(domains[i].rawValue))!, level: .verbose, message: names[i])
+            Log.log(domain: LogDomain(rawValue: UInt(domains[i].rawValue))!, level: .verbose, message: names[i])
         }
         XCTAssertEqual(logSink.lines.count, names.count)
         for i in 0..<names.count {

@@ -133,6 +133,9 @@ void cblLog(C4LogDomain domain, C4LogLevel level, NSString *msg, ...) {
         case kCBLLogDomainPeerDiscovery:
             c4Domain = kCBL_LogDomainDiscovery;
             break;
+        case kCBLLogDomainMDNS:
+            c4Domain = kCBL_LogDomainMDNS;
+            break;
         case kCBLLogDomainMultipeer:
             c4Domain = kCBL_LogDomainP2P;
             break;
