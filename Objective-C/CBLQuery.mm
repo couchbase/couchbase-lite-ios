@@ -309,7 +309,13 @@ using namespace fleece;
 #pragma mark delegate(CBLRemovableListenerToken)
 
 - (void) removeToken: (id)token {
-    [token remove];
+    CBLAssertNotNil(token);
+    
+    CBL_LOCK(self) {
+        CBLChangeListenerToken* t = (CBLChangeListenerToken*)token;
+        [(CBLQueryObserver*)t.context stop];
+        [_changeNotifier removeChangeListenerWithToken: token];
+    }
 }
 
 #pragma mark - Internal
