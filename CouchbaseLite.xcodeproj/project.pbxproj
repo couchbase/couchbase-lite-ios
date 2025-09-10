@@ -403,10 +403,6 @@
 		40938A0D2D4AFA5900691393 /* LogSinkTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40938A0B2D4AFA5900691393 /* LogSinkTest.swift */; };
 		40938A0E2D4AFA5900691393 /* LogSinkTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40938A0B2D4AFA5900691393 /* LogSinkTest.swift */; };
 		40938A0F2D4AFA5900691393 /* LogSinkTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40938A0B2D4AFA5900691393 /* LogSinkTest.swift */; };
-		40938A132D4B26D000691393 /* CBLLogSinks+Reset.h in Headers */ = {isa = PBXBuildFile; fileRef = 40938A122D4B26D000691393 /* CBLLogSinks+Reset.h */; };
-		40938A142D4B26D000691393 /* CBLLogSinks+Reset.h in Headers */ = {isa = PBXBuildFile; fileRef = 40938A122D4B26D000691393 /* CBLLogSinks+Reset.h */; };
-		40938A152D4B26D000691393 /* CBLLogSinks+Reset.h in Headers */ = {isa = PBXBuildFile; fileRef = 40938A122D4B26D000691393 /* CBLLogSinks+Reset.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		40938A162D4B26D000691393 /* CBLLogSinks+Reset.h in Headers */ = {isa = PBXBuildFile; fileRef = 40938A122D4B26D000691393 /* CBLLogSinks+Reset.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		40938A512D4B464500691393 /* CBLTestCustomLogSink.m in Sources */ = {isa = PBXBuildFile; fileRef = 40938A502D4B464500691393 /* CBLTestCustomLogSink.m */; };
 		40938A522D4B464500691393 /* CBLTestCustomLogSink.m in Sources */ = {isa = PBXBuildFile; fileRef = 40938A502D4B464500691393 /* CBLTestCustomLogSink.m */; };
 		40938A532D4B464500691393 /* CBLTestCustomLogSink.m in Sources */ = {isa = PBXBuildFile; fileRef = 40938A502D4B464500691393 /* CBLTestCustomLogSink.m */; };
@@ -2460,7 +2456,6 @@
 		409389EE2D4AB8EB00691393 /* CustomLogSink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomLogSink.swift; sourceTree = "<group>"; };
 		409389F12D4AB99900691393 /* FileLogSink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FileLogSink.swift; sourceTree = "<group>"; };
 		40938A0B2D4AFA5900691393 /* LogSinkTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogSinkTest.swift; sourceTree = "<group>"; };
-		40938A122D4B26D000691393 /* CBLLogSinks+Reset.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "CBLLogSinks+Reset.h"; sourceTree = "<group>"; };
 		40938A4F2D4B464500691393 /* CBLTestCustomLogSink.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLTestCustomLogSink.h; sourceTree = "<group>"; };
 		40938A502D4B464500691393 /* CBLTestCustomLogSink.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CBLTestCustomLogSink.m; sourceTree = "<group>"; };
 		409F44A92DF3B09F00BB7851 /* CBLAppBackgroundingMonitor.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLAppBackgroundingMonitor.h; sourceTree = "<group>"; };
@@ -4236,7 +4231,6 @@
 				AEA6C1612E71CB9100A0B8BA /* CBLLog+Internal.h */,
 				934F4C9C1E241FB500F90659 /* CBLLog+Logging.h */,
 				AEAFDCE72D10576400BA5C9C /* CBLLogSinks+Internal.h */,
-				40938A122D4B26D000691393 /* CBLLogSinks+Reset.h */,
 			);
 			name = Log;
 			sourceTree = "<group>";
@@ -4796,7 +4790,6 @@
 				938196191EC113770032CC51 /* CBLArrayFragment.h in Headers */,
 				275F92841E4D30A4007FD5A2 /* CouchbaseLiteSwift.h in Headers */,
 				9383A5851F1EE7C00083053D /* CBLQueryResultSet.h in Headers */,
-				40938A152D4B26D000691393 /* CBLLogSinks+Reset.h in Headers */,
 				938196151EC1135F0032CC51 /* CBLDocumentFragment.h in Headers */,
 				93FD614A2020446300E7F6A1 /* CBLQueryBuilder.h in Headers */,
 				1A3471B226736E670042C6BA /* CBLQuery+N1QL.h in Headers */,
@@ -5029,7 +5022,6 @@
 				1A34714B2671C8800042C6BA /* CBLFullTextIndexConfiguration.h in Headers */,
 				AEC806BB2C89EA68001C9723 /* CBLArrayIndexConfiguration.h in Headers */,
 				9343EFE0207D611600F19A89 /* CBLJSON.h in Headers */,
-				40938A142D4B26D000691393 /* CBLLogSinks+Reset.h in Headers */,
 				9343EFE1207D611600F19A89 /* CBLDocumentChange.h in Headers */,
 				9343EFE2207D611600F19A89 /* CBLQueryResultSet.h in Headers */,
 				40FC1BD72B928A4F00394276 /* CBLCoreMLPredictiveModel.h in Headers */,
@@ -5120,7 +5112,6 @@
 				9343F0BB207D61AB00F19A89 /* CBLBlobStream.h in Headers */,
 				9343F0BD207D61AB00F19A89 /* CBLLock.h in Headers */,
 				9343F0BE207D61AB00F19A89 /* MYBackgroundMonitor.h in Headers */,
-				40938A162D4B26D000691393 /* CBLLogSinks+Reset.h in Headers */,
 				40FC1C142B928ADD00394276 /* CBLTLSIdentity+Swift.h in Headers */,
 				40ECAE8B2E0E0B0F00C109A6 /* CBLPrecondition.h in Headers */,
 				9343F0BF207D61AB00F19A89 /* CBLHTTPLogic.h in Headers */,
@@ -5436,7 +5427,6 @@
 				9322DCDF1F14603400C4ACF7 /* CBLQueryLimit.h in Headers */,
 				1AEF059A283380F800D5DDEA /* CBLCollection.h in Headers */,
 				69002EB9234E693F00776107 /* CBLErrorMessage.h in Headers */,
-				40938A132D4B26D000691393 /* CBLLogSinks+Reset.h in Headers */,
 				934F4C5A1E1EF25E00F90659 /* Test.h in Headers */,
 				934A279F1F30E61B003946A7 /* CBLPropertyExpression.h in Headers */,
 				93CD02E61EA0382D00AFB3FA /* CBLMutableDictionary.h in Headers */,

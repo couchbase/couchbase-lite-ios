@@ -23,37 +23,23 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-typedef NS_ENUM(NSUInteger, CBLLogAPI) {
-    kCBLLogAPINone,
-    kCBLLogAPIOld,
-    kCBLLogAPINew,
-};
-
-@protocol CBLLogApiSource <NSObject>
-
-@property (nonatomic) CBLLogAPI version;
-
-@end
-
 @interface CBLLogSinks ()
 
 + (void) writeCBLLog: (C4LogDomain)domain level: (C4LogLevel)level message: (NSString*)message;
-
-+ (void) checkLogApiVersion: (nullable id<CBLLogApiSource>) source;
 
 + (instancetype) sharedInstance;
 
 @end
 
-@interface CBLConsoleLogSink () <CBLLogSinkProtocol, CBLLogApiSource>
+@interface CBLConsoleLogSink () <CBLLogSinkProtocol>
 
 @end
 
-@interface CBLCustomLogSink () <CBLLogSinkProtocol, CBLLogApiSource>
+@interface CBLCustomLogSink () <CBLLogSinkProtocol>
 
 @end
 
-@interface CBLFileLogSink () <CBLLogSinkProtocol, CBLLogApiSource>
+@interface CBLFileLogSink () <CBLLogSinkProtocol>
 
 + (void) setup: (nullable CBLFileLogSink*)logSink;
 

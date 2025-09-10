@@ -17,7 +17,6 @@
 //  limitations under the License.
 //
 #import "CBLLogSinks+Internal.h"
-#import "CBLLogSinks+Reset.h"
 #import "CBLLog+Logging.h"
 #import "CBLStringBytes.h"
 
@@ -49,7 +48,6 @@ static CBLFileLogSink* _file = nil;
 
 @implementation CBLLogSinks
 
-static CBLLogAPI _vAPI;
 NSDictionary* domainDictionary = nil;
 
 // Initialize the CBLLogSinks object and register the logging callback.
@@ -69,14 +67,11 @@ NSDictionary* domainDictionary = nil;
         
         // Create the default warning console log:
         self.console = [[CBLConsoleLogSink alloc] initWithLevel: kCBLLogLevelWarning];
-        
-        [self resetApiVersion];
     });
 }
 
 + (void) setConsole:(nullable CBLConsoleLogSink*)console {
     CBL_LOCK(self) {
-        [self checkLogApiVersion: console];
         _console = console;
     }
     [self updateLogLevels];
@@ -90,7 +85,6 @@ NSDictionary* domainDictionary = nil;
 
 + (void) setCustom: (nullable CBLCustomLogSink*) custom {
     CBL_LOCK(self) {
-        [self checkLogApiVersion: custom];
         _custom = custom;
     }
     [self updateLogLevels];
@@ -104,7 +98,6 @@ NSDictionary* domainDictionary = nil;
 
 + (void) setFile: (nullable CBLFileLogSink*) file {
     CBL_LOCK(self) {
-        [self checkLogApiVersion: file];
         _file = file;
     }
     [CBLFileLogSink setup: file];
@@ -212,20 +205,6 @@ static CBLLogDomain toCBLLogDomain(C4LogDomain domain) {
         sharedInstance = [[self alloc] initWithDefault];
     });
     return sharedInstance;
-}
-
-+ (void) resetApiVersion {
-    _vAPI = kCBLLogAPINone;
-}
-
-+ (void) checkLogApiVersion: (id<CBLLogApiSource>) source {
-    CBLLogAPI version = source ? source.version :  kCBLLogAPINew;
-    if (_vAPI == kCBLLogAPINone) {
-        _vAPI = version;
-    } else if (_vAPI != version) {
-        [NSException raise: NSInternalInconsistencyException
-                    format: @"Cannot use both new and old Logging API simultaneously."];
-    }
 }
 
 @end
