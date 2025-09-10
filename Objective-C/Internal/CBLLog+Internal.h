@@ -18,26 +18,11 @@
 //
 
 #import "CBLLog.h"
-#import "CBLConsoleLogger.h"
-#import "CBLFileLogger.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
 @interface CBLLog ()
 
-+ (instancetype) sharedInstance;
-
-@end
-
-@interface CBLConsoleLogger ()
-
-- (instancetype) initWithDefault;
-
-@end
-
-@interface CBLFileLogger ()
-
-- (instancetype) initWithDefault;
 
 @end
 

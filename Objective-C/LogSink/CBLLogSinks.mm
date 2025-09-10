@@ -52,6 +52,9 @@ static CBLFileLogSink* _file = nil;
 static CBLLogAPI _vAPI;
 NSDictionary* domainDictionary = nil;
 
+// Initialize the CBLLogSinks object and register the logging callback.
+// It also sets up log domain levels based on user defaults named:
+
 + (void) initialize {
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
@@ -192,6 +195,24 @@ static CBLLogDomain toCBLLogDomain(C4LogDomain domain) {
 }
 
 #pragma mark - Internal
+
+- (instancetype) initWithDefault {
+    self = [super init];
+    if (self) {
+        // Initialize new logging system
+        CBLAssertNotNil(self);
+    }
+    return self;
+}
+
++ (instancetype) sharedInstance {
+    static CBLLogSinks* sharedInstance = nil;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        sharedInstance = [[self alloc] initWithDefault];
+    });
+    return sharedInstance;
+}
 
 + (void) resetApiVersion {
     _vAPI = kCBLLogAPINone;

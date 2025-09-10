@@ -376,17 +376,4 @@
     CBLLogSinks.custom = nil;
 }
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-
-- (void) testUseBothApi {
-    CBLTestCustomLogSink* logSink = [[CBLTestCustomLogSink alloc] init];
-    CBLLogSinks.custom = [[CBLCustomLogSink alloc] initWithLevel: kCBLLogLevelVerbose logSink: logSink];
-    [self expectException: @"NSInternalInconsistencyException" in: ^{
-        CBLDatabase.log.console.level = kCBLLogLevelVerbose;
-    }];
-}
-
-#pragma clang diagnostic pop
-
 @end

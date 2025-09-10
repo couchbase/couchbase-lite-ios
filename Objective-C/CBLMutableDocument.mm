@@ -24,7 +24,7 @@
 #import "CBLDocument+Internal.h"
 #import "CBLDatabase+Internal.h"
 #import "CBLJSON.h"
-#import "CBLLog+Internal.h"
+#import "CBLLogSinks+Internal.h"
 #import "CBLMisc.h"
 #import "CBLStringBytes.h"
 #import "CBLStatus.h"
@@ -37,7 +37,7 @@ using namespace fleece;
 + (void) initialize {
     if (self == [CBLMutableDocument class]) {
         // Initialize logging
-        CBLAssertNotNil(CBLLog.sharedInstance);
+        CBLAssertNotNil(CBLLogSinks.sharedInstance);
     }
 }
 

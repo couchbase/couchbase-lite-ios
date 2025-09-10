@@ -41,6 +41,8 @@ typedef NS_ENUM(NSUInteger, CBLLogAPI) {
 
 + (void) checkLogApiVersion: (nullable id<CBLLogApiSource>) source;
 
++ (instancetype) sharedInstance;
+
 @end
 
 @interface CBLConsoleLogSink () <CBLLogSinkProtocol, CBLLogApiSource>
