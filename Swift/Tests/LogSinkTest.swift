@@ -62,10 +62,6 @@ class LogSinkTest: CBLTestCase {
         restoreLoggerConfig()
     }
     
-    func logFileConfig() -> LogFileConfiguration {
-        return LogFileConfiguration(directory: logFileDirectory)
-    }
-    
     func backupLoggerConfig() {
         backupConsoleLogSink = LogSinks.console
         backupFileLogSink = LogSinks.file

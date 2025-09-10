@@ -20,31 +20,42 @@
 import Foundation
 import CouchbaseLiteSwift_Private
 
+/// Log domain.
+///
+/// database:   Database domain.
+/// query:      Query domain.
+/// replicator: Replicator domain.
+/// network:    Network domain.
+/// listener:   Listener domain.
+public enum LogDomain: UInt8 {
+    case database       = 1
+    case query          = 2
+    case replicator     = 4
+    case network        = 8
+    case listener       = 16
+    case peerDiscovery  = 32
+    case multipeer      = 64
+}
+
+/// Log level.
+///
+/// - Debug:   Debug log messages. Only present in debug builds of CouchbaseLite.
+/// - verbose: Verbose log messages.
+/// - info:    Informational log messages.
+/// - warning: Warning log messages.
+/// - error:   Error log messages. These indicate immediate errors that need to be addressed.
+/// - none:    Disabling log messages of a given log domain.
+public enum LogLevel: UInt8 {
+    case debug = 0
+    case verbose
+    case info
+    case warning
+    case error
+    case none
+}
+
 /// Log allows to configure console and file logger or to set a custom logger.
 public class Log {
-    
-    /// Console logger writing log messages to the system console.
-    public let console = ConsoleLogger()
-    
-    /// File logger writing log messages to files.
-    public let file = FileLogger()
-    
-    /// For setting a custom logger. Changing the log level of the assigned custom logger will
-    /// require the custom logger to be reassigned so that the change can be affected.
-    public var custom: Logger? {
-        didSet {
-            if let logger = custom {
-                let logLevel = CBLLogLevel(rawValue: UInt(logger.level.rawValue))!
-                CBLDatabase.log().setCustomLoggerWith(logLevel) { (level, domain, message) in
-                    let l = LogLevel(rawValue: UInt8(level.rawValue))!
-                    let d = LogDomain(rawValue: UInt8(domain.rawValue))!
-                    logger.log(level: l, domain: d, message: message)
-                }
-            } else {
-                CBLDatabase.log().custom = nil
-            }
-        }
-    }
     
     // MARK: Internal
     
@@ -53,9 +64,7 @@ public class Log {
     // For Unit Tests
     
     static func log(domain: LogDomain, level: LogLevel, message: String) {
-        let cDomain = CBLLogDomain.init(rawValue: UInt(domain.rawValue))
-        let cLevel = CBLLogLevel(rawValue: UInt(level.rawValue))!
-        CBLDatabase.log().log(to: cDomain, level: cLevel, message: message)
+        LogSinks.custom?.logSink.writeLog(level: level, domain: domain, message: message)
     }
     
 }

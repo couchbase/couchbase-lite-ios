@@ -79,9 +79,4 @@ public class LogSinks {
             logSink.writeLog(level:logLevel, domain: logDomain, message: message)
         }
     }
-    
-    /// Internally used for testing purpose.
-    static func _resetApiVersion() {
-        CBLLogSinks.resetApiVersion()
-    }
 }

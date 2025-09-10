@@ -32,23 +32,6 @@ public extension DatabaseConfiguration {
 
 }
 
-public extension LogFileConfiguration {
-
-    /// [false] Plaintext is not used, and instead binary encoding is used in log files
-    static let defaultUsePlaintext: Bool = false
-    
-    /// [false] Plaintext is not used, and instead binary encoding is used in log files
-    /// @available(*, deprecated, message: "Use LogFileConfiguration.defaultUsePlaintext instead.")
-    static let defaultUsePlainText: Bool = false
-
-    /// [524288] 512 KiB for the size of a log file
-    static let defaultMaxSize: UInt64 = 524288
-
-    /// [1] 1 rotated file present (2 total, including the currently active log file)
-    static let defaultMaxRotateCount: Int = 1
-
-}
-
 public extension FileLogSink {
 
     /// [false] Plaintext is not used, and instead binary encoding is used in log files
