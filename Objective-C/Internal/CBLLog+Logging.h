@@ -44,7 +44,7 @@ extern C4LogDomain kCBL_LogDomainP2P;
     
 // Logging functions. For the domain, just use the part of the name between kCBL… and …LogDomain.
 #define CBLLogToAt(DOMAIN, LEVEL, FMT, ...)        \
-        ({writeCBLLog(kCBL_LogDomain##DOMAIN, LEVEL, FMT, ## __VA_ARGS__);})
+        ({writeCBLLogMessage(kCBL_LogDomain##DOMAIN, LEVEL, FMT, ## __VA_ARGS__);})
 #define CBLLogVerbose(DOMAIN, FMT, ...) CBLLogToAt(DOMAIN, kC4LogVerbose, FMT, ## __VA_ARGS__)
 #define CBLLogInfo(DOMAIN, FMT, ...)    CBLLogToAt(DOMAIN, kC4LogInfo,    FMT, ## __VA_ARGS__)
 #define CBLWarn(DOMAIN, FMT, ...)       CBLLogToAt(DOMAIN, kC4LogWarning, FMT, ## __VA_ARGS__)
@@ -57,7 +57,7 @@ extern C4LogDomain kCBL_LogDomainP2P;
 #define CBLDebug(DOMAIN, FMT, ...)      ({ })
 #endif
     
-void writeCBLLog(C4LogDomain domain, C4LogLevel level, NSString *msg, ...)
+void writeCBLLogMessage(C4LogDomain domain, C4LogLevel level, NSString *msg, ...)
     __attribute__((format(__NSString__, 3, 4)));
     
 NS_ASSUME_NONNULL_END

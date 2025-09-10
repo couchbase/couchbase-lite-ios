@@ -19,6 +19,7 @@
 #import "CBLLogSinks+Internal.h"
 #import "CBLLog+Logging.h"
 #import "CBLStringBytes.h"
+#import "CBLLogSinks+Swift.h"
 
 C4LogDomain kCBL_LogDomainDatabase;
 C4LogDomain kCBL_LogDomainQuery;
@@ -184,7 +185,7 @@ static void c4Callback(C4LogDomain c4domain, C4LogLevel c4level, const char *msg
     [CBLLogSinks.custom writeLogWithLevel: level domain: domain message :message];
 }
 
-void writeCBLLog(C4LogDomain domain, C4LogLevel level, NSString *msg, ...) {
+void writeCBLLogMessage(C4LogDomain domain, C4LogLevel level, NSString *msg, ...) {
     // If CBLLogSinks is not initialized yet, the domain will be NULL.
     // To avoid crash from checking the log level for this edge case, just return.
     if (!domain) { return; }
@@ -199,7 +200,35 @@ void writeCBLLog(C4LogDomain domain, C4LogLevel level, NSString *msg, ...) {
     [CBLLogSinks writeCBLLog: domain level: level message: formatted];
 }
 
-
++ (void) writeSwiftLog: (CBLLogDomain)domain level: (CBLLogLevel)level message: (NSString*)message {
+    C4LogDomain c4Domain;
+    switch (domain) {
+        case kCBLLogDomainDatabase:
+            c4Domain = kCBL_LogDomainDatabase;
+            break;
+        case kCBLLogDomainQuery:
+            c4Domain = kCBL_LogDomainQuery;
+            break;
+        case kCBLLogDomainReplicator:
+            c4Domain = kCBL_LogDomainSync;
+            break;
+        case kCBLLogDomainNetwork:
+            c4Domain = kCBL_LogDomainWebSocket;
+            break;
+        case kCBLLogDomainListener:
+            c4Domain = kCBL_LogDomainListener;
+            break;
+        case kCBLLogDomainPeerDiscovery:
+            c4Domain = kCBL_LogDomainDiscovery;
+            break;
+        case kCBLLogDomainMultipeer:
+            c4Domain = kCBL_LogDomainP2P;
+            break;
+        default:
+            c4Domain = kCBL_LogDomainDatabase;
+    }
+    writeCBLLogMessage(c4Domain, (C4LogLevel)level, @"%@", message);
+}
 
 static CBLLogDomain toCBLLogDomain(C4LogDomain domain) {
     if (!domainDictionary) {

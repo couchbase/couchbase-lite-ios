@@ -104,7 +104,7 @@ framework module CouchbaseLiteSwift_Private {
     header "CBLPrecondition.h"
     
     // Swift Extensions:
-    header "CBLLogSinks+Internal.h"
+    header "CBLLogSinks+Swift.h"
     header "CBLArray+Swift.h"
     header "CBLBlob+Swift.h"
     header "CBLCollection+Swift.h"
