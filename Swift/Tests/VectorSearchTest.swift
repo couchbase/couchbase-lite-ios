@@ -34,7 +34,7 @@ class VectorSearchTest: CBLTestCase {
     
     let wordPredictiveModelName = "WordEmbedding";
     
-    var logger: CustomLogger!
+    var logger: TestCustomLogSink!
     
     var wordDB: Database!
     
@@ -43,6 +43,29 @@ class VectorSearchTest: CBLTestCase {
     var wordsCollection: Collection!
     
     var extWordsCollection: Collection!
+    
+    class TestCustomLogSink: LogSinkProtocol {
+        var lines: [String] = []
+        
+        var level: LogLevel = .none
+        
+        func writeLog(level: LogLevel, domain: LogDomain, message: String) {
+            lines.append(message)
+        }
+        
+        func reset() {
+            lines.removeAll()
+        }
+        
+        func containsString(_ string: String) -> Bool {
+            for line in lines {
+                if (line as NSString).contains(string) {
+                    return true
+                }
+            }
+            return false
+        }
+    }
     
     override func setUp() {
         try? deleteDB(name: wordsDatabaseName);
@@ -61,13 +84,13 @@ class VectorSearchTest: CBLTestCase {
         wordsCollection = try! wordDB.collection(name: wordsCollectionName)!
         extWordsCollection = try! wordDB.collection(name: extWordsCollectionName)!
         
-        logger = CustomLogger()
-        logger.level = .info
-        Database.log.custom = logger
+        logger = TestCustomLogSink()
+        LogSinks.custom = CustomLogSink(level: .info, logSink: logger)
     }
     
     override func tearDown() {
-        Database.log.custom = nil
+        LogSinks.custom = nil
+        logger = nil
         try! wordDB.close()
         
         if let modelDB = self.modelDB {

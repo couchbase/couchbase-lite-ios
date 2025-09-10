@@ -110,6 +110,34 @@ NSDictionary* domainDictionary = nil;
     }
 }
 
+#pragma mark - Internal
+
+- (instancetype) initWithDefault {
+    self = [super init];
+    if (self) {
+        // Initialize new logging system
+        CBLAssertNotNil(self);
+    }
+    return self;
+}
+
++ (instancetype) sharedInstance {
+    static CBLLogSinks* sharedInstance = nil;
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        sharedInstance = [[self alloc] initWithDefault];
+    });
+    return sharedInstance;
+}
+
+static void c4Callback(C4LogDomain c4domain, C4LogLevel c4level, const char *msg, va_list args) {
+    NSString* message = [NSString stringWithUTF8String: msg];
+    CBLLogLevel level = (CBLLogLevel) c4level;
+    CBLLogDomain domain = toCBLLogDomain(c4domain);
+    [CBLLogSinks.console writeLogWithLevel: level domain: domain message :message];
+    [CBLLogSinks.custom writeLogWithLevel: level domain: domain message :message];
+}
+
 + (void) updateLogLevels {
     CBLConsoleLogSink* console = self.console;
     CBLLogLevel consoleLevel = console != nil ? console.level : kCBLLogLevelNone;
@@ -147,11 +175,12 @@ NSDictionary* domainDictionary = nil;
     }
 }
 
-static void c4Callback(C4LogDomain c4domain, C4LogLevel c4level, const char *msg, va_list args) {
-    NSString* message = [NSString stringWithUTF8String: msg];
++ (void) writeCBLLog: (C4LogDomain)c4domain level: (C4LogLevel)c4level message: (NSString*)message {
     CBLLogLevel level = (CBLLogLevel) c4level;
     CBLLogDomain domain = toCBLLogDomain(c4domain);
+    
     [CBLLogSinks.console writeLogWithLevel: level domain: domain message :message];
+    [CBLLogSinks.file writeLogWithLevel: level domain: domain message :message];
     [CBLLogSinks.custom writeLogWithLevel: level domain: domain message :message];
 }
 
@@ -170,14 +199,7 @@ void writeCBLLog(C4LogDomain domain, C4LogLevel level, NSString *msg, ...) {
     [CBLLogSinks writeCBLLog: domain level: level message: formatted];
 }
 
-+ (void) writeCBLLog: (C4LogDomain)c4domain level: (C4LogLevel)c4level message: (NSString*)message {
-    CBLLogLevel level = (CBLLogLevel) c4level;
-    CBLLogDomain domain = toCBLLogDomain(c4domain);
-    
-    [CBLLogSinks.console writeLogWithLevel: level domain: domain message :message];
-    [CBLLogSinks.file writeLogWithLevel: level domain: domain message :message];
-    [CBLLogSinks.custom writeLogWithLevel: level domain: domain message :message];
-}
+
 
 static CBLLogDomain toCBLLogDomain(C4LogDomain domain) {
     if (!domainDictionary) {
@@ -200,26 +222,6 @@ static CBLLogDomain toCBLLogDomain(C4LogDomain domain) {
     NSString* domainName = [NSString stringWithUTF8String: c4log_getDomainName(domain)];
     NSNumber* mapped = [domainDictionary objectForKey: domainName];
     return mapped ? mapped.integerValue : kCBLLogDomainDatabase;
-}
-
-#pragma mark - Internal
-
-- (instancetype) initWithDefault {
-    self = [super init];
-    if (self) {
-        // Initialize new logging system
-        CBLAssertNotNil(self);
-    }
-    return self;
-}
-
-+ (instancetype) sharedInstance {
-    static CBLLogSinks* sharedInstance = nil;
-    static dispatch_once_t onceToken;
-    dispatch_once(&onceToken, ^{
-        sharedInstance = [[self alloc] initWithDefault];
-    });
-    return sharedInstance;
 }
 
 @end

@@ -327,9 +327,8 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
     
     func testConflictResolverWrongDocID() throws {
         // use this to verify the logs generated during the conflict resolution.
-        let customLogger = CustomLogger()
-        customLogger.level = .warning
-        Database.log.custom = customLogger
+        let customLogger = TestCustomLogSink()
+        LogSinks.custom = CustomLogSink(level: .warning, logSink: customLogger)
         
         let docID = "doc"
         let wrongDocID = "wrong-doc-id"
@@ -376,7 +375,8 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
                               "is not matching with the document ID of the conflicting " +
                               "document '\(docID)'."))
         
-        Database.log.custom = nil
+        LogSinks.custom = nil;
+        customLogger.reset()
     }
     
     func testConflictResolverDifferentDBDoc() throws {

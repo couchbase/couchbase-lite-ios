@@ -20,6 +20,40 @@
 import Foundation
 import CouchbaseLiteSwift_Private
 
+/// Log domain.
+///
+/// database:   Database domain.
+/// query:      Query domain.
+/// replicator: Replicator domain.
+/// network:    Network domain.
+/// listener:   Listener domain.
+public enum LogDomain: UInt8 {
+    case database       = 1
+    case query          = 2
+    case replicator     = 4
+    case network        = 8
+    case listener       = 16
+    case peerDiscovery  = 32
+    case multipeer      = 64
+}
+
+/// Log level.
+///
+/// - Debug:   Debug log messages. Only present in debug builds of CouchbaseLite.
+/// - verbose: Verbose log messages.
+/// - info:    Informational log messages.
+/// - warning: Warning log messages.
+/// - error:   Error log messages. These indicate immediate errors that need to be addressed.
+/// - none:    Disabling log messages of a given log domain.
+public enum LogLevel: UInt8 {
+    case debug = 0
+    case verbose
+    case info
+    case warning
+    case error
+    case none
+}
+
 /// A static container for managing the three log sinks used by Couchbase Lite.
 public class LogSinks {
     /// The console log sink, enabled by default with a warning level.
@@ -78,5 +112,12 @@ public class LogSinks {
             let logDomain = LogDomain.init(rawValue: UInt8(domain.rawValue))!
             logSink.writeLog(level:logLevel, domain: logDomain, message: message)
         }
+    }
+    
+    /// Writes a log message to all the enabled log sinks.
+    internal static func log(domain: LogDomain, level: LogLevel, message: String) {
+        let cDomain = CBLLogDomain(rawValue: UInt(domain.rawValue))
+        let cLevel = CBLLogLevel(rawValue: UInt(level.rawValue))
+        CBLLogSinks.writeCBLLog(level: cLevel!, domain: cDomain, message: message)
     }
 }
