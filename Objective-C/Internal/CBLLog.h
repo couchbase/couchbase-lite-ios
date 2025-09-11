@@ -17,13 +17,10 @@
 //  limitations under the License.
 
 #import <Foundation/Foundation.h>
-#import "CBLLogTypes.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
 @interface CBLLog : NSObject
-
-+ (CBLLogDomain) toCBLLogDomain: (C4LogDomain)domain;
 
 @end
 

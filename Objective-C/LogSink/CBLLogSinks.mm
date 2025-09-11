@@ -49,6 +49,8 @@ static CBLFileLogSink* _file = nil;
 
 @implementation CBLLogSinks
 
+NSDictionary* domainDictionary = nil;
+
 // Initialize the CBLLogSinks object and register the logging callback.
 // It also sets up log domain levels based on user defaults named:
 
@@ -160,18 +162,41 @@ static CBLFileLogSink* _file = nil;
 static void c4Callback(C4LogDomain c4domain, C4LogLevel c4level, const char *msg, va_list args) {
     NSString* message = [NSString stringWithUTF8String: msg];
     CBLLogLevel level = (CBLLogLevel) c4level;
-    CBLLogDomain domain = [CBLLog toCBLLogDomain: c4domain];
+    CBLLogDomain domain = toCBLLogDomain(c4domain);
     [CBLLogSinks.console writeLogWithLevel: level domain: domain message :message];
     [CBLLogSinks.custom writeLogWithLevel: level domain: domain message :message];
 }
 
 + (void) writeCBLLog: (C4LogDomain)c4domain level: (C4LogLevel)c4level message: (NSString*)message {
     CBLLogLevel level = (CBLLogLevel) c4level;
-    CBLLogDomain domain = [CBLLog toCBLLogDomain: c4domain];
+    CBLLogDomain domain = toCBLLogDomain(c4domain);
     
     [CBLLogSinks.console writeLogWithLevel: level domain: domain message :message];
     [CBLLogSinks.file writeLogWithLevel: level domain: domain message :message];
     [CBLLogSinks.custom writeLogWithLevel: level domain: domain message :message];
+}
+
+static CBLLogDomain toCBLLogDomain(C4LogDomain domain) {
+    if (!domainDictionary) {
+        domainDictionary = @{ @"DB": @(kCBLLogDomainDatabase),
+                              @"Query": @(kCBLLogDomainQuery),
+                              @"Sync": @(kCBLLogDomainReplicator),
+                              @"SyncBusy": @(kCBLLogDomainReplicator),
+                              @"Changes": @(kCBLLogDomainDatabase),
+                              @"BLIP": @(kCBLLogDomainNetwork),
+                              @"WS": @(kCBLLogDomainNetwork),
+                              @"BLIPMessages": @(kCBLLogDomainNetwork),
+                              @"Zip": @(kCBLLogDomainNetwork),
+                              @"TLS": @(kCBLLogDomainNetwork),
+                              @"Listener": @(kCBLLogDomainListener),
+                              @"Discovery": @(kCBLLogDomainPeerDiscovery),
+                              @"P2P": @(kCBLLogDomainMultipeer)
+        };
+    }
+    
+    NSString* domainName = [NSString stringWithUTF8String: c4log_getDomainName(domain)];
+    NSNumber* mapped = [domainDictionary objectForKey: domainName];
+    return mapped ? mapped.integerValue : kCBLLogDomainDatabase;
 }
 
 @end

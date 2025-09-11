@@ -23,31 +23,6 @@
 
 @implementation CBLLog
 
-NSDictionary* domainDictionary = nil;
-
-+ (CBLLogDomain) toCBLLogDomain: (C4LogDomain) domain {
-    if (!domainDictionary) {
-        domainDictionary = @{ @"DB": @(kCBLLogDomainDatabase),
-                              @"Query": @(kCBLLogDomainQuery),
-                              @"Sync": @(kCBLLogDomainReplicator),
-                              @"SyncBusy": @(kCBLLogDomainReplicator),
-                              @"Changes": @(kCBLLogDomainDatabase),
-                              @"BLIP": @(kCBLLogDomainNetwork),
-                              @"WS": @(kCBLLogDomainNetwork),
-                              @"BLIPMessages": @(kCBLLogDomainNetwork),
-                              @"Zip": @(kCBLLogDomainNetwork),
-                              @"TLS": @(kCBLLogDomainNetwork),
-                              @"Listener": @(kCBLLogDomainListener),
-                              @"Discovery": @(kCBLLogDomainPeerDiscovery),
-                              @"P2P": @(kCBLLogDomainMultipeer)
-        };
-    }
-    
-    NSString* domainName = [NSString stringWithUTF8String: c4log_getDomainName(domain)];
-    NSNumber* mapped = [domainDictionary objectForKey: domainName];
-    return mapped ? mapped.integerValue : kCBLLogDomainDatabase;
-}
-
 void writeCBLLogMessage(C4LogDomain domain, C4LogLevel level, NSString *msg, ...) {
     // If CBLLogSinks is not initialized yet, the domain will be NULL.
     // To avoid crash from checking the log level for this edge case, just return.

@@ -102,10 +102,8 @@ framework module CouchbaseLiteSwift_Private {
     // Internal
     header "CBLQueryFullTextIndexExpression.h"
     header "CBLPrecondition.h"
-    header "CBLLog.h"
     
     // Swift Extensions:
-    header "CBLLog+Swift.h"
     header "CBLArray+Swift.h"
     header "CBLBlob+Swift.h"
     header "CBLCollection+Swift.h"
@@ -113,4 +111,5 @@ framework module CouchbaseLiteSwift_Private {
     header "CBLDictionary+Swift.h"
     header "CBLConflictResolverBridge.h"
     header "CBLCollectionConfiguration+Swift.h"
+    header "CBLLog+Swift.h"
 }
