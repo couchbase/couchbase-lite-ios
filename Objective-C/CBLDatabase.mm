@@ -107,7 +107,7 @@ static const C4DatabaseConfig2 kDBConfig = {
     if (self == [CBLDatabase class]) {
         NSLog(@"%@", [CBLVersion userAgent]);
         // Initialize logging
-        CBLAssertNotNil(CBLLogSinks.sharedInstance);
+        CBLAssertNotNil(CBLLogSinks.self);
     }
 }
 

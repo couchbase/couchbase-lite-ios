@@ -1,5 +1,5 @@
 //
-//  CBLLogSinks+Swift.h
+//  CBLLog+Swift.h
 //  CouchbaseLite
 //
 //  Copyright (c) 2025 Couchbase, Inc All rights reserved.
@@ -16,12 +16,12 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 
-#import "CBLLogSinks.h"
+#import "CBLLog.h"
 #import "CBLLogTypes.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface CBLLogSinks ()
+@interface CBLLog ()
 
 + (void) writeSwiftLog: (CBLLogDomain)domain level: (CBLLogLevel)level message: (NSString*)message;
 

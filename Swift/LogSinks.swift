@@ -113,11 +113,4 @@ public class LogSinks {
             logSink.writeLog(level:logLevel, domain: logDomain, message: message)
         }
     }
-    
-    /// Writes a log message to all the enabled log sinks.
-    internal static func log(domain: LogDomain, level: LogLevel, message: String) {
-        let cDomain = CBLLogDomain.init(rawValue: UInt(domain.rawValue))
-        let cLevel = CBLLogLevel(rawValue: UInt(level.rawValue))!
-        CBLLogSinks.writeSwiftLog(cDomain, level: cLevel, message: message)
-    }
 }

@@ -18,7 +18,7 @@
 //
 
 #import "CBLTestCase.h"
-#import "CBLLog+Logging.h"
+#import "CBLLog+Internal.h"
 #import "CBLTestCustomLogSink.h"
 
 @interface LogTest : CBLTestCase

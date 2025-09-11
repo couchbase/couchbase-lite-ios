@@ -1,5 +1,5 @@
 //
-//  CBLLog+Logging.h
+//  CBLLog+Internal.h
 //  CouchbaseLite
 //
 //  Copyright (c) 2017 Couchbase, Inc All rights reserved.

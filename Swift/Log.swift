@@ -1,5 +1,5 @@
 //
-//  CBLLogSinks+Internal.h
+//  Log.swift
 //  CouchbaseLite
 //
 //  Copyright (c) 2025 Couchbase, Inc All rights reserved.
@@ -15,32 +15,16 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
+//
 
-#import "CBLLogSinks.h"
-#import "CBLConsoleLogSink.h"
-#import "CBLCustomLogSink.h"
-#import "CBLFileLogSink.h"
+import Foundation
+import CouchbaseLiteSwift_Private
 
-NS_ASSUME_NONNULL_BEGIN
-
-@interface CBLLogSinks ()
-
-+ (void) writeCBLLog: (C4LogDomain)domain level: (C4LogLevel)level message: (NSString*)message;
-
-@end
-
-@interface CBLConsoleLogSink () <CBLLogSinkProtocol>
-
-@end
-
-@interface CBLCustomLogSink () <CBLLogSinkProtocol>
-
-@end
-
-@interface CBLFileLogSink () <CBLLogSinkProtocol>
-
-+ (void) setup: (nullable CBLFileLogSink*)logSink;
-
-@end
-
-NS_ASSUME_NONNULL_END
+internal class Log {
+    /// Writes a log message to all the enabled log sinks.
+    internal static func log(domain: LogDomain, level: LogLevel, message: String) {
+        let cDomain = CBLLogDomain.init(rawValue: UInt(domain.rawValue))
+        let cLevel = CBLLogLevel(rawValue: UInt(level.rawValue))!
+        CBLLog.writeSwiftLog(cDomain, level: cLevel, message: message)
+    }
+}

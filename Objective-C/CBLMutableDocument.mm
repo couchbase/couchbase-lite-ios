@@ -37,7 +37,7 @@ using namespace fleece;
 + (void) initialize {
     if (self == [CBLMutableDocument class]) {
         // Initialize logging
-        CBLAssertNotNil(CBLLogSinks.sharedInstance);
+        CBLAssertNotNil(CBLLogSinks.self);
     }
 }
 
