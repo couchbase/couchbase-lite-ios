@@ -2583,6 +2583,7 @@
 		40ECAE892E0E0B0F00C109A6 /* CBLPrecondition.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CBLPrecondition.m; sourceTree = "<group>"; };
 		40EF68102B71891A00F0CB50 /* remove_private_module.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = remove_private_module.sh; sourceTree = "<group>"; };
 		40EF690A2B77564000F0CB50 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		40F447EE2E7376960068F13B /* generate_release_zip.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = generate_release_zip.sh; sourceTree = "<group>"; };
 		40FC1AA32B9286E700394276 /* CBLEncryptionKey.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLEncryptionKey.m; sourceTree = "<group>"; };
 		40FC1AA42B9286E700394276 /* CBLDatabase+Encryption.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "CBLDatabase+Encryption.h"; sourceTree = "<group>"; };
 		40FC1AA52B9286E700394276 /* CBLDatabaseConfiguration+Encryption.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "CBLDatabaseConfiguration+Encryption.h"; sourceTree = "<group>"; };
@@ -2686,7 +2687,6 @@
 		40FC1C542B928C1600394276 /* Prediction.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Prediction.swift; sourceTree = "<group>"; };
 		40FC1C552B928C1600394276 /* Function+Prediction.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Function+Prediction.swift"; sourceTree = "<group>"; };
 		40FC1C732B928CC800394276 /* generate_carthage_package.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = generate_carthage_package.sh; sourceTree = "<group>"; };
-		40FC1C742B928CC800394276 /* generate_ee_release_zip.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = generate_ee_release_zip.sh; sourceTree = "<group>"; };
 		40FC1C752B928CC800394276 /* loc.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = loc.sh; sourceTree = "<group>"; };
 		40FC1C762B928CC800394276 /* prepare_project.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = prepare_project.sh; sourceTree = "<group>"; };
 		69002EA9234E693F00776107 /* CBLErrorMessage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLErrorMessage.h; sourceTree = "<group>"; };
@@ -3873,7 +3873,7 @@
 			isa = PBXGroup;
 			children = (
 				40FC1C732B928CC800394276 /* generate_carthage_package.sh */,
-				40FC1C742B928CC800394276 /* generate_ee_release_zip.sh */,
+				40F447EE2E7376960068F13B /* generate_release_zip.sh */,
 				40FC1C752B928CC800394276 /* loc.sh */,
 				40FC1C762B928CC800394276 /* prepare_project.sh */,
 			);
