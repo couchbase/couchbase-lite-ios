@@ -2,7 +2,7 @@
 //  Defaults.swift
 //  CouchbaseLite
 //
-//  Copyright (c) 2024-present Couchbase, Inc All rights reserved.
+//  Copyright (c) 2025-present Couchbase, Inc All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -27,9 +27,6 @@ public extension DatabaseConfiguration {
     /// [false] Full sync is off by default because the performance hit is seldom worth the benefit
     static let defaultFullSync: Bool = false
 
-    /// [false] Memory mapped database files are disabled by default. Always disabled for macOS.
-    static let defaultMmapEnabled: Bool = true
-
 }
 
 public extension FileLogSink {
@@ -37,11 +34,11 @@ public extension FileLogSink {
     /// [false] Plaintext is not used, and instead binary encoding is used in log files
     static let defaultUsePlaintext: Bool = false
 
-    /// [2] 2 files preserved during each log rotation
-    static let defaultMaxKeptFiles: Int32 = 2
-    
     /// [524288] 512 KiB for the size of a log file
-    static let defaultMaxSize: Int64 = 524288
+    static let defaultMaxSize: UInt64 = 524288
+
+    /// [2] 2 files preserved during each log rotation
+    static let defaultMaxKeptFiles: Int = 2
 
 }
 
@@ -74,10 +71,6 @@ public extension ReplicatorConfiguration {
 
     /// [300] Max wait time between retry attempts in seconds
     static let defaultMaxAttemptsWaitTime: TimeInterval = 300
-    
-    /// [300] Max wait time between retry attempts in seconds
-    /// @available(*, deprecated, message: "Use ReplicatorConfiguration.defaultMaxAttemptsWaitTime instead.")
-    static let defaultMaxAttemptWaitTime: TimeInterval = 300
 
     /// [true] Purge documents when a user loses access
     static let defaultEnableAutoPurge: Bool = true
@@ -100,7 +93,7 @@ public extension VectorIndexConfiguration {
     /// [ScalarQuantizerType.SQ8] Vectors are encoded by using 8-bit Scalar Quantizer encoding, by default
     static let defaultEncoding: ScalarQuantizerType = ScalarQuantizerType.SQ8
 
-    /// [DistanceMetric.euclideanSquared] By default, vectors are compared using Squared Euclidean metrics
+    /// [DistanceMetric.euclideanSquared] By default, vectors are compared using squared Euclidean metrics
     static let defaultDistanceMetric: DistanceMetric = DistanceMetric.euclideanSquared
 
     /// [0] By default, the value will be determined based on the number of centroids, encoding types, and the encoding parameters.
