@@ -110,16 +110,23 @@
         case kCBLLogDomainNetwork:
             c4domain = kCBL_LogDomainWebSocket;
             break;
-#ifdef COUCHBASE_ENTERPRISE
         case kCBLLogDomainListener:
             c4domain = kCBL_LogDomainListener;
             break;
-#endif
+        case kCBLLogDomainPeerDiscovery:
+            c4domain = kCBL_LogDomainDiscovery;
+            break;
+        case kCBLLogDomainMDNS:
+            c4domain = kCBL_LogDomainMDNS;
+            break;
+        case kCBLLogDomainMultipeer:
+            c4domain = kCBL_LogDomainP2P;
+            break;
         default:
             c4domain = kCBL_LogDomainDatabase;
     }
-        CBLStringBytes c4msg(message);
-        c4slog(c4domain, c4level, c4msg);
+    CBLStringBytes c4msg(message);
+    c4slog(c4domain, c4level, c4msg);
 }
 
 + (BOOL) setupLogDirectory: (NSString*)directory error: (NSError**)outError {
