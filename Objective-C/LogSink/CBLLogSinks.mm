@@ -113,15 +113,6 @@ NSDictionary* domainDictionary = nil;
 
 #pragma mark - Internal
 
-- (instancetype) initWithDefault {
-    self = [super init];
-    if (self) {
-        // Initialize new logging system
-        CBLAssertNotNil(self);
-    }
-    return self;
-}
-
 + (void) updateLogLevels {
     CBLConsoleLogSink* console = self.console;
     CBLLogLevel consoleLevel = console != nil ? console.level : kCBLLogLevelNone;
