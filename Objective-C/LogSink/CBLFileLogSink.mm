@@ -43,7 +43,7 @@
                      directory: (NSString*)directory
                   usePlaintext: (BOOL)usePlaintext
                   maxKeptFiles: (NSInteger)maxKeptFiles
-                   maxFileSize: (NSUInteger)maxFileSize
+                   maxFileSize: (unsigned long long)maxFileSize
 {
     self = [super init];
     if (self) {

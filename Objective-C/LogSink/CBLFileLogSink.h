@@ -38,7 +38,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, readonly) NSInteger maxKeptFiles;
 
 /** The maximum size of a log file before rotation. Default is `kCBLDefaultMaxFileSize`. */
-@property (nonatomic, readonly) NSUInteger maxFileSize;
+@property (nonatomic, readonly) unsigned long long maxFileSize;
 
 /**
  Initializes with log level and directory.
@@ -62,7 +62,7 @@ NS_ASSUME_NONNULL_BEGIN
                      directory: (NSString*)directory
                   usePlaintext: (BOOL)usePlainText
                   maxKeptFiles: (NSInteger)maxKeptFiles
-                   maxFileSize: (NSUInteger)maxFileSize;
+                   maxFileSize: (unsigned long long)maxFileSize;
 
 /** Not available */
 - (instancetype) init NS_UNAVAILABLE;

@@ -78,7 +78,7 @@ public class LogSinks {
                                                   directory: file.directory,
                                                   usePlaintext: file.usePlaintext,
                                                   maxKeptFiles: Int(file.maxKeptFiles),
-                                                  maxFileSize: UInt(file.maxFileSize))
+                                                  maxFileSize: file.maxFileSize)
             } else {
                 CBLLogSinks.file = nil
             }

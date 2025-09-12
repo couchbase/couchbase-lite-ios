@@ -110,7 +110,7 @@
                                                        directory: logFileDirectory
                                                     usePlaintext: YES
                                                     maxKeptFiles: kCBLDefaultFileLogSinkMaxKeptFiles
-                                                     maxFileSize: kCBLDefaultLogFileMaxSize];
+                                                     maxFileSize: kCBLDefaultFileLogSinkMaxSize];
         CBLLogVerbose(Database, @"TEST VERBOSE");
         CBLLogInfo(Database, @"TEST INFO");
         CBLWarn(Database, @"TEST WARNING");
@@ -181,7 +181,7 @@
                                                    directory: logFileDirectory
                                                 usePlaintext: YES
                                                 maxKeptFiles: kCBLDefaultFileLogSinkMaxKeptFiles
-                                                 maxFileSize: kCBLDefaultLogFileMaxSize];
+                                                 maxFileSize: kCBLDefaultFileLogSinkMaxSize];
     
     NSString* input = @"SOME TEST MESSAGE";
     CBLLogInfo(Database, @"%@", input);
@@ -248,7 +248,7 @@
     CBLLogSinks.file = [[CBLFileLogSink alloc] initWithLevel: kCBLLogLevelInfo directory: logFileDirectory];
     AssertEqual(CBLLogSinks.file.maxFileSize, kCBLDefaultFileLogSinkMaxSize);
     AssertEqual(CBLLogSinks.file.maxKeptFiles, kCBLDefaultFileLogSinkMaxKeptFiles);
-    AssertEqual(CBLLogSinks.file.usePlaintext, kCBLDefaultLogFileUsePlaintext);
+    AssertEqual(CBLLogSinks.file.usePlaintext, kCBLDefaultFileLogSinkUsePlaintext);
     CBLLogSinks.file = [[CBLFileLogSink alloc] initWithLevel: kCBLLogLevelDebug
                                                    directory: logFileDirectory
                                                 usePlaintext: YES
@@ -276,7 +276,7 @@
                                                    directory: logFileDirectory
                                                 usePlaintext: YES
                                                 maxKeptFiles: kCBLDefaultFileLogSinkMaxKeptFiles
-                                                 maxFileSize: kCBLDefaultLogFileMaxSize];
+                                                 maxFileSize: kCBLDefaultFileLogSinkMaxSize];
     [self writeAllLogs: inputString];
     
     // Disable file logging
@@ -289,7 +289,7 @@
                                                    directory: logFileDirectory
                                                 usePlaintext: YES
                                                 maxKeptFiles: kCBLDefaultFileLogSinkMaxKeptFiles
-                                                 maxFileSize: kCBLDefaultLogFileMaxSize];
+                                                 maxFileSize: kCBLDefaultFileLogSinkMaxSize];
     [self writeAllLogs: inputString];
     NSArray* files = [self getLogsInDirectory: CBLLogSinks.file.directory properties: nil onlyInfoLogs: NO];
     NSError* error;
@@ -309,7 +309,7 @@
                                                    directory: logFileDirectory
                                                 usePlaintext: YES
                                                 maxKeptFiles: kCBLDefaultFileLogSinkMaxKeptFiles
-                                                 maxFileSize: kCBLDefaultLogFileMaxSize];
+                                                 maxFileSize: kCBLDefaultFileLogSinkMaxSize];
     [self writeOneKiloByteOfLog];
     NSArray* files = [self getLogsInDirectory: CBLLogSinks.file.directory properties: nil onlyInfoLogs: NO];
     NSError* error;
