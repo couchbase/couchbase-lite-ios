@@ -16,10 +16,10 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 //
+#import "CBLLogSinks.h"
 #import "CBLLogSinks+Internal.h"
-#import "CBLLogSinks+Reset.h"
-#import "CBLLog+Logging.h"
 #import "CBLStringBytes.h"
+#import "CBLLog.h"
 
 C4LogDomain kCBL_LogDomainDatabase;
 C4LogDomain kCBL_LogDomainQuery;
@@ -49,8 +49,10 @@ static CBLFileLogSink* _file = nil;
 
 @implementation CBLLogSinks
 
-static CBLLogAPI _vAPI;
 NSDictionary* domainDictionary = nil;
+
+// Initialize the CBLLogSinks object and register the logging callback.
+// It also sets up log domain levels based on user defaults named:
 
 + (void) initialize {
     static dispatch_once_t onceToken;
@@ -66,14 +68,11 @@ NSDictionary* domainDictionary = nil;
         
         // Create the default warning console log:
         self.console = [[CBLConsoleLogSink alloc] initWithLevel: kCBLLogLevelWarning];
-        
-        [self resetApiVersion];
     });
 }
 
 + (void) setConsole:(nullable CBLConsoleLogSink*)console {
     CBL_LOCK(self) {
-        [self checkLogApiVersion: console];
         _console = console;
     }
     [self updateLogLevels];
@@ -87,7 +86,6 @@ NSDictionary* domainDictionary = nil;
 
 + (void) setCustom: (nullable CBLCustomLogSink*) custom {
     CBL_LOCK(self) {
-        [self checkLogApiVersion: custom];
         _custom = custom;
     }
     [self updateLogLevels];
@@ -101,7 +99,6 @@ NSDictionary* domainDictionary = nil;
 
 + (void) setFile: (nullable CBLFileLogSink*) file {
     CBL_LOCK(self) {
-        [self checkLogApiVersion: file];
         _file = file;
     }
     [CBLFileLogSink setup: file];
@@ -113,6 +110,8 @@ NSDictionary* domainDictionary = nil;
         return _file;
     }
 }
+
+#pragma mark - Internal
 
 + (void) updateLogLevels {
     CBLConsoleLogSink* console = self.console;
@@ -189,22 +188,6 @@ static CBLLogDomain toCBLLogDomain(C4LogDomain domain) {
     NSString* domainName = [NSString stringWithUTF8String: c4log_getDomainName(domain)];
     NSNumber* mapped = [domainDictionary objectForKey: domainName];
     return mapped ? mapped.integerValue : kCBLLogDomainDatabase;
-}
-
-#pragma mark - Internal
-
-+ (void) resetApiVersion {
-    _vAPI = kCBLLogAPINone;
-}
-
-+ (void) checkLogApiVersion: (id<CBLLogApiSource>) source {
-    CBLLogAPI version = source ? source.version :  kCBLLogAPINew;
-    if (_vAPI == kCBLLogAPINone) {
-        _vAPI = version;
-    } else if (_vAPI != version) {
-        [NSException raise: NSInternalInconsistencyException
-                    format: @"Cannot use both new and old Logging API simultaneously."];
-    }
 }
 
 @end

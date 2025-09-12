@@ -22,7 +22,7 @@
 #import <Foundation/Foundation.h>
 
 #import "fleece/Fleece.h"
-#import "CBLLog+Logging.h"
+#import "CBLLog+Internal.h"
 
 #ifdef __cplusplus
 extern "C" {

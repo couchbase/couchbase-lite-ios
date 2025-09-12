@@ -192,10 +192,6 @@ public final class Database {
         try CBLDatabase.copy(fromPath: path, toDatabase: name, withConfig: config?.toImpl())
     }
     
-    /// Log object used for configuring console, file, and custom logger.
-    public static let log = Log()
-    
-    
     // MARK: Scopes
     
     

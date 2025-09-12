@@ -24,7 +24,7 @@ static NSArray* logLevelNames = @[@"Debug", @"Verbose", @"Info", @"WARNING", @"E
 
 @implementation CBLConsoleLogSink
 
-@synthesize level=_level, domains=_domains, version=_version;
+@synthesize level=_level, domains=_domains;
 
 - (instancetype) initWithLevel: (CBLLogLevel)level {
     return [self initWithLevel: level domains: kCBLLogDomainAll];
@@ -35,7 +35,6 @@ static NSArray* logLevelNames = @[@"Debug", @"Verbose", @"Info", @"WARNING", @"E
     if (self) {
         _level = level;
         _domains = domains;
-        _version = kCBLLogAPINew;
     }
     return self;
 }

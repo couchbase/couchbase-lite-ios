@@ -17,28 +17,51 @@
 //  limitations under the License.
 //
 
-#import "CBLLog.h"
-#import "CBLConsoleLogger.h"
-#import "CBLFileLogger.h"
+#pragma once
+#import <Foundation/Foundation.h>
+#import "c4.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+    
 NS_ASSUME_NONNULL_BEGIN
 
-@interface CBLLog ()
+// Log domains. Other domains can be created like so:
+//    C4LogDomain kCBLQueryLogDomain;
+//    ... then inside a +initialize method:
+//    kCBLQueryLogDomain = c4log_getDomain("Query", true);
 
-+ (instancetype) sharedInstance;
+#define kCBL_LogDomainDefault kC4DefaultLog
 
-@end
+extern C4LogDomain kCBL_LogDomainDatabase;
+extern C4LogDomain kCBL_LogDomainQuery;
+extern C4LogDomain kCBL_LogDomainSync;
+extern C4LogDomain kCBL_LogDomainWebSocket;
+extern C4LogDomain kCBL_LogDomainListener;
+extern C4LogDomain kCBL_LogDomainDiscovery;
+extern C4LogDomain kCBL_LogDomainP2P;
+    
+// Logging functions. For the domain, just use the part of the name between kCBL… and …LogDomain.
+#define CBLLogToAt(DOMAIN, LEVEL, FMT, ...)        \
+        ({writeCBLLogMessage(kCBL_LogDomain##DOMAIN, LEVEL, FMT, ## __VA_ARGS__);})
+#define CBLLogVerbose(DOMAIN, FMT, ...) CBLLogToAt(DOMAIN, kC4LogVerbose, FMT, ## __VA_ARGS__)
+#define CBLLogInfo(DOMAIN, FMT, ...)    CBLLogToAt(DOMAIN, kC4LogInfo,    FMT, ## __VA_ARGS__)
+#define CBLWarn(DOMAIN, FMT, ...)       CBLLogToAt(DOMAIN, kC4LogWarning, FMT, ## __VA_ARGS__)
+#define CBLWarnError(DOMAIN, FMT, ...)  CBLLogToAt(DOMAIN, kC4LogError,   FMT, ## __VA_ARGS__)
 
-@interface CBLConsoleLogger ()
-
-- (instancetype) initWithDefault;
-
-@end
-
-@interface CBLFileLogger ()
-
-- (instancetype) initWithDefault;
-
-@end
-
+// CBLDebug calls are stripped out of release builds.
+#if DEBUG
+#define CBLDebug(DOMAIN, FMT, ...)      CBLLogToAt(DOMAIN, kC4LogDebug,   FMT, ## __VA_ARGS__)
+#else
+#define CBLDebug(DOMAIN, FMT, ...)      ({ })
+#endif
+    
+void writeCBLLogMessage(C4LogDomain domain, C4LogLevel level, NSString *msg, ...)
+    __attribute__((format(__NSString__, 3, 4)));
+    
 NS_ASSUME_NONNULL_END
+    
+#ifdef __cplusplus
+}
+#endif

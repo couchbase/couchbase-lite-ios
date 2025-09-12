@@ -22,25 +22,6 @@ import XCTest
 
 class LogSinkTest: CBLTestCase {
     
-    class TestCustomLogSink: LogSinkProtocol {
-        var lines: [String] = []
-        
-        var level: LogLevel = .none
-        
-        func writeLog(level: LogLevel, domain: LogDomain, message: String) {
-            lines.append(message)
-        }
-        
-        func containsString(_ string: String) -> Bool {
-            for line in lines {
-                if (line as NSString).contains(string) {
-                    return true
-                }
-            }
-            return false
-        }
-    }
-    
     var logFileDirectory: String!
     
     var backupConsoleLogSink: ConsoleLogSink?
@@ -60,10 +41,6 @@ class LogSinkTest: CBLTestCase {
         super.tearDown()
         try? FileManager.default.removeItem(atPath: logFileDirectory)
         restoreLoggerConfig()
-    }
-    
-    func logFileConfig() -> LogFileConfiguration {
-        return LogFileConfiguration(directory: logFileDirectory)
     }
     
     func backupLoggerConfig() {

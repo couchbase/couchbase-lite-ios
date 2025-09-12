@@ -30,7 +30,6 @@ framework module CouchbaseLiteSwift_Private {
     header "CBLCollectionConfiguration.h"
     header "CBLConflict.h"
     header "CBLConflictResolver.h"
-    header "CBLConsoleLogger.h"
     header "CBLConsoleLogSink.h"
     header "CBLCustomLogSink.h"
     header "CBLDatabase.h"
@@ -46,7 +45,6 @@ framework module CouchbaseLiteSwift_Private {
     header "CBLEncoder.h"
     header "CBLEndpoint.h"
     header "CBLErrors.h"
-    header "CBLFileLogger.h"
     header "CBLFileLogSink.h"
     header "CBLFragment.h"
     header "CBLFullTextIndex.h"
@@ -56,9 +54,6 @@ framework module CouchbaseLiteSwift_Private {
     header "CBLIndexBuilder.h"
     header "CBLIndexConfiguration.h"
     header "CBLListenerToken.h"
-    header "CBLLog.h"
-    header "CBLLogFileConfiguration.h"
-    header "CBLLogger.h"
     header "CBLLogSinks.h"
     header "CBLLogTypes.h"
     header "CBLQueryChange.h"
@@ -106,7 +101,6 @@ framework module CouchbaseLiteSwift_Private {
     
     // Internal
     header "CBLQueryFullTextIndexExpression.h"
-    header "CBLLogSinks+Reset.h"
     header "CBLPrecondition.h"
     
     // Swift Extensions:
@@ -115,7 +109,7 @@ framework module CouchbaseLiteSwift_Private {
     header "CBLCollection+Swift.h"
     header "CBLDatabase+Swift.h"
     header "CBLDictionary+Swift.h"
-    header "CBLLog+Swift.h"
     header "CBLConflictResolverBridge.h"
     header "CBLCollectionConfiguration+Swift.h"
+    header "CBLLog+Swift.h"
 }

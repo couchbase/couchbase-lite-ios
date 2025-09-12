@@ -2,7 +2,7 @@
 //  CBLLogSinks+Internal.h
 //  CouchbaseLite
 //
-//  Copyright (c) 2024 Couchbase, Inc All rights reserved.
+//  Copyright (c) 2025 Couchbase, Inc All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -23,35 +23,21 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-typedef NS_ENUM(NSUInteger, CBLLogAPI) {
-    kCBLLogAPINone,
-    kCBLLogAPIOld,
-    kCBLLogAPINew,
-};
-
-@protocol CBLLogApiSource <NSObject>
-
-@property (nonatomic) CBLLogAPI version;
-
-@end
-
 @interface CBLLogSinks ()
 
 + (void) writeCBLLog: (C4LogDomain)domain level: (C4LogLevel)level message: (NSString*)message;
 
-+ (void) checkLogApiVersion: (nullable id<CBLLogApiSource>) source;
+@end
+
+@interface CBLConsoleLogSink () <CBLLogSinkProtocol>
 
 @end
 
-@interface CBLConsoleLogSink () <CBLLogSinkProtocol, CBLLogApiSource>
+@interface CBLCustomLogSink () <CBLLogSinkProtocol>
 
 @end
 
-@interface CBLCustomLogSink () <CBLLogSinkProtocol, CBLLogApiSource>
-
-@end
-
-@interface CBLFileLogSink () <CBLLogSinkProtocol, CBLLogApiSource>
+@interface CBLFileLogSink () <CBLLogSinkProtocol>
 
 + (void) setup: (nullable CBLFileLogSink*)logSink;
 

@@ -30,7 +30,6 @@
 #import "CBLIndexConfiguration+Internal.h"
 #import "CBLIndexSpec.h"
 #import "CBLIndex+Internal.h"
-#import "CBLLog+Internal.h"
 #import "CBLLogSinks+Internal.h"
 #import "CBLMisc.h"
 #import "CBLPrecondition.h"
@@ -108,7 +107,7 @@ static const C4DatabaseConfig2 kDBConfig = {
     if (self == [CBLDatabase class]) {
         NSLog(@"%@", [CBLVersion userAgent]);
         // Initialize logging
-        CBLAssertNotNil(CBLLog.sharedInstance);
+        CBLAssertNotNil(CBLLogSinks.self);
     }
 }
 
@@ -459,12 +458,6 @@ static const C4DatabaseConfig2 kDBConfig = {
         return NO;
     }
     return YES;
-}
-
-#pragma mark - Logging
-
-+ (CBLLog*) log {
-    return [CBLLog sharedInstance];
 }
 
 #pragma mark - Query
