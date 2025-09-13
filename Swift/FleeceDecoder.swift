@@ -328,7 +328,12 @@ private struct SingleValueContainer: SingleValueDecodingContainer {
     func decode(_ type: Date.Type) throws -> Date {
         switch decoder.fleeceValue {
         case .string(let string):
-            if let date = ISO8601DateFormatter().date(from: string) {
+            if let date = ISO8601DateFormatter.couchbase.date(from: string) {
+                return date
+            } else if let date = ISO8601DateFormatter().date(from: string) {
+                // CBL-7061. Because of an issue introduced in 3.2.3 which used the default formatter for dates, some customers may have dates in their documents which are
+                // encoded using the default formatter (rather than the `.couchbase` formatter).
+                // We can remove this extra check once we are sure no customers have default formatter dates in their databases.
                 return date
             } else {
                 throw CBLError.create(CBLError.decodingError, description: "Failed to parse ISO8601 Date from '\(string)'")
@@ -524,4 +529,17 @@ enum FleeceValue {
             self.init(value)
         }
     }
+}
+
+extension ISO8601DateFormatter {
+    /// The variation of ISO8601 used by Couchbase.
+    /// YYYY-mm-ddThh:mm:ss.SSSZ
+    static let couchbase: ISO8601DateFormatter = {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [
+            .withInternetDateTime,
+            .withFractionalSeconds
+        ]
+        return formatter
+    }()
 }
