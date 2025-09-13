@@ -21,39 +21,42 @@ import Foundation
 
 /// Log domain options that can be enabled in the console logger.
 public struct LogDomains: OptionSet {
-    
     /// Raw value.
-    public let rawValue: Int
+    public let rawValue: UInt
     
     /// Constructor with the raw value.
-    public init(rawValue: Int) {
+    public init(rawValue: UInt) {
         self.rawValue = rawValue
     }
     
     /// Database domain.
-    public static let database = LogDomains(rawValue: Int(LogDomain.database.rawValue))
+    public static let database = LogDomains(rawValue: LogDomain.database.rawValue)
     
     /// Query domain.
-    public static let query = LogDomains(rawValue: Int(LogDomain.query.rawValue))
+    public static let query = LogDomains(rawValue: LogDomain.query.rawValue)
     
     /// Replicator domain.
-    public static let replicator = LogDomains(rawValue: Int(LogDomain.replicator.rawValue))
+    public static let replicator = LogDomains(rawValue: LogDomain.replicator.rawValue)
     
     /// Network domain.
-    public static let network = LogDomains(rawValue: Int(LogDomain.network.rawValue))
+    public static let network = LogDomains(rawValue: LogDomain.network.rawValue)
     
     /// Listener domain.
-    public static let listener = LogDomains(rawValue: Int(LogDomain.listener.rawValue))
+    public static let listener = LogDomains(rawValue: LogDomain.listener.rawValue)
     
     /// Peer Discovery domain.
-    public static let peerDiscovery = LogDomains(rawValue: Int(LogDomain.peerDiscovery.rawValue))
+    public static let peerDiscovery = LogDomains(rawValue: LogDomain.peerDiscovery.rawValue)
+    
+    /// mDNS specific logs used for DNS-SD peer discovery.
+    public static let mdns = LogDomains(rawValue: LogDomain.mdns.rawValue)
+
     
     /// Multipeer Replication domain.
-    public static let multipeer = LogDomains(rawValue: Int(LogDomain.multipeer.rawValue))
+    public static let multipeer = LogDomains(rawValue: LogDomain.multipeer.rawValue)
     
     /// All domains.
     public static let all: LogDomains = [
-        .database, .query, .replicator, .network, .listener, .peerDiscovery, .multipeer
+        .database, .query, .replicator, .network, .listener, .peerDiscovery, .mdns, .multipeer
     ]
 }
 

@@ -27,9 +27,10 @@ C4LogDomain kCBL_LogDomainSync;
 C4LogDomain kCBL_LogDomainWebSocket;
 C4LogDomain kCBL_LogDomainListener;
 C4LogDomain kCBL_LogDomainDiscovery;
+C4LogDomain kCBL_LogDomainMDNS;
 C4LogDomain kCBL_LogDomainP2P;
 
-static NSArray* c4Domains = @[@"DB", @"Query", @"Sync", @"WS", @"Listener", @"Discovery", @"P2P"];
+static NSArray* c4Domains = @[@"DB", @"Query", @"Sync", @"WS", @"Listener", @"Discovery", @"mDNS", @"P2P"];
 static NSArray* platformDomains = @[@"BLIP", @"BLIPMessages", @"SyncBusy", @"TLS", @"Changes", @"Zip"];
 
 static CBLLogLevel _domainsLevel = kCBLLogLevelNone;
@@ -49,7 +50,8 @@ static CBLFileLogSink* _file = nil;
 
 @implementation CBLLogSinks
 
-NSDictionary* domainDictionary = nil;
+NSDictionary<NSString*, NSNumber*>* coreDomainNameToCBLLogDomainMap = nil;
+
 
 // Initialize the CBLLogSinks object and register the logging callback.
 // It also sets up log domain levels based on user defaults named:
@@ -57,14 +59,33 @@ NSDictionary* domainDictionary = nil;
 + (void) initialize {
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        // Cache log domain for logging from the platforms:
+        // Cache lite-core log domain for logging from the platforms:
         kCBL_LogDomainDatabase  = c4log_getDomain("DB", true);
         kCBL_LogDomainQuery  = c4log_getDomain("Query", true);
         kCBL_LogDomainSync  = c4log_getDomain("Sync", true);
         kCBL_LogDomainWebSocket  = c4log_getDomain("WS", true);
         kCBL_LogDomainListener  = c4log_getDomain("Listener", true);
         kCBL_LogDomainDiscovery = c4log_getDomain("Discovery", true);
+        kCBL_LogDomainMDNS = c4log_getDomain("mDNS", true);
         kCBL_LogDomainP2P = c4log_getDomain("P2P", true);
+        
+        // Cache lite-core log domain name to CBL log domain map:
+        coreDomainNameToCBLLogDomainMap = @{
+            @"DB": @(kCBLLogDomainDatabase),
+            @"Query": @(kCBLLogDomainQuery),
+            @"Sync": @(kCBLLogDomainReplicator),
+            @"SyncBusy": @(kCBLLogDomainReplicator),
+            @"Changes": @(kCBLLogDomainDatabase),
+            @"BLIP": @(kCBLLogDomainNetwork),
+            @"WS": @(kCBLLogDomainNetwork),
+            @"BLIPMessages": @(kCBLLogDomainNetwork),
+            @"Zip": @(kCBLLogDomainNetwork),
+            @"TLS": @(kCBLLogDomainNetwork),
+            @"Listener": @(kCBLLogDomainListener),
+            @"Discovery": @(kCBLLogDomainPeerDiscovery),
+            @"mDNS": @(kCBLLogDomainMDNS),
+            @"P2P": @(kCBLLogDomainMultipeer)
+        };
         
         // Create the default warning console log:
         self.console = [[CBLConsoleLogSink alloc] initWithLevel: kCBLLogLevelWarning];
@@ -168,25 +189,8 @@ static void c4Callback(C4LogDomain c4domain, C4LogLevel c4level, const char *msg
 }
 
 static CBLLogDomain toCBLLogDomain(C4LogDomain domain) {
-    if (!domainDictionary) {
-        domainDictionary = @{ @"DB": @(kCBLLogDomainDatabase),
-                              @"Query": @(kCBLLogDomainQuery),
-                              @"Sync": @(kCBLLogDomainReplicator),
-                              @"SyncBusy": @(kCBLLogDomainReplicator),
-                              @"Changes": @(kCBLLogDomainDatabase),
-                              @"BLIP": @(kCBLLogDomainNetwork),
-                              @"WS": @(kCBLLogDomainNetwork),
-                              @"BLIPMessages": @(kCBLLogDomainNetwork),
-                              @"Zip": @(kCBLLogDomainNetwork),
-                              @"TLS": @(kCBLLogDomainNetwork),
-                              @"Listener": @(kCBLLogDomainListener),
-                              @"Discovery": @(kCBLLogDomainPeerDiscovery),
-                              @"P2P": @(kCBLLogDomainMultipeer)
-        };
-    }
-    
     NSString* domainName = [NSString stringWithUTF8String: c4log_getDomainName(domain)];
-    NSNumber* mapped = [domainDictionary objectForKey: domainName];
+    NSNumber* mapped = [coreDomainNameToCBLLogDomainMap objectForKey: domainName];
     return mapped ? mapped.integerValue : kCBLLogDomainDatabase;
 }
 
