@@ -43,7 +43,7 @@
                      directory: (NSString*)directory
                   usePlaintext: (BOOL)usePlaintext
                   maxKeptFiles: (NSInteger)maxKeptFiles
-                   maxFileSize: (long long)maxFileSize
+                   maxFileSize: (unsigned long long)maxFileSize
 {
     self = [super init];
     if (self) {
@@ -78,7 +78,7 @@
             .base_path = directory,
             .log_level = (C4LogLevel)logSink.level,
             .max_rotate_count = static_cast<int32_t>(logSink.maxKeptFiles - 1),
-            .max_size_bytes = logSink.maxFileSize,
+            .max_size_bytes = static_cast<int64_t>(logSink.maxFileSize),
             .use_plaintext = static_cast<bool>(logSink.usePlaintext),
             .header = header
         };

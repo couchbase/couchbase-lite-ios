@@ -2343,7 +2343,7 @@
     AssertEqual(doc.timestamp, 0);
     
     Assert([self.defaultCollection saveDocument:doc error: &err]);
-    NSTimeInterval timestamp = doc.timestamp;
+    uint64_t timestamp = doc.timestamp;
     Assert(timestamp > 0);
     
     doc = [[self.defaultCollection documentWithID: @"doc1" error: &err] toMutable];

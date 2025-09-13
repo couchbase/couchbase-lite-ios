@@ -860,8 +860,6 @@ static C4DatabaseConfig2 c4DatabaseConfig2 (CBLDatabaseConfiguration *config) {
 
     if (config.fullSync)
         c4config.flags |= kC4DB_DiskSyncFull;
-    if (!config.mmapEnabled)
-        c4config.flags |= kC4DB_MmapDisabled;
     
 #ifdef COUCHBASE_ENTERPRISE
     if (config.encryptionKey)
