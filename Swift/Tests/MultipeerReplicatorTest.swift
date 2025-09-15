@@ -342,6 +342,8 @@ class MultipeerReplicatorTest: CBLTestCase {
      4. Check that the configuration cannot be created as the collections are empty.
      */
     func testConfigurationValidation() throws {
+        throw XCTSkip("Swift's Precondition cannot be asserted. Enable manually when needed.")
+        
         // Create the collection and identity
         let collection = try db.defaultCollection()
         let identity = try createIdentity()
@@ -349,24 +351,20 @@ class MultipeerReplicatorTest: CBLTestCase {
         let collConfig = MultipeerCollectionConfiguration(collection: collection)
 
         // Create the configuration with an empty peerGroupID:
-        expectException(exception: .invalidArgumentException) {
-            _ = MultipeerReplicatorConfiguration(
-                peerGroupID: "",
-                identity: identity,
-                authenticator: auth,
-                collections: [collConfig]
-            )
-        }
+        _ = MultipeerReplicatorConfiguration(
+            peerGroupID: "",
+            identity: identity,
+            authenticator: auth,
+            collections: [collConfig]
+        )
         
         // Create the configuration with an empty collections:
-        expectException(exception: .invalidArgumentException) {
-            _ = MultipeerReplicatorConfiguration(
-                peerGroupID: self.kTestPeerGroupID,
-                identity: identity,
-                authenticator: auth,
-                collections: []
-            )
-        }
+        _ = MultipeerReplicatorConfiguration(
+            peerGroupID: self.kTestPeerGroupID,
+            identity: identity,
+            authenticator: auth,
+            collections: []
+        )
     }
     
     // MARK: - Stop and Restart
@@ -642,8 +640,6 @@ class MultipeerReplicatorTest: CBLTestCase {
         that one of the replicators is STOPPED with the error.
      */
     func testAuthenticateWithRootCertsFailed() throws {
-        LogSinks.console = ConsoleLogSink(level: .verbose)
-        
         let rootCertPEM = """
         -----BEGIN CERTIFICATE-----
         MIIE/DCCAuSgAwIBAgIUHKj9KlERcqJF62FpOzQn7rC9PPgwDQYJKoZIhvcNAQEL
@@ -745,8 +741,6 @@ class MultipeerReplicatorTest: CBLTestCase {
         that one of the replicators is STOPPED with the error.
      */
     func testAuthenticateWithCallbackFailed() throws {
-        LogSinks.console = ConsoleLogSink(level: .verbose)
-        
         let auth = MultipeerCertificateAuthenticator { peerID, certs in
             XCTAssertNotNil(peerID)
             XCTAssertFalse(certs.isEmpty)
@@ -1372,8 +1366,6 @@ class MultipeerReplicatorTest: CBLTestCase {
      13. Verify that MultipeerReplicator#2's neighborPeers is empty.
      */
     func testNeighborPeers() throws {
-        LogSinks.console = ConsoleLogSink(level: .verbose)
-        
         let repl1 = try multipeerReplicator(for: db)
         XCTAssertEqual(repl1.neighborPeers.count, 0)
 
