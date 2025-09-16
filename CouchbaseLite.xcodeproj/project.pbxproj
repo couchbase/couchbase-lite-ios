@@ -2599,7 +2599,6 @@
 		40FC1C542B928C1600394276 /* Prediction.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Prediction.swift; sourceTree = "<group>"; };
 		40FC1C552B928C1600394276 /* Function+Prediction.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Function+Prediction.swift"; sourceTree = "<group>"; };
 		40FC1C732B928CC800394276 /* generate_carthage_package.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = generate_carthage_package.sh; sourceTree = "<group>"; };
-		40FC1C742B928CC800394276 /* generate_ee_release_zip.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = generate_ee_release_zip.sh; sourceTree = "<group>"; };
 		40FC1C752B928CC800394276 /* loc.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = loc.sh; sourceTree = "<group>"; };
 		40FC1C762B928CC800394276 /* prepare_project.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = prepare_project.sh; sourceTree = "<group>"; };
 		69002EA9234E693F00776107 /* CBLErrorMessage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLErrorMessage.h; sourceTree = "<group>"; };
@@ -2960,6 +2959,8 @@
 		AE006DD22B7B9FEF00884E2B /* CBLWordEmbeddingModel.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLWordEmbeddingModel.h; sourceTree = "<group>"; };
 		AE006DD32B7B9FEF00884E2B /* CBLWordEmbeddingModel.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CBLWordEmbeddingModel.m; sourceTree = "<group>"; };
 		AE006DE62B7BB98B00884E2B /* VectorSearchTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = VectorSearchTest.m; sourceTree = "<group>"; };
+		AE2424BE2E799C9B004A86D9 /* download_vector_search_extension.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = download_vector_search_extension.sh; sourceTree = "<group>"; };
+		AE2424BF2E799CAC004A86D9 /* generate_release_zip.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = generate_release_zip.sh; sourceTree = "<group>"; };
 		AE5803A32B99C67D001A1BE3 /* VectorSearchTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VectorSearchTest.swift; sourceTree = "<group>"; };
 		AE5803D72B9B5B2A001A1BE3 /* WordEmbeddingModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WordEmbeddingModel.swift; sourceTree = "<group>"; };
 		AE5CA6AB2E5E2584003A9E89 /* CBLMessageEndpointListenerConfiguration+Internal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "CBLMessageEndpointListenerConfiguration+Internal.h"; sourceTree = "<group>"; };
@@ -3761,8 +3762,9 @@
 		40FC1C722B928CC800394276 /* Scripts */ = {
 			isa = PBXGroup;
 			children = (
+				AE2424BF2E799CAC004A86D9 /* generate_release_zip.sh */,
+				AE2424BE2E799C9B004A86D9 /* download_vector_search_extension.sh */,
 				40FC1C732B928CC800394276 /* generate_carthage_package.sh */,
-				40FC1C742B928CC800394276 /* generate_ee_release_zip.sh */,
 				40FC1C752B928CC800394276 /* loc.sh */,
 				40FC1C762B928CC800394276 /* prepare_project.sh */,
 			);
