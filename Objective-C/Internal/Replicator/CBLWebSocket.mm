@@ -110,6 +110,7 @@ NSString * const kCBLWebSocketUseTLSServerAuthCallback = @"serverAuthCallback";
     BOOL _closing;
     
     NSString* _networkInterface;
+    BOOL _useNetworkInterface;
     dispatch_queue_t _socketConnectQueue;
     
     CBLDNSService* _dnsService;
@@ -217,9 +218,10 @@ static void doDispose(C4Socket* s) {
         
         _sockfd = -1;
         _networkInterface = [context networkInterfaceForWebsocket: self];
-        if (_networkInterface) {
+        if (_networkInterface.length > 0) {
             queueName = [NSString stringWithFormat: @"%@-SocketConnect", queueName];
             _socketConnectQueue = dispatch_queue_create(queueName.UTF8String, DISPATCH_QUEUE_SERIAL);
+            _useNetworkInterface = YES;
         }
     }
     return self;
@@ -353,7 +355,7 @@ static void doDispose(C4Socket* s) {
     _connectingToProxy = (_logic.proxyType == kCBLHTTPProxy);
     _connectedThruProxy = NO;
     
-    if (_networkInterface) {
+    if (_useNetworkInterface) {
         [self connectToHostWithName: _logic.directHost
                                port: _logic.directPort
                    networkInterface: _networkInterface];
@@ -625,8 +627,14 @@ static inline NSError* posixError(int errNo, NSString* msg) {
         _shouldCheckSSLCert = true;
         
         NSMutableDictionary* settings = [NSMutableDictionary dictionary];
-        if (_connectedThruProxy) {
-            [settings setObject: _logic.directHost forKey: (__bridge id)kCFStreamSSLPeerName];
+        
+        // Set the actual hostname used for certificate verification during the TLS handshake
+        // when connecting through a proxy or a specified network interface. The hostname will
+        // appear in the Server Name Indication (SNI) field of the TLS ClientHello message.
+        if (_connectedThruProxy || _useNetworkInterface) {
+            NSString* hostName = _logic.directHost;
+            CBLLogVerbose(WebSocket, @"%@ Setting TLS peer (SNI) hostname: %@", self, hostName);
+            [settings setObject: hostName forKey: (__bridge id)kCFStreamSSLPeerName];
         }
         
         // Disable the default certificate validation process using system's CA certs
