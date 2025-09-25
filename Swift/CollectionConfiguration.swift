@@ -68,30 +68,6 @@ public struct CollectionConfiguration {
         return collections.map { CollectionConfiguration(collection: $0) }
     }
     
-    /// Creates an array of `CollectionConfiguration` objects from the given collections with the same configuration closure.
-    ///
-    /// Each collection is wrapped in a `CollectionConfiguration`using default settings
-    /// (no filters and no custom conflict resolvers).
-    ///
-    /// This is a convenience method for configuring multiple collections with the same configuration.
-    /// If custom configurations are needed, construct `CollectionConfiguration` objects
-    /// directly instead.
-    ///
-    /// - Parameter collections: An array of `Collection` objects to configure for replication.
-    /// - Parameter config: A closure that takes a `CollectionConfiguration` object
-    /// - Returns: An array of `CollectionConfiguration` objects corresponding to the given collections.
-    /// Creates configurations from an array of collections with a configuration closure.
-    static func fromCollections(_ collections: [Collection], config: (CollectionConfiguration) -> Void) -> [CollectionConfiguration] {
-        Precondition.assertNotEmpty(collections, name: "collections")
-        return collections.map {
-            let colConfig = CollectionConfiguration(collection: $0)
-            config(colConfig)
-            return colConfig
-        }
-    }
-    
-    
-    
     // MARK: internal
     
     func toImpl() -> CBLCollectionConfiguration {

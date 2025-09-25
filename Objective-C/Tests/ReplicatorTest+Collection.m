@@ -19,6 +19,7 @@
 
 #import "ReplicatorTest.h"
 #import "CBLReplicator+Internal.h"
+#import "CBLCollectionConfiguration+Internal.h"
 
 @interface ReplicatorTest_Collection : ReplicatorTest
 

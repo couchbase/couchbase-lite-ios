@@ -52,7 +52,7 @@ class ReplicatorTest_Collection: ReplicatorTest {
         XCTAssertNil(colConfig!.pushFilter)
         XCTAssertNil(colConfig!.pullFilter)
     }
-    
+        
     // fatal error! can't be unit tested.
     func _testCollectionsFromDifferentDatabaseInstances() throws {
         let col1a = try self.db.createCollection(name: "colA", scope: "scopeA")
