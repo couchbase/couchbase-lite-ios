@@ -52,20 +52,6 @@ class ReplicatorTest_Collection: ReplicatorTest {
         XCTAssertNil(colConfig!.pushFilter)
         XCTAssertNil(colConfig!.pullFilter)
     }
-    
-    func testCreateCollectionConfigsWithSameConfig() throws {
-        let url = URL(string: "wss://foo")!
-        let target = URLEndpoint(url: url)
-        
-        let col1a = try self.db.createCollection(name: "colA", scope: "scopeA")
-        let col1b = try self.db.createCollection(name: "colB", scope: "scopeA")
-        
-        var colConfigs = CollectionConfiguration.fromCollections([col1a, col1b], config: { c in
-            c.channels = ["test"]
-        })
-        
-        let config = self.config(collections: [col1a, col1b], target: target)
-    }
         
     // fatal error! can't be unit tested.
     func _testCollectionsFromDifferentDatabaseInstances() throws {
