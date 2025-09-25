@@ -28,6 +28,20 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (NSDictionary*) effectiveOptions;
 
+/**
+ Creates an array of `CBLCollectionConfiguration` objects from the given collections with the same configuration closure.
+
+ This is a convenience method for configuring multiple collections with the same configurations.
+ If custom configurations are needed, construct `CBLCollectionConfiguration` objects
+ directly instead.
+       
+ @param collections The collections to replicate.
+ @param config A block to configure all `CBLCollectionConfiguration` object.
+ @return An array of CBLCollectionConfiguration objects for the given collections.
+ */
++ (NSArray<CBLCollectionConfiguration*>*) fromCollections: (NSArray<CBLCollection*>*)collections
+                                                   config: (void (^)(CBLCollectionConfiguration* config))config;
+
 @end
 
 NS_ASSUME_NONNULL_END
