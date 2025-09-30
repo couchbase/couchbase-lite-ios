@@ -2,6 +2,8 @@ name: Swift Package
 
 on:
   pull_request:
+    branches:
+      - 'release/3.*'
     paths: Package.swift
 
 jobs:

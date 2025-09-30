@@ -24,7 +24,7 @@ Couchbase Lite implementation is on top of [Couchbase Lite Core](https://github.
 ```
 dependencies: [
         .package(name: "CouchbaseLiteSwift",
-                 url: "https://github.com/couchbase/couchbase-lite-ios.git", 
+                 url: "https://github.com/couchbase/couchbase-lite-swift.git", 
                  from: "3.2.0"),
     ],
 ```
@@ -120,11 +120,6 @@ $ ./Scripts/build_framework.sh -s "CBL Swift" -p iOS -o output   // For building
 
 - [Swift](https://docs.couchbase.com/couchbase-lite/current/swift/quickstart.html)
 - [Objective-C](https://docs.couchbase.com/couchbase-lite/current/objc/quickstart.html)
-
-## Sample Apps
-
-- [Todo](https://github.com/couchbaselabs/mobile-training-todo) : Objective-C and Swift
-
 
 ## License
 
