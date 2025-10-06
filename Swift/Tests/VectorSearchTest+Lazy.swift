@@ -597,9 +597,10 @@ class VectorSearchTest_Lazy : VectorSearchTest {
         
         let index = try wordsIndex()
         let updater = try index.beginUpdate(limit: 10)!
+        XCTAssertEqual(updater.count, 10)
         var i = 0
         for value in updater {
-            XCTAssertEqual(value as? String, updater[i].string)
+            XCTAssertEqual(value, updater[i].value)
             i = i+1
         }
         XCTAssertEqual(i, 10)
