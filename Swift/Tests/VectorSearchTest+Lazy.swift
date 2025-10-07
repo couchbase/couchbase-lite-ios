@@ -592,7 +592,7 @@ class VectorSearchTest_Lazy : VectorSearchTest {
     ///    from getValue(index).
     /// 8. Check that there were 10 iteration calls.
     func testIndexUpdaterArrayIterator() throws {
-        let config = VectorIndexConfiguration(expression: "vector", dimensions: 300, centroids: 8)
+        let config = VectorIndexConfiguration(expression: "word", dimensions: 300, centroids: 8)
         try createWordsIndex(config: lazyConfig(config))
         
         let index = try wordsIndex()
