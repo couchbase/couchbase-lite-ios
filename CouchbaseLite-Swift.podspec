@@ -17,6 +17,6 @@ Pod::Spec.new do |s|
   s.osx.preserve_paths = 'frameworks/CBL_Swift/macOS/CouchbaseLiteSwift.framework'
   s.osx.vendored_frameworks = 'frameworks/CBL_Swift/macOS/CouchbaseLiteSwift.framework'
 
-  s.ios.deployment_target  = '12.0'
+  s.ios.deployment_target  = '15.0'
   s.osx.deployment_target  = '12.0'
 end
