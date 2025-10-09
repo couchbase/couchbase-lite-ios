@@ -600,7 +600,7 @@ class VectorSearchTest_Lazy : VectorSearchTest {
         XCTAssertEqual(updater.count, 10)
         var i = 0
         for value in updater {
-            XCTAssertEqual(value, updater[i].value)
+            XCTAssertEqual(value as? String, updater[i].value as? String)
             i = i+1
         }
         XCTAssertEqual(i, 10)

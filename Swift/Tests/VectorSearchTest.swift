@@ -44,29 +44,6 @@ class VectorSearchTest: CBLTestCase {
     
     var extWordsCollection: Collection!
     
-    class TestCustomLogSink: LogSinkProtocol {
-        var lines: [String] = []
-        
-        var level: LogLevel = .none
-        
-        func writeLog(level: LogLevel, domain: LogDomain, message: String) {
-            lines.append(message)
-        }
-        
-        func reset() {
-            lines.removeAll()
-        }
-        
-        func containsString(_ string: String) -> Bool {
-            for line in lines {
-                if (line as NSString).contains(string) {
-                    return true
-                }
-            }
-            return false
-        }
-    }
-    
     override func setUp() {
         try? deleteDB(name: wordsDatabaseName);
         
