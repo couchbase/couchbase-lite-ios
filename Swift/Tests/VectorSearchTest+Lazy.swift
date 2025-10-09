@@ -592,14 +592,15 @@ class VectorSearchTest_Lazy : VectorSearchTest {
     ///    from getValue(index).
     /// 8. Check that there were 10 iteration calls.
     func testIndexUpdaterArrayIterator() throws {
-        let config = VectorIndexConfiguration(expression: "vector", dimensions: 300, centroids: 8)
+        let config = VectorIndexConfiguration(expression: "word", dimensions: 300, centroids: 8)
         try createWordsIndex(config: lazyConfig(config))
         
         let index = try wordsIndex()
         let updater = try index.beginUpdate(limit: 10)!
+        XCTAssertEqual(updater.count, 10)
         var i = 0
         for value in updater {
-            XCTAssertEqual(value as? String, updater[i].string)
+            XCTAssertEqual(value, updater[i].value)
             i = i+1
         }
         XCTAssertEqual(i, 10)
