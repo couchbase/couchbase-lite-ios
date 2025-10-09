@@ -9,9 +9,7 @@ Couchbase Lite implementation is on top of [Couchbase Lite Core](https://github.
 
 
 ## Requirements
-- iOS 12.0+ | macOS 12+
-
-- iOS 12.0+ | macOS 12.0+
+- iOS 15.0+ | macOS 13.0+
 
 ## Installation
 
@@ -25,7 +23,7 @@ Couchbase Lite implementation is on top of [Couchbase Lite Core](https://github.
 dependencies: [
         .package(name: "CouchbaseLiteSwift",
                  url: "https://github.com/couchbase/couchbase-lite-ios.git", 
-                 from: "3.2.0"),
+                 from: "3.3.0"),
     ],
 ```
 
@@ -35,7 +33,7 @@ dependencies: [
 dependencies: [
         .package(name: "CouchbaseLiteSwift",
                  url: "https://github.com/couchbase/couchbase-lite-swift-ee.git", 
-                 from: "3.2.0"),
+                 from: "3.3.0"),
     ],
 ```
 
