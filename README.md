@@ -1,41 +1,36 @@
 
 # Couchbase Lite for iOS and MacOS
 
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0) [![Build Status](https://travis-ci.org/couchbase/couchbase-lite-ios.svg?branch=master)](https://travis-ci.org/couchbase/couchbase-lite-ios) [![Coverage Status](https://coveralls.io/repos/github/couchbase/couchbase-lite-ios/badge.svg?branch=master)](https://coveralls.io/github/couchbase/couchbase-lite-ios?branch=master)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 **Couchbase Lite** is an embedded lightweight, document-oriented (NoSQL), syncable database engine.
 
 Couchbase Lite implementation is on top of [Couchbase Lite Core](https://github.com/couchbase/couchbase-lite-core), which is also a new cross-platform implementation of database CRUD and query features, as well as document versioning.
 
-
 ## Requirements
-- iOS 12.0+ | macOS 12+
 
-- iOS 12.0+ | macOS 12.0+
+- iOS 15.0+ | macOS 13.0+
 
 ## Installation
 
 ### Swift Package 
 
-#### Requirements:
-- XCode 12+
-
-##### Community Edition
+#### Community Edition
 ```
 dependencies: [
         .package(name: "CouchbaseLiteSwift",
                  url: "https://github.com/couchbase/couchbase-lite-swift.git", 
-                 from: "3.2.0"),
+                 from: "4.0.0"),
     ],
 ```
 
-##### Enterprise Edition
+#### Enterprise Edition
 
 ```
 dependencies: [
         .package(name: "CouchbaseLiteSwift",
                  url: "https://github.com/couchbase/couchbase-lite-swift-ee.git", 
-                 from: "3.2.0"),
+                 from: "4.0.0"),
     ],
 ```
 
@@ -43,7 +38,7 @@ More detailed information on how to setup is available here: [swift package mana
 
 ### CocoaPods
 
-You can use [CocoaPods](https://cocoapods.org/) to install `CouchbaseLite` for Objective-C API or `CouchbaseLiteSwift` for Swift API by adding it in your [Podfile](https://guides.cocoapods.org/using/the-podfile.html):
+You can use [CocoaPods](https://cocoapods.org/) to install `CouchbaseLite` for Objective-C API or `CouchbaseLite-Swift` for Swift API by adding it in your [Podfile](https://guides.cocoapods.org/using/the-podfile.html):
 
 #### Objective-C
 
