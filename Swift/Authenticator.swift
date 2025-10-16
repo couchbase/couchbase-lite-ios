@@ -55,7 +55,6 @@ public struct BasicAuthenticator: IAuthenticator {
     }
     
     // MARK: Internal
-    
     func toImpl() -> CBLAuthenticator {
         return CBLBasicAuthenticator(username: username, password: password)
     }
