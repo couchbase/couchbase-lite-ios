@@ -412,6 +412,22 @@ class TLSIdentityTest: CBLTestCase {
         }
     }
     
+    // fatal error! can't be unit tested.
+    func _testCertificateExpirationAlreadyPast() throws {
+        try XCTSkipUnless(keyChainAccessAllowed)
+
+        // A date definitely in the past
+        let expired = Date.distantPast // or Date(timeIntervalSinceNow: -3600)
+
+        expectException(exception: .invalidArgumentException) {
+            _ = try? TLSIdentity.createIdentity(
+                for: .serverAuth,
+                attributes: [certAttrCommonName: "CBL-Server"],
+                expiration: expired,
+                label: self.serverCertLabel)
+        }
+    }
+    
     func testCertificateExpiration() throws {
         try XCTSkipUnless(keyChainAccessAllowed)
         
