@@ -412,6 +412,21 @@ class TLSIdentityTest: CBLTestCase {
         }
     }
     
+    func testCertificateExpirationAlreadyPast() throws {
+        try XCTSkipUnless(keyChainAccessAllowed)
+
+        // A date definitely in the past
+        let expired = Date.distantPast
+
+        expectException(exception: .invalidArgumentException) {
+            _ = try? TLSIdentity.createIdentity(
+                for: .serverAuth,
+                attributes: [certAttrCommonName: "CBL-Server"],
+                expiration: expired,
+                label: self.serverCertLabel)
+        }
+    }
+    
     func testCertificateExpiration() throws {
         try XCTSkipUnless(keyChainAccessAllowed)
         

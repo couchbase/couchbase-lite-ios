@@ -522,6 +522,20 @@
     Assert([error.localizedDescription containsString: @"-67655"]);
 }
 
+- (void) testCertificateExpirationAlreadyPast {
+    XCTSkipUnless(self.keyChainAccessAllowed);
+    NSDate* expired = [NSDate distantPast];
+
+    [self expectException: @"NSInvalidArgumentException" in:^{
+        NSError* error;
+        [CBLTLSIdentity createIdentityForKeyUsages: kCBLKeyUsagesServerAuth
+                                        attributes: kServerCertAttrs
+                                        expiration: expired
+                                             label: kServerCertLabel
+                                             error: &error];
+    }];
+}
+
 - (void) testCertificateExpiration {
     XCTSkipUnless(self.keyChainAccessAllowed);
     
