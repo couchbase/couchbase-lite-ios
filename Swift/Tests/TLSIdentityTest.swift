@@ -412,12 +412,11 @@ class TLSIdentityTest: CBLTestCase {
         }
     }
     
-    // fatal error! can't be unit tested.
-    func _testCertificateExpirationAlreadyPast() throws {
+    func testCertificateExpirationAlreadyPast() throws {
         try XCTSkipUnless(keyChainAccessAllowed)
 
         // A date definitely in the past
-        let expired = Date.distantPast // or Date(timeIntervalSinceNow: -3600)
+        let expired = Date.distantPast
 
         expectException(exception: .invalidArgumentException) {
             _ = try? TLSIdentity.createIdentity(

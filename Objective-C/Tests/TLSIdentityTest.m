@@ -524,8 +524,8 @@
 
 - (void) testCertificateExpirationAlreadyPast {
     XCTSkipUnless(self.keyChainAccessAllowed);
-    NSDate *expired = [NSDate distantPast];
-    
+    NSDate* expired = [NSDate distantPast];
+
     [self expectException: @"NSInvalidArgumentException" in:^{
         NSError* error;
         [CBLTLSIdentity createIdentityForKeyUsages: kCBLKeyUsagesServerAuth
