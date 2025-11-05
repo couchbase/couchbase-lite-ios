@@ -425,7 +425,7 @@ public final class Collection: CollectionChangeObservable, Indexable, Equatable,
     {
         let token = impl.addDocumentChangeListener(withID: id, queue: queue) { [weak self] change in
             guard let self = self else {
-                Log.log(domain: .database, level: .warning, message: "Unable to notify changes as the collection object was released")
+                Log._log(domain: .database, level: .warning, message: "Unable to notify changes as the collection object was released")
                 return
             }
             listener(DocumentChange(database: self.database,

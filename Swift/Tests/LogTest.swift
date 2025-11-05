@@ -87,21 +87,21 @@ class LogTest: CBLTestCase {
     func writeOneKiloByteOfLog() {
         let message = "11223344556677889900" // 44Byte line
         for _ in 0..<23 { // 1012 Bytes
-            Log.log(domain: .database, level: .error, message: "\(message)")
-            Log.log(domain: .database, level: .warning, message: "\(message)")
-            Log.log(domain: .database, level: .info, message: "\(message)")
-            Log.log(domain: .database, level: .verbose, message: "\(message)")
-            Log.log(domain: .database, level: .debug, message: "\(message)")
+            Log._log(domain: .database, level: .error, message: "\(message)")
+            Log._log(domain: .database, level: .warning, message: "\(message)")
+            Log._log(domain: .database, level: .info, message: "\(message)")
+            Log._log(domain: .database, level: .verbose, message: "\(message)")
+            Log._log(domain: .database, level: .debug, message: "\(message)")
         }
         writeAllLogs("1") // ~25Bytes
     }
     
     func writeAllLogs(_ message: String) {
-        Log.log(domain: .database, level: .error, message: message)
-        Log.log(domain: .database, level: .warning, message: message)
-        Log.log(domain: .database, level: .info, message: message)
-        Log.log(domain: .database, level: .verbose, message: message)
-        Log.log(domain: .database, level: .debug, message: message)
+        Log._log(domain: .database, level: .error, message: message)
+        Log._log(domain: .database, level: .warning, message: message)
+        Log._log(domain: .database, level: .info, message: message)
+        Log._log(domain: .database, level: .verbose, message: message)
+        Log._log(domain: .database, level: .debug, message: message)
     }
     
     func isKeywordPresentInAnyLog(_ keyword: String, path: String) throws -> Bool {
@@ -115,7 +115,7 @@ class LogTest: CBLTestCase {
     }
     
     func testCustomLoggingLevels() throws {
-        Log.log(domain: .database, level: .info, message: "IGNORE")
+        Log._log(domain: .database, level: .info, message: "IGNORE")
         let customLogger = CustomLogger()
         Database.log.custom = customLogger
         
@@ -123,10 +123,10 @@ class LogTest: CBLTestCase {
             customLogger.reset()
             customLogger.level = LogLevel(rawValue: UInt8(i))!
             Database.log.custom = customLogger
-            Log.log(domain: .database, level: .verbose, message: "TEST VERBOSE")
-            Log.log(domain: .database, level: .info, message: "TEST INFO")
-            Log.log(domain: .database, level: .warning, message: "TEST WARNING")
-            Log.log(domain: .database, level: .error, message: "TEST ERROR")
+            Log._log(domain: .database, level: .verbose, message: "TEST VERBOSE")
+            Log._log(domain: .database, level: .info, message: "TEST INFO")
+            Log._log(domain: .database, level: .warning, message: "TEST WARNING")
+            Log._log(domain: .database, level: .error, message: "TEST ERROR")
             XCTAssertEqual(customLogger.lines.count, 5 - i)
         }
     }
@@ -138,10 +138,10 @@ class LogTest: CBLTestCase {
         
         for i in (1...5).reversed() {
             Database.log.file.level = LogLevel(rawValue: UInt8(i))!
-            Log.log(domain: .database, level: .verbose, message: "TEST VERBOSE")
-            Log.log(domain: .database, level: .info, message: "TEST INFO")
-            Log.log(domain: .database, level: .warning, message: "TEST WARNING")
-            Log.log(domain: .database, level: .error, message: "TEST ERROR")
+            Log._log(domain: .database, level: .verbose, message: "TEST VERBOSE")
+            Log._log(domain: .database, level: .info, message: "TEST INFO")
+            Log._log(domain: .database, level: .warning, message: "TEST WARNING")
+            Log._log(domain: .database, level: .error, message: "TEST ERROR")
         }
         
         let files = try FileManager.default.contentsOfDirectory(atPath: config.directory)
@@ -171,7 +171,7 @@ class LogTest: CBLTestCase {
         let config = self.logFileConfig()
         Database.log.file.config = config
         Database.log.file.level = .info
-        Log.log(domain: .database, level: .info, message: "TEST INFO")
+        Log._log(domain: .database, level: .info, message: "TEST INFO")
         
         let files = try getLogsInDirectory(config.directory,
                                            properties: [.contentModificationDateKey],
@@ -211,7 +211,7 @@ class LogTest: CBLTestCase {
         Database.log.file.level = .info
         
         let inputString = "SOME TEST INFO"
-        Log.log(domain: .database, level: .info, message: inputString)
+        Log._log(domain: .database, level: .info, message: inputString)
         
         let files = try getLogsInDirectory(config.directory,
                                            properties: [.contentModificationDateKey],
@@ -252,24 +252,24 @@ class LogTest: CBLTestCase {
     }
     
     func testEnableAndDisableCustomLogging() throws {
-        Log.log(domain: .database, level: .info, message: "IGNORE")
+        Log._log(domain: .database, level: .info, message: "IGNORE")
         let customLogger = CustomLogger()
         Database.log.custom = customLogger
         
         customLogger.level = .none
         Database.log.custom = customLogger
-        Log.log(domain: .database, level: .verbose, message: "TEST VERBOSE")
-        Log.log(domain: .database, level: .info, message: "TEST INFO")
-        Log.log(domain: .database, level: .warning, message: "TEST WARNING")
-        Log.log(domain: .database, level: .error, message: "TEST ERROR")
+        Log._log(domain: .database, level: .verbose, message: "TEST VERBOSE")
+        Log._log(domain: .database, level: .info, message: "TEST INFO")
+        Log._log(domain: .database, level: .warning, message: "TEST WARNING")
+        Log._log(domain: .database, level: .error, message: "TEST ERROR")
         XCTAssertEqual(customLogger.lines.count, 0)
         
         customLogger.level = .verbose
         Database.log.custom = customLogger
-        Log.log(domain: .database, level: .verbose, message: "TEST VERBOSE")
-        Log.log(domain: .database, level: .info, message: "TEST INFO")
-        Log.log(domain: .database, level: .warning, message: "TEST WARNING")
-        Log.log(domain: .database, level: .error, message: "TEST ERROR")
+        Log._log(domain: .database, level: .verbose, message: "TEST VERBOSE")
+        Log._log(domain: .database, level: .info, message: "TEST INFO")
+        Log._log(domain: .database, level: .warning, message: "TEST WARNING")
+        Log._log(domain: .database, level: .error, message: "TEST ERROR")
         XCTAssertEqual(customLogger.lines.count, 4)
     }
     
@@ -388,7 +388,7 @@ class LogTest: CBLTestCase {
         Database.log.custom = customLogger
         Database.log.console.domains = .all
         Database.log.console.level = .info
-        Log.log(domain: .database, level: .info, message: "Hello %s there")
+        Log._log(domain: .database, level: .info, message: "Hello %s there")
         var found: Bool = false
         for line in customLogger.lines {
             if line.contains("Hello %s there") {
