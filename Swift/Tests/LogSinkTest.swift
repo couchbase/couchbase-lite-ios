@@ -376,15 +376,7 @@ class LogSinkTest: CBLTestCase {
             let logSink = TestCustomLogSink()
             LogSinks.custom = CustomLogSink(level: .debug, domains: domains[i], logSink: logSink)
             for j in 0..<domains.count {
-<<<<<<< Updated upstream
-                Log.log(domain: LogDomain(rawValue: domains[j].rawValue)!, level: .verbose, message: names[j])
-=======
-<<<<<<< Updated upstream
-                Log.log(domain: LogDomain(rawValue: UInt(domains[j].rawValue))!, level: .verbose, message: names[j])
-=======
                 Log._log(domain: LogDomain(rawValue: domains[j].rawValue)!, level: .verbose, message: names[j])
->>>>>>> Stashed changes
->>>>>>> Stashed changes
             }
             XCTAssertEqual(logSink.lines.count, 1)
             XCTAssertEqual(logSink.lines[0], names[i])
@@ -400,15 +392,7 @@ class LogSinkTest: CBLTestCase {
             let logSink = TestCustomLogSink()
             LogSinks.custom = CustomLogSink(level: .debug, domains: combined, logSink: logSink)
             for j in 0..<domains.count {
-<<<<<<< Updated upstream
-                Log.log(domain: LogDomain(rawValue: domains[j].rawValue)!, level: .verbose, message: names[j])
-=======
-<<<<<<< Updated upstream
-                Log.log(domain: LogDomain(rawValue: UInt(domains[j].rawValue))!, level: .verbose, message: names[j])
-=======
                 Log._log(domain: LogDomain(rawValue: domains[j].rawValue)!, level: .verbose, message: names[j])
->>>>>>> Stashed changes
->>>>>>> Stashed changes
             }
             
             XCTAssertEqual(logSink.lines.count, i + 1)
@@ -421,15 +405,7 @@ class LogSinkTest: CBLTestCase {
         let logSink = TestCustomLogSink()
         LogSinks.custom = CustomLogSink(level: .debug, domains: .all, logSink: logSink)
         for i in 0..<domains.count {
-<<<<<<< Updated upstream
-            Log.log(domain: LogDomain(rawValue: domains[i].rawValue)!, level: .verbose, message: names[i])
-=======
-<<<<<<< Updated upstream
-            Log.log(domain: LogDomain(rawValue: UInt(domains[i].rawValue))!, level: .verbose, message: names[i])
-=======
             Log._log(domain: LogDomain(rawValue: domains[i].rawValue)!, level: .verbose, message: names[i])
->>>>>>> Stashed changes
->>>>>>> Stashed changes
         }
         XCTAssertEqual(logSink.lines.count, names.count)
         for i in 0..<names.count {
