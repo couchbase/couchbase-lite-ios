@@ -20,7 +20,7 @@
 import Foundation
 import CouchbaseLiteSwift_Private
 
-class Log {
+public final class Log {
     /// Writes a log message to all the enabled log sinks.
     /// - Note: `Unsupported API` Internal used for testing purpose.
     static func _log(domain: LogDomain, level: LogLevel, message: String) {
