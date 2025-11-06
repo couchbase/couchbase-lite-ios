@@ -93,21 +93,21 @@ class LogSinkTest: CBLTestCase {
     func writeOneKiloByteOfLog() {
         let message = "11223344556677889900" // 44Byte line
         for _ in 0..<23 { // 1012 Bytes
-            Log._log(domain: .database, level: .error, message: "\(message)")
-            Log._log(domain: .database, level: .warning, message: "\(message)")
-            Log._log(domain: .database, level: .info, message: "\(message)")
-            Log._log(domain: .database, level: .verbose, message: "\(message)")
-            Log._log(domain: .database, level: .debug, message: "\(message)")
+            Log.log(domain: .database, level: .error, message: "\(message)")
+            Log.log(domain: .database, level: .warning, message: "\(message)")
+            Log.log(domain: .database, level: .info, message: "\(message)")
+            Log.log(domain: .database, level: .verbose, message: "\(message)")
+            Log.log(domain: .database, level: .debug, message: "\(message)")
         }
         writeAllLogs("1") // ~25Bytes
     }
     
     func writeAllLogs(_ message: String) {
-        Log._log(domain: .database, level: .error, message: message)
-        Log._log(domain: .database, level: .warning, message: message)
-        Log._log(domain: .database, level: .info, message: message)
-        Log._log(domain: .database, level: .verbose, message: message)
-        Log._log(domain: .database, level: .debug, message: message)
+        Log.log(domain: .database, level: .error, message: message)
+        Log.log(domain: .database, level: .warning, message: message)
+        Log.log(domain: .database, level: .info, message: message)
+        Log.log(domain: .database, level: .verbose, message: message)
+        Log.log(domain: .database, level: .debug, message: message)
     }
     
     func isKeywordPresentInAnyLog(_ keyword: String, path: String) throws -> Bool {
@@ -149,10 +149,10 @@ class LogSinkTest: CBLTestCase {
         for i in (1...5).reversed() {
             let level = LogLevel(rawValue: UInt8(i))!
             LogSinks.file = FileLogSink(level: level, directory: logFileDirectory, usePlainText: true)
-            Log._log(domain: .database, level: .verbose, message: "TEST VERBOSE")
-            Log._log(domain: .database, level: .info, message: "TEST INFO")
-            Log._log(domain: .database, level: .warning, message: "TEST WARNING")
-            Log._log(domain: .database, level: .error, message: "TEST ERROR")
+            Log.log(domain: .database, level: .verbose, message: "TEST VERBOSE")
+            Log.log(domain: .database, level: .info, message: "TEST INFO")
+            Log.log(domain: .database, level: .warning, message: "TEST WARNING")
+            Log.log(domain: .database, level: .error, message: "TEST ERROR")
         }
         
         let files = try FileManager.default.contentsOfDirectory(atPath: logFileDirectory)
@@ -181,7 +181,7 @@ class LogSinkTest: CBLTestCase {
     func testFileLogSinkBinaryFormat() throws {
         LogSinks.file = FileLogSink(level: .info, directory: logFileDirectory, usePlainText: false)
         
-        Log._log(domain: .database, level: .info, message: "TEST INFO")
+        Log.log(domain: .database, level: .info, message: "TEST INFO")
         
         let files = try getLogsInDirectory(logFileDirectory,
                                            properties: [.contentModificationDateKey],
@@ -216,7 +216,7 @@ class LogSinkTest: CBLTestCase {
         LogSinks.file = FileLogSink(level: .info, directory: logFileDirectory, usePlainText: true)
         
         let inputString = "SOME TEST INFO"
-        Log._log(domain: .database, level: .info, message: inputString)
+        Log.log(domain: .database, level: .info, message: inputString)
         
         let files = try getLogsInDirectory(logFileDirectory,
                                            properties: [.contentModificationDateKey],
@@ -361,31 +361,31 @@ class LogSinkTest: CBLTestCase {
     func testEnableDisableCustomLogSink() throws {
         var logSink = TestCustomLogSink()
         LogSinks.custom = CustomLogSink(level: .verbose, logSink: logSink)
-        Log._log(domain: .database, level: .verbose, message: "TEST VERBOSE")
-        Log._log(domain: .database, level: .info, message: "TEST INFO")
-        Log._log(domain: .database, level: .warning, message: "TEST WARNING")
-        Log._log(domain: .database, level: .error, message: "TEST ERROR")
+        Log.log(domain: .database, level: .verbose, message: "TEST VERBOSE")
+        Log.log(domain: .database, level: .info, message: "TEST INFO")
+        Log.log(domain: .database, level: .warning, message: "TEST WARNING")
+        Log.log(domain: .database, level: .error, message: "TEST ERROR")
         XCTAssertEqual(logSink.lines.count, 4)
         
         logSink = TestCustomLogSink()
         LogSinks.custom = CustomLogSink(level: .none, logSink: logSink)
-        Log._log(domain: .database, level: .verbose, message: "TEST VERBOSE")
-        Log._log(domain: .database, level: .info, message: "TEST INFO")
-        Log._log(domain: .database, level: .warning, message: "TEST WARNING")
-        Log._log(domain: .database, level: .error, message: "TEST ERROR")
+        Log.log(domain: .database, level: .verbose, message: "TEST VERBOSE")
+        Log.log(domain: .database, level: .info, message: "TEST INFO")
+        Log.log(domain: .database, level: .warning, message: "TEST WARNING")
+        Log.log(domain: .database, level: .error, message: "TEST ERROR")
         XCTAssertEqual(logSink.lines.count, 0)
     }
     
     func testCustomLogSinkLevels() throws {
-        Log._log(domain: .database, level: .info, message: "IGNORE")
+        Log.log(domain: .database, level: .info, message: "IGNORE")
         for i in (1...5).reversed() {
             let level = LogLevel(rawValue: UInt8(i))!
             let logSink = TestCustomLogSink()
             LogSinks.custom = CustomLogSink(level: level, logSink: logSink)
-            Log._log(domain: .database, level: .verbose, message: "TEST VERBOSE")
-            Log._log(domain: .database, level: .info, message: "TEST INFO")
-            Log._log(domain: .database, level: .warning, message: "TEST WARNING")
-            Log._log(domain: .database, level: .error, message: "TEST ERROR")
+            Log.log(domain: .database, level: .verbose, message: "TEST VERBOSE")
+            Log.log(domain: .database, level: .info, message: "TEST INFO")
+            Log.log(domain: .database, level: .warning, message: "TEST WARNING")
+            Log.log(domain: .database, level: .error, message: "TEST ERROR")
             XCTAssertEqual(logSink.lines.count, 5 - i)
         }
     }
@@ -399,7 +399,7 @@ class LogSinkTest: CBLTestCase {
             let logSink = TestCustomLogSink()
             LogSinks.custom = CustomLogSink(level: .debug, domains: domains[i], logSink: logSink)
             for j in 0..<domains.count {
-                Log._log(domain: LogDomain(rawValue: UInt(domains[j].rawValue))!, level: .verbose, message: names[j])
+                Log.log(domain: LogDomain(rawValue: UInt(domains[j].rawValue))!, level: .verbose, message: names[j])
             }
             XCTAssertEqual(logSink.lines.count, 1)
             XCTAssertEqual(logSink.lines[0], names[i])
@@ -415,7 +415,7 @@ class LogSinkTest: CBLTestCase {
             let logSink = TestCustomLogSink()
             LogSinks.custom = CustomLogSink(level: .debug, domains: combined, logSink: logSink)
             for j in 0..<domains.count {
-                Log._log(domain: LogDomain(rawValue: UInt(domains[j].rawValue))!, level: .verbose, message: names[j])
+                Log.log(domain: LogDomain(rawValue: UInt(domains[j].rawValue))!, level: .verbose, message: names[j])
             }
             
             XCTAssertEqual(logSink.lines.count, i + 1)
@@ -428,7 +428,7 @@ class LogSinkTest: CBLTestCase {
         let logSink = TestCustomLogSink()
         LogSinks.custom = CustomLogSink(level: .debug, domains: .all, logSink: logSink)
         for i in 0..<domains.count {
-            Log._log(domain: LogDomain(rawValue: UInt(domains[i].rawValue))!, level: .verbose, message: names[i])
+            Log.log(domain: LogDomain(rawValue: UInt(domains[i].rawValue))!, level: .verbose, message: names[i])
         }
         XCTAssertEqual(logSink.lines.count, names.count)
         for i in 0..<names.count {
@@ -439,7 +439,7 @@ class LogSinkTest: CBLTestCase {
     func testPercentEscape() throws {
         let logSink = TestCustomLogSink()
         LogSinks.custom = CustomLogSink(level: .info, logSink: logSink)
-        Log._log(domain: .database, level: .info, message: "Hello %s there")
+        Log.log(domain: .database, level: .info, message: "Hello %s there")
         var found: Bool = false
         for line in logSink.lines {
             if line.contains("Hello %s there") {

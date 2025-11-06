@@ -55,7 +55,7 @@ public class Log {
     
     /// Writes a log message to all the enabled log sinks.
     /// - Note: `Unsupported API` Internal used for testing purpose.
-    static func _log(domain: LogDomain, level: LogLevel, message: String) {
+    static func log(domain: LogDomain, level: LogLevel, message: String) {
         let cDomain = CBLLogDomain.init(rawValue: UInt(domain.rawValue))
         let cLevel = CBLLogLevel(rawValue: UInt(level.rawValue))!
         CBLDatabase.log().log(to: cDomain, level: cLevel, message: message)
