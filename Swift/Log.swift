@@ -23,7 +23,7 @@ import CouchbaseLiteSwift_Private
 public final class Log {
     /// Writes a log message to all the enabled log sinks.
     /// - Note: `Unsupported API` Internal used for testing purpose.
-    static func log(domain: LogDomain, level: LogLevel, message: String) {
+    public static func log(domain: LogDomain, level: LogLevel, message: String) {
         let cDomain = CBLLogDomain.init(rawValue: domain.rawValue)
         let cLevel = CBLLogLevel(rawValue: UInt(level.rawValue))!
         CBLLog.writeSwiftLog(cDomain, level: cLevel, message: message)
