@@ -129,15 +129,18 @@ typedef void (^MultipeerCollectionConfigureBlock)(CBLMultipeerCollectionConfigur
 
 - (CBLTLSIdentity*) createIdentity {
     Assert(_identityCount++ <= kTestMaxIdentity);
-    
     NSError* error;
-    NSString* name = [self identityNameForNumber: _identityCount];
-    NSDictionary* attrs = @{ kCBLCertAttrCommonName: name };
+    NSString* label = [self identityNameForNumber: _identityCount];
+    
+    uint64_t timestamp = (uint64_t)([[NSDate date] timeIntervalSince1970] * 1000);
+    NSString* cn = [NSString stringWithFormat: @"%@-%llu", label, timestamp];
+    NSDictionary* attrs = @{ kCBLCertAttrCommonName: cn };
+    
     CBLTLSIdentity* identity = [CBLTLSIdentity createIdentityForKeyUsages: kTestKeyUsages
                                                                attributes: attrs
                                                                expiration: nil
                                                                    issuer: [self issuer]
-                                                                    label: name
+                                                                    label: label
                                                                     error: &error];
     
     AssertNotNil(identity);
@@ -406,6 +409,7 @@ typedef void (^MultipeerCollectionConfigureBlock)(CBLMultipeerCollectionConfigur
  4. Check that the configuration cannot be created as the collections are empty.
  */
 - (void) testConfigurationValidation {
+    // When exception is thrown, the object will not get released:
     self.disableObjectLeakCheck = YES;
     
     CBLTLSIdentity* identity = [self createIdentity];
@@ -1085,8 +1089,6 @@ typedef void (^MultipeerCollectionConfigureBlock)(CBLMultipeerCollectionConfigur
     [self waitForReplicatorStatus: repl1 peerID: repl2.peerID activityLevel: kCBLReplicatorIdle];
     [self waitForReplicatorStatus: repl2 peerID: repl1.peerID activityLevel: kCBLReplicatorIdle];
     
-    NSLog(@"-----------------------------------------");
-    
     // Stops:
     [self stopMultipeerReplicator: repl1];
     [self stopMultipeerReplicator: repl2];
@@ -1176,7 +1178,6 @@ typedef void (^MultipeerCollectionConfigureBlock)(CBLMultipeerCollectionConfigur
   18. Check the doc1 in both peers and verify that the its body is {"greeting": "howdy"}.
   */
 - (void) testDefaultConflictResolver {
-    CBLLogSinks.console = [[CBLConsoleLogSink alloc] initWithLevel: kCBLLogLevelVerbose];
     [self runConflictResolverTestWithResolver: nil verifyBlock: ^BOOL (CBLDocument* resolvedDoc) {
         return [[resolvedDoc stringForKey: @"greeting"] isEqualToString: @"howdy"];
     }];
