@@ -973,7 +973,10 @@ static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expec
                                                   kCFStreamPropertySSLPeerTrust);
 }
 
-// Notify the received cert and verify the cert if using custom verification logic
+// Handles SSL certificate validation for the peer.
+// Performs custom trust evaluation if enabled, notifies certificate to
+// CBLWebSocketContext's callback and C4Socket and closes the connection on failure.
+// Returns YES if the certificate is accepted.
 - (BOOL) checkSSLCert {
     _shouldCheckSSLCert = NO;
     
@@ -982,10 +985,16 @@ static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expec
     
     SecCertificateRef cert = [self certificateFromTrust: trust];
     [self notifyServerCertificateReceived: cert];
-
+    
     NSError* error = nil;
+    
+    // Validate trust only when using custom certificate validation
+    // (kCFStreamSSLValidatesCertificateChain is disabled).
+    // If system validation is enabled, the certificates have already been verified,
+    // and any validation failure will trigger NSStreamEventErrorOccurred without
+    // calling this method.
     if ([self usesCustomTLSCertValidation]) {
-        if (![self validateTrust:trust error:&error]) {
+        if (![self validateTrust: trust error: &error]) {
             [self closeWithError: error];
             return NO;
         }
@@ -1018,18 +1027,17 @@ static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expec
     NSURL* url = _logic.URL;
     CBLTrustCheck* check = [[CBLTrustCheck alloc] initWithTrust: trust host: url.host port: url.port.shortValue];
     
-    NSURLCredential* credentials = nil;
     Value pinnedCert = _options[kC4ReplicatorOptionPinnedServerCert];
     if (pinnedCert) {
         check.pinnedCertData = slice(pinnedCert.asData()).copiedNSData();
-        credentials = [check checkTrust: error];
     }
 #ifdef COUCHBASE_ENTERPRISE
     else if (_options[kC4ReplicatorOptionOnlySelfSignedServerCert].asBool()) {
         check.acceptOnlySelfSignedCert = YES;
-        credentials = [check checkTrust: error];
     }
 #endif
+    
+    NSURLCredential* credentials = [check checkTrust: error];
     if (!credentials) {
         CBLWarn(WebSocket, @"%@: TLS handshake failed: certificate verification error: %@", self, (*error).localizedDescription);
         return false;
