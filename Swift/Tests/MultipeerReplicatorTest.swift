@@ -34,6 +34,9 @@ class MultipeerReplicatorTest: CBLTestCase {
         }
     }
     
+    // Disable as cannot be run on the build VM (Got POSIX Error 50, Network is down)
+    let kDisableMultipeerReplicatorTest = true
+    
     let kTestKeyUsages: KeyUsages = [.clientAuth, .serverAuth]
     
     let kTestPeerGroupID = "CBLMultipeerReplTestGroup"
@@ -59,8 +62,7 @@ class MultipeerReplicatorTest: CBLTestCase {
         // See FAQ-12: https://developer.apple.com/forums/thread/663858
         return false
 #else
-        // Disable as cannot be run on the build VM (Got POSIX Error 50, Network is down)
-        return keyChainAccessAllowed && false
+        return kDisableMultipeerReplicatorTest ? false : keyChainAccessAllowed;
 #endif
     }
     
