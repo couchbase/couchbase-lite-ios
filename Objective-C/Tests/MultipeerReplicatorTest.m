@@ -16,6 +16,9 @@
 #define kTestMaxIdentity 10
 #define kTestIdentityCommonName @"CBLMultipeerReplTest"
 
+// Disable as cannot be run on the build VM (Got POSIX Error 50, Network is down)
+#define kDisableMultipeerTests YES
+
 typedef NSMutableDictionary<CBLPeerID*, CBLPeerReplicatorStatus*> CBLPeerReplicatorStatusMap;
 
 typedef CBLDocument * _Nullable (^MultipeerConflictResolverBlock)(CBLPeerID*, CBLConflict*);
@@ -67,6 +70,9 @@ typedef void (^MultipeerCollectionConfigureBlock)(CBLMultipeerCollectionConfigur
     
     XCTSkipUnless(self.isExecutionAllowed);
     
+    // Disabled by testConfigurationValidation, ensure to re-enable the leak check:
+    self.disableObjectLeakCheck = NO;
+    
     [self cleanupIdentities];
     [self openOtherDB];
     
@@ -85,13 +91,12 @@ typedef void (^MultipeerCollectionConfigureBlock)(CBLMultipeerCollectionConfigur
 
 // TODO: Too flaky, enable after all LiteCore issues have been handled.
 - (BOOL) isExecutionAllowed {
-#if TARGET_OS_SIMULATOR || TARGET_OS_MACCATALYST || TARGET_OS_OSX
+#if TARGET_OS_SIMULATOR
     // Cannot be tested on the simulator as local network access permission is required.
     // See FAQ-12 : https://developer.apple.com/forums/thread/663858)
     return NO;
 #else
-    // Disable as cannot be run on the build VM (Got POSIX Error 50, Network is down)
-    return self.keyChainAccessAllowed;
+    return kDisableMultipeerTests ? NO : self.keyChainAccessAllowed;
 #endif
 }
 
