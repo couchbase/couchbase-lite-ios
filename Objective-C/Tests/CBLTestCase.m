@@ -36,10 +36,6 @@ const NSTimeInterval kExpTimeout = 20.0;
 
 @synthesize db=_db, otherDB=_otherDB, disableObjectLeakCheck=_disableObjectLeakCheck;
 
-// TODO: Remove https://issues.couchbase.com/browse/CBL-3206
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
-
 - (XCTestExpectation*) allowOverfillExpectationWithDescription:(NSString *)description {
     XCTestExpectation* e = [super expectationWithDescription: description];
     e.assertForOverFulfill = false;
@@ -75,15 +71,12 @@ const NSTimeInterval kExpTimeout = 20.0;
 
     if (!_disableObjectLeakCheck) {
         // Wait a little while for objects to be cleaned up:
-        int leaks = 0;
-        for (int i = 0; i < 20; i++) {
-            leaks = c4_getObjectCount() - _c4ObjectCount;
-            if (leaks == 0)
-                break;
-            else
-                [NSThread sleepForTimeInterval: 0.1];
-        }
-        if (leaks) {
+        __block int leaks = 0;
+        BOOL success = [self waitWithTimeout: 8 interval: 0.5 until: ^BOOL{
+            leaks = c4_getObjectCount() - self->_c4ObjectCount;
+            return leaks == 0;
+        }];
+        if (!success) {
             fprintf(stderr, "**** LITECORE OBJECTS STILL NOT FREED: ****\n");
             c4_dumpInstances();
             XCTFail("%d LiteCore objects have not been freed (see above)", leaks);
@@ -483,6 +476,18 @@ const NSTimeInterval kExpTimeout = 20.0;
     return [self stringFromResource: @"rick_morty" ofType: @"json"];
 }
 
-#pragma clang diagnostic pop
+- (BOOL) waitWithTimeout: (NSTimeInterval)timeout
+                interval: (NSTimeInterval)interval
+                   until: (BOOL (^)(void))condition {
+    NSDate *deadline = [NSDate dateWithTimeIntervalSinceNow: timeout];
+    while ([deadline timeIntervalSinceNow] > 0) {
+        if (condition()) {
+            return YES;
+        }
+        [[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode
+                                 beforeDate: [NSDate dateWithTimeIntervalSinceNow: interval]];
+    }
+    return condition();
+}
 
 @end
