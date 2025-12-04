@@ -215,6 +215,11 @@ extern const NSTimeInterval kExpTimeout;
  */
 - (XCTestExpectation*) allowOverfillExpectationWithDescription:(NSString *)description;
 
+/** A utility function for waiting for the condition or timeout, spinning the run loop without blocking. */
+- (BOOL) waitWithTimeout: (NSTimeInterval)timeout
+                interval: (NSTimeInterval)interval
+                   until: (BOOL (^)(void))condition;
+
 @end
 
 NS_ASSUME_NONNULL_END
