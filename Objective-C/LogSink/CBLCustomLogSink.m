@@ -25,7 +25,7 @@
 @synthesize level = _level, domains=_domains, logSink = _logSink;
 
 - (instancetype) initWithLevel: (CBLLogLevel)level logSink: (id<CBLLogSinkProtocol>)logSink {
-    return [self initWithLevel:level domains:kCBLLogDomainAll logSink: logSink];
+    return [self initWithLevel: level domains: kCBLLogDomainAll logSink: logSink];
 }
 
 - (instancetype) initWithLevel: (CBLLogLevel)level
@@ -41,10 +41,13 @@
 }
 
 - (void) writeLogWithLevel: (CBLLogLevel)level domain: (CBLLogDomain)domain message: (NSString*)message {
-    if (level < _level || (_domains & domain) == 0) {
+    if (level < _level || (domain != kCBLLogDomainDefault && (_domains & domain) == 0)) {
         return;
     }
-    [self.logSink writeLogWithLevel: level domain: domain message: message];
+    
+    // The default domain is not a public domain, assign it to database domain instead.
+    CBLLogDomain effectiveDomain = domain == kCBLLogDomainDefault ? kCBLLogDomainDatabase : domain;
+    [self.logSink writeLogWithLevel: level domain: effectiveDomain message: message];
 }
 
 @end

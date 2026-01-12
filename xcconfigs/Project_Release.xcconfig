@@ -36,5 +36,4 @@ STRIP_INSTALLED_PRODUCT          = YES                   // Strip debug symbols
 SWIFT_COMPILATION_MODE           = wholemodule           // Swift Compilation Mode
 SWIFT_OPTIMIZATION_LEVEL         = -O                    // Optimize for Speed
 VALIDATE_PRODUCT                 = YES                   // Perform validation checks on the product
-BUILD_LIBRARY_FOR_DISTRIBUTION   = YES
 SWIFT_SERIALIZE_DEBUGGING_OPTIONS = NO

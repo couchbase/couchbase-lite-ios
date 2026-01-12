@@ -18,8 +18,9 @@
 //
 #include "CBL_OS_Target_Versions.xcconfig"
 
-INFOPLIST_FILE              = Swift/Tests/Info.plist
+INFOPLIST_FILE              = $(SRCROOT)/Swift/Tests/Info.plist
 LD_RUNPATH_SEARCH_PATHS     = $(inherited) @executable_path/Frameworks @loader_path/Frameworks @executable_path/../Frameworks @loader_path/../Frameworks
 PRODUCT_BUNDLE_IDENTIFIER   = com.couchbase.CouchbaseLiteSwiftTests
 PRODUCT_NAME                = CouchbaseLiteSwiftTests
 SWIFT_OBJC_BRIDGING_HEADER  = Swift/Tests/CBL Swift Tests-Bridging-Header.h
+BUILD_LIBRARY_FOR_DISTRIBUTION = NO // Need to disable as using Objective-C Bridging Header
