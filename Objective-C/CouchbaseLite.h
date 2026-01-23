@@ -128,6 +128,7 @@ FOUNDATION_EXPORT const unsigned char CouchbaseLiteVersionString[];
 #import <CouchbaseLite/CBLMultipeerEventTypes.h>
 #import <CouchbaseLite/CBLMultipeerReplicator.h>
 #import <CouchbaseLite/CBLMultipeerReplicatorConfiguration.h>
+#import <CouchbaseLite/CBLMultipeerTransportTypes.h>
 #import <CouchbaseLite/CBLPeerID.h>
 #import <CouchbaseLite/CBLPeerInfo.h>
 #import <CouchbaseLite/CBLPrediction.h>

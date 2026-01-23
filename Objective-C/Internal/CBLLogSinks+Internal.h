@@ -23,6 +23,9 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+// Internal Default Log Domain
+extern const CBLLogDomain kCBLLogDomainDefault;
+
 @interface CBLLogSinks ()
 
 + (void) writeCBLLog: (C4LogDomain)domain level: (C4LogLevel)level message: (NSString*)message;

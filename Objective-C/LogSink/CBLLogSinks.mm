@@ -30,6 +30,8 @@ C4LogDomain kCBL_LogDomainDiscovery;
 C4LogDomain kCBL_LogDomainMDNS;
 C4LogDomain kCBL_LogDomainP2P;
 
+const CBLLogDomain kCBLLogDomainDefault = (CBLLogDomain)0;
+
 static NSArray* c4Domains = @[@"DB", @"Query", @"Sync", @"WS", @"Listener", @"Discovery", @"mDNS", @"P2P"];
 static NSArray* platformDomains = @[@"BLIP", @"BLIPMessages", @"SyncBusy", @"TLS", @"Changes", @"Zip"];
 
@@ -173,6 +175,9 @@ NSDictionary<NSString*, NSNumber*>* coreDomainNameToCBLLogDomainMap = nil;
 
 static void c4Callback(C4LogDomain c4domain, C4LogLevel c4level, const char *msg, va_list args) {
     NSString* message = [NSString stringWithUTF8String: msg];
+    if (!message)
+        return;
+    
     CBLLogLevel level = (CBLLogLevel) c4level;
     CBLLogDomain domain = toCBLLogDomain(c4domain);
     [CBLLogSinks.console writeLogWithLevel: level domain: domain message :message];
@@ -191,7 +196,7 @@ static void c4Callback(C4LogDomain c4domain, C4LogLevel c4level, const char *msg
 static CBLLogDomain toCBLLogDomain(C4LogDomain domain) {
     NSString* domainName = [NSString stringWithUTF8String: c4log_getDomainName(domain)];
     NSNumber* mapped = [coreDomainNameToCBLLogDomainMap objectForKey: domainName];
-    return mapped ? mapped.integerValue : kCBLLogDomainDatabase;
+    return mapped ? mapped.integerValue : kCBLLogDomainDefault;
 }
 
 @end

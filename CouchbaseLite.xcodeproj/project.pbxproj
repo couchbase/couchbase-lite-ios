@@ -389,6 +389,10 @@
 		406F8DFB2C27C303000223FC /* IndexUpdater.swift in Sources */ = {isa = PBXBuildFile; fileRef = 406F8DF92C27C302000223FC /* IndexUpdater.swift */; };
 		406F8DFF2C27F0A9000223FC /* VectorSearchTest+Lazy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 406F8DFC2C27F097000223FC /* VectorSearchTest+Lazy.swift */; };
 		406F8E002C27F0AB000223FC /* VectorSearchTest+Lazy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 406F8DFC2C27F097000223FC /* VectorSearchTest+Lazy.swift */; };
+		40815F9A2F0F2279004D8590 /* CBLMultipeerTransportTypes.h in Headers */ = {isa = PBXBuildFile; fileRef = 40815F992F0F2279004D8590 /* CBLMultipeerTransportTypes.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		40815F9B2F0F2279004D8590 /* CBLMultipeerTransportTypes.h in Headers */ = {isa = PBXBuildFile; fileRef = 40815F992F0F2279004D8590 /* CBLMultipeerTransportTypes.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		40815FB42F1058C3004D8590 /* CoreBluetooth.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 40815FB32F1058C3004D8590 /* CoreBluetooth.framework */; };
+		40815FB52F1058CB004D8590 /* CoreBluetooth.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 40815FB32F1058C3004D8590 /* CoreBluetooth.framework */; };
 		409389E92D4AB81700691393 /* LogSinks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 409389E82D4AB81700691393 /* LogSinks.swift */; };
 		409389EA2D4AB81700691393 /* LogSinks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 409389E82D4AB81700691393 /* LogSinks.swift */; };
 		409389EC2D4AB8B500691393 /* ConsoleLogSink.swift in Sources */ = {isa = PBXBuildFile; fileRef = 409389EB2D4AB8B500691393 /* ConsoleLogSink.swift */; };
@@ -2438,6 +2442,8 @@
 		406F8DEA2C26901A000223FC /* QueryIndex.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QueryIndex.swift; sourceTree = "<group>"; };
 		406F8DF92C27C302000223FC /* IndexUpdater.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IndexUpdater.swift; sourceTree = "<group>"; };
 		406F8DFC2C27F097000223FC /* VectorSearchTest+Lazy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "VectorSearchTest+Lazy.swift"; sourceTree = "<group>"; };
+		40815F992F0F2279004D8590 /* CBLMultipeerTransportTypes.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLMultipeerTransportTypes.h; sourceTree = "<group>"; };
+		40815FB32F1058C3004D8590 /* CoreBluetooth.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreBluetooth.framework; path = System/Library/Frameworks/CoreBluetooth.framework; sourceTree = SDKROOT; };
 		409389E82D4AB81700691393 /* LogSinks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogSinks.swift; sourceTree = "<group>"; };
 		409389EB2D4AB8B500691393 /* ConsoleLogSink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConsoleLogSink.swift; sourceTree = "<group>"; };
 		409389EE2D4AB8EB00691393 /* CustomLogSink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomLogSink.swift; sourceTree = "<group>"; };
@@ -3060,6 +3066,7 @@
 				9343EF8E207D611600F19A89 /* libz.tbd in Frameworks */,
 				9343EF8F207D611600F19A89 /* libLiteCore-static.a in Frameworks */,
 				939C5E68244FC7DE007CEBAC /* libLiteCoreWebSocket.a in Frameworks */,
+				40815FB42F1058C3004D8590 /* CoreBluetooth.framework in Frameworks */,
 				93A4F2452221058500257423 /* CoreImage.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -3072,6 +3079,7 @@
 				9343F0B3207D61AB00F19A89 /* libLiteCore-static.a in Frameworks */,
 				93249D7B246B6EB0000A8A6E /* libLiteCoreWebSocket.a in Frameworks */,
 				9343F0B2207D61AB00F19A89 /* libz.tbd in Frameworks */,
+				40815FB52F1058CB004D8590 /* CoreBluetooth.framework in Frameworks */,
 				93A4F2462221059500257423 /* CoreImage.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -3316,6 +3324,7 @@
 		27EF6AF01E32D12C004748DF /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				40815FB32F1058C3004D8590 /* CoreBluetooth.framework */,
 				93A4F2352221058500257423 /* CoreImage.framework */,
 				9399E4B21E932F4700B57600 /* libz.tbd */,
 			);
@@ -3408,6 +3417,7 @@
 				40E46AE02DD6A4E7007E495D /* CBLMultipeerReplicator.mm */,
 				40E46AE12DD6A4E7007E495D /* CBLMultipeerReplicatorConfiguration.h */,
 				40E46AE22DD6A4E7007E495D /* CBLMultipeerReplicatorConfiguration.m */,
+				40815F992F0F2279004D8590 /* CBLMultipeerTransportTypes.h */,
 				40E46AE32DD6A4E7007E495D /* CBLPeerID.h */,
 				40E46AE42DD6A4E7007E495D /* CBLPeerID.m */,
 				40E46AE52DD6A4E7007E495D /* CBLPeerInfo.h */,
@@ -5016,6 +5026,7 @@
 				69002EBD234E695600776107 /* CBLErrorMessage.h in Headers */,
 				9343EFEB207D611600F19A89 /* CBLArray.h in Headers */,
 				9343EFEC207D611600F19A89 /* CBLStringBytes.h in Headers */,
+				40815F9A2F0F2279004D8590 /* CBLMultipeerTransportTypes.h in Headers */,
 				9343EFED207D611600F19A89 /* CBLNewDictionary.h in Headers */,
 				40FC1C7C2B92D0E200394276 /* CBLClientCertificateAuthenticator.h in Headers */,
 				40FC1B792B9288A800394276 /* CBLMessagingError.h in Headers */,
@@ -5193,6 +5204,7 @@
 				40FC1B722B92889800394276 /* CBLDatabaseEndpoint.h in Headers */,
 				40FC1B842B9288A800394276 /* CBLMessageEndpoint.h in Headers */,
 				AEAFDCEA2D10576400BA5C9C /* CBLLogSinks+Internal.h in Headers */,
+				40815F9B2F0F2279004D8590 /* CBLMultipeerTransportTypes.h in Headers */,
 				40FC1B742B92889800394276 /* CBLReplicatorConfiguration+ServerCert.h in Headers */,
 				9343F0F1207D61AB00F19A89 /* CBLSessionAuthenticator.h in Headers */,
 				400AAFDC2C2A843B00DB6223 /* CBLExtension.h in Headers */,
@@ -9185,7 +9197,6 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				INFOPLIST_FILE = Swift/Tests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -9246,7 +9257,6 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				INFOPLIST_FILE = Swift/Tests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -9301,7 +9311,6 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				INFOPLIST_FILE = Swift/Tests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -9355,7 +9364,6 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				INFOPLIST_FILE = Swift/Tests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",

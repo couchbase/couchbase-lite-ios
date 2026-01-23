@@ -123,7 +123,7 @@
             c4domain = kCBL_LogDomainP2P;
             break;
         default:
-            c4domain = kCBL_LogDomainDatabase;
+            c4domain = kCBL_LogDomainDefault;
     }
     CBLStringBytes c4msg(message);
     c4slog(c4domain, c4level, c4msg);

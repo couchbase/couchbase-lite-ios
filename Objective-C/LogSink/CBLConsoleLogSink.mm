@@ -40,7 +40,7 @@ static NSArray* logLevelNames = @[@"Debug", @"Verbose", @"Info", @"WARNING", @"E
 }
 
 - (void) writeLogWithLevel: (CBLLogLevel)level domain: (CBLLogDomain)domain message: (NSString*)message { 
-    if (level < _level || (_domains & domain) == 0) {
+    if (level < _level || (domain != kCBLLogDomainDefault && (_domains & domain) == 0)) {
         return;
     }
     
@@ -76,7 +76,7 @@ static NSArray* logLevelNames = @[@"Debug", @"Verbose", @"Info", @"WARNING", @"E
             return @"Multipeer";
             break;
         default:
-            return @"Database";
+            return @"Default";
     }
 }
 

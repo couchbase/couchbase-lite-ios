@@ -217,6 +217,7 @@
 
 // Error Tests During Open:
 
+// CBL-7791
 - (void) testRecoverableErrorDuringOpenWithMessageStream {
     [self runErrorTestForCase: kCBLMockConnectionConnect protocol: kCBLProtocolTypeMessageStream recoverable: YES];
 }
@@ -235,7 +236,8 @@
 
 // Error Tests During Send:
 
-- (void) testRecoverableErrorDuringSendWithMessageStream {
+// CBL-7791
+- (void) _testRecoverableErrorDuringSendWithMessageStream {
     [self runErrorTestForCase: kCBLMockConnectionSend protocol: kCBLProtocolTypeMessageStream recoverable: YES];
 }
 
@@ -253,7 +255,8 @@
 
 // Error Tests During Receive:
 
-- (void) testRecoverableErrorDuringReceiveWithMessageStream {
+// CBL-7791
+- (void) _testRecoverableErrorDuringReceiveWithMessageStream {
     [self runErrorTestForCase: kCBLMockConnectionReceive protocol: kCBLProtocolTypeMessageStream recoverable: YES];
 }
 

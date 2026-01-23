@@ -53,6 +53,9 @@ GCC_NO_COMMON_BLOCKS               = YES
 
 SWIFT_VERSION                      = 5.0
 
+// Support Swift library evolution and generation of a module interface file for both DEBUG and RELEASE.
+BUILD_LIBRARY_FOR_DISTRIBUTION      = YES
+
 VERSION_INFO_PREFIX                = 
 VERSIONING_SYSTEM                  = apple-generic
 
