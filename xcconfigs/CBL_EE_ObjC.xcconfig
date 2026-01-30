@@ -21,3 +21,4 @@
 #include "CBL_ObjC.xcconfig"
 
 CBL_EXPORTED_SYMBOLS_FILE = Objective-C/Exports/Generated/CBL_EE.exp
+HEADER_SEARCH_PATHS       = $(inherited) $(SRCROOT)/vendor/couchbase-lite-core-EE/P2P
