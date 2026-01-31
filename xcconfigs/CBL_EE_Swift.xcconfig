@@ -22,3 +22,4 @@
 
 CBL_EXPORTED_SYMBOLS_FILE    = // None
 MODULEMAP_PRIVATE_FILE       = ../couchbase-lite-ios-ee/Sources/Swift/CouchbaseLiteSwift.private.modulemap
+HEADER_SEARCH_PATHS          = $(inherited) $(SRCROOT)/vendor/couchbase-lite-core-EE/P2P
