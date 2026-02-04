@@ -33,7 +33,7 @@ C4LogDomain kCBL_LogDomainP2P;
 const CBLLogDomain kCBLLogDomainDefault = (CBLLogDomain)0;
 
 static NSArray* c4Domains = @[@"DB", @"Query", @"Sync", @"WS", @"Listener", @"Discovery", @"mDNS", @"P2P"];
-static NSArray* platformDomains = @[@"BLIP", @"BLIPMessages", @"SyncBusy", @"TLS", @"Changes", @"Zip"];
+static NSArray* platformDomains = @[@"BLIP", @"BLIPMessages", @"SyncBusy", @"Changes", @"Zip"];
 
 static CBLLogLevel _domainsLevel = kCBLLogLevelNone;
 static CBLLogLevel _callbackLevel = kCBLLogLevelNone;
