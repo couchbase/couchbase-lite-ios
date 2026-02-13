@@ -191,8 +191,10 @@ static const C4DatabaseConfig2 kDBConfig = {
 
 - (void) dealloc {
     if (!_shellMode) {
-        [self freeC4Observer];
-        [self freeC4DB];
+        CBL_LOCK(_mutex) {
+            [self freeC4Observer];
+            [self freeC4DB];
+        }
     }
 }
 
