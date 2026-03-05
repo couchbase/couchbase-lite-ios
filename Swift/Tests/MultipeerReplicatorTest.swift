@@ -1445,10 +1445,12 @@ class MultipeerReplicatorTest: CBLTestCase {
         let repl1 = try multipeerReplicator(for: db)
         var repl1Peer1 = repl1.peerInfo(for: repl1.peerID)
         XCTAssertNotNil(repl1Peer1)
-        XCTAssertEqual(repl1Peer1?.peerID, repl1.peerID)
-        XCTAssertNotNil(repl1Peer1?.certificate)
-        XCTAssertEqual(repl1Peer1?.neighborPeers.count, 0)
-        XCTAssertEqual(repl1Peer1?.replicatorStatus.activity, .stopped)
+        XCTAssertEqual(repl1Peer1!.peerID, repl1.peerID)
+        XCTAssertNotNil(repl1Peer1!.certificate)
+        XCTAssertEqual(repl1Peer1!.neighborPeers.count, 0)
+        XCTAssertEqual(repl1Peer1!.transports.count, 0)
+        XCTAssertNil(repl1Peer1!.replicatorTransport)
+        XCTAssertEqual(repl1Peer1!.replicatorStatus.activity, .stopped)
 
         let repl2 = try multipeerReplicator(for: otherDB!)
         var repl1Peer2 = repl1.peerInfo(for: repl2.peerID)
@@ -1462,16 +1464,20 @@ class MultipeerReplicatorTest: CBLTestCase {
 
         repl1Peer1 = repl1.peerInfo(for: repl1.peerID)
         XCTAssertNotNil(repl1Peer1)
-        XCTAssertEqual(repl1Peer1?.neighborPeers.count, 1)
-        XCTAssertEqual(repl1Peer1?.neighborPeers.first, repl2.peerID)
+        XCTAssertEqual(repl1Peer1!.neighborPeers.count, 1)
+        XCTAssertEqual(repl1Peer1!.neighborPeers.first, repl2.peerID)
+        XCTAssertEqual(repl1Peer1!.transports, [])    // No replication to itself
+        XCTAssertNil(repl1Peer1!.replicatorTransport) // No replication to itself
         XCTAssertEqual(repl1Peer1?.replicatorStatus.activity, .stopped) // No replication to itself
 
         repl1Peer2 = repl1.peerInfo(for: repl2.peerID)
         XCTAssertNotNil(repl1Peer2)
         XCTAssertEqual(repl1Peer2?.neighborPeers.count, 1)
         XCTAssertEqual(repl1Peer2?.neighborPeers.first, repl1.peerID)
+        XCTAssertEqual(repl1Peer2!.transports, [.wifi])
+        XCTAssertEqual(repl1Peer2!.replicatorTransport, .wifi)
         XCTAssertEqual(repl1Peer2?.replicatorStatus.activity, .idle)
-
+        
         stopMultipeerReplicator(repl1)
         stopMultipeerReplicator(repl2)
     }
