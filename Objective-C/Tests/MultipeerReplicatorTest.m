@@ -1564,6 +1564,8 @@ typedef void (^MultipeerCollectionConfigureBlock)(CBLMultipeerCollectionConfigur
     AssertEqualObjects(repl1Peer1.peerID, repl1.peerID);
     AssertNotNil((__bridge id)repl1Peer1.certificate);
     AssertEqual(repl1Peer1.neighborPeers.count, 0);
+    AssertEqual(repl1Peer1.replicatorTransport, 0);
+    AssertEqual(repl1Peer1.transports, 0);
     AssertEqual(repl1Peer1.replicatorStatus.activity, kCBLReplicatorStopped);
     
     CBLPeerInfo* repl1Peer2 = [repl1 peerInfoForPeerID: repl2.peerID];
@@ -1579,12 +1581,16 @@ typedef void (^MultipeerCollectionConfigureBlock)(CBLMultipeerCollectionConfigur
     AssertNotNil(repl1Peer1);
     AssertEqual(repl1Peer1.neighborPeers.count, 1);
     AssertEqualObjects(repl1Peer1.neighborPeers[0], repl2.peerID);
+    AssertEqual(repl1Peer1.replicatorTransport, 0);                           // No replication to itself
+    AssertEqual(repl1Peer1.transports, 0);                                    // No replication to itself
     AssertEqual(repl1Peer1.replicatorStatus.activity, kCBLReplicatorStopped); // No replication to itself
     
     repl1Peer2 = [repl1 peerInfoForPeerID: repl2.peerID];
     AssertNotNil(repl1Peer2);
     AssertEqual(repl1Peer2.neighborPeers.count, 1);
     AssertEqualObjects(repl1Peer2.neighborPeers[0], repl1.peerID);
+    AssertEqual(repl1Peer2.replicatorTransport, kCBLMultipeerTransportWifi);
+    AssertEqual(repl1Peer2.transports, kCBLMultipeerTransportWifi);
     AssertEqual(repl1Peer2.replicatorStatus.activity, kCBLReplicatorIdle);
     
     [self stopMultipeerReplicator: repl1];
