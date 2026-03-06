@@ -469,13 +469,19 @@ public final class Collection: CollectionChangeObservable, Indexable, Equatable,
     public func changePublisher(on queue: DispatchQueue = .main) -> AnyPublisher<CollectionChange, Never> {
         let subject = PassthroughSubject<CollectionChange, Never>()
         
-        let token = self.addChangeListener(queue: queue) { change in
-            subject.send(change)
-        }
-
+        var token: ListenerToken?
+        
         return subject
             .receive(on: queue)
-            .handleEvents(receiveCancel: { token.remove() })
+            .handleEvents(
+                receiveSubscription: { [weak self] _ in
+                    guard let self else { return }
+                    token = self.addChangeListener(queue: queue) { change in
+                        subject.send(change)
+                    }
+                },
+                receiveCancel: { token?.remove() }
+            )
             .eraseToAnyPublisher()
     }
     
@@ -490,14 +496,20 @@ public final class Collection: CollectionChangeObservable, Indexable, Equatable,
     @available(iOS 13.0, *)
     public func documentChangePublisher(for id: String, on queue: DispatchQueue = .main) -> AnyPublisher<DocumentChange, Never> {
         let subject = PassthroughSubject<DocumentChange, Never>()
-
-        let token = self.addDocumentChangeListener(id: id, queue: queue) { change in
-            subject.send(change)
-        }
-
+        
+        var token: ListenerToken?
+        
         return subject
             .receive(on: queue)
-            .handleEvents(receiveCancel: { token.remove() })
+            .handleEvents(
+                receiveSubscription: { [weak self] _ in
+                    guard let self else { return }
+                    token = self.addDocumentChangeListener(id: id, queue: queue) { change in
+                        subject.send(change)
+                    }
+                },
+                receiveCancel: { token?.remove() }
+            )
             .eraseToAnyPublisher()
     }
     

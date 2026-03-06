@@ -203,13 +203,19 @@ public final class Replicator {
     public func changePublisher(on queue: DispatchQueue = .main) -> AnyPublisher<ReplicatorChange, Never> {
         let subject = PassthroughSubject<ReplicatorChange, Never>()
         
-        let token = self.addChangeListener(withQueue: queue) { change in
-            subject.send(change)
-        }
-
+        var token: ListenerToken?
+        
         return subject
             .receive(on: queue)
-            .handleEvents(receiveCancel: { token.remove()})
+            .handleEvents(
+                receiveSubscription: { [weak self] _ in
+                    guard let self else { return }
+                    token = self.addChangeListener(withQueue: queue) { change in
+                        subject.send(change)
+                    }
+                },
+                receiveCancel: { token?.remove() }
+            )
             .eraseToAnyPublisher()
     }
     
@@ -224,13 +230,19 @@ public final class Replicator {
     public func documentReplicationPublisher(on queue: DispatchQueue = .main) -> AnyPublisher<DocumentReplication, Never> {
         let subject = PassthroughSubject<DocumentReplication, Never>()
         
-        let token = self.addDocumentReplicationListener(withQueue: queue) { change in
-            subject.send(change)
-        }
-
+        var token: ListenerToken?
+        
         return subject
             .receive(on: queue)
-            .handleEvents(receiveCancel: { token.remove() })
+            .handleEvents(
+                receiveSubscription: { [weak self] _ in
+                    guard let self else { return }
+                    token = self.addDocumentReplicationListener(withQueue: queue) { change in
+                        subject.send(change)
+                    }
+                },
+                receiveCancel: { token?.remove() }
+            )
             .eraseToAnyPublisher()
     }
     
