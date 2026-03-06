@@ -19,6 +19,9 @@
 
 #import "CBLConsoleLogSink.h"
 #import "CBLLogSinks+Internal.h"
+#import <os/log.h>
+
+static const char * const kSubsystem = "com.couchbase.CouchbaseLite";
 
 static NSArray* logLevelNames = @[@"Debug", @"Verbose", @"Info", @"WARNING", @"ERROR", @"none"];
 
@@ -46,37 +49,88 @@ static NSArray* logLevelNames = @[@"Debug", @"Verbose", @"Info", @"WARNING", @"E
     
     NSString* levelName = logLevelNames[level];
     NSString* domainName = [self domainName: domain];
-    NSLog(@"CouchbaseLite %@ %@: %@", domainName, levelName, message);
+    os_log_with_type([self osLogForDomain: domain], [self osLogTypeForLevel: level],
+                     "CouchbaseLite %{public}@ %{public}@: %{public}@",
+                     domainName, levelName, message);
 }
 
 - (NSString*) domainName: (CBLLogDomain)domain {
     switch (domain) {
         case kCBLLogDomainDatabase:
             return @"Database";
-            break;
         case kCBLLogDomainQuery:
             return @"Query";
-            break;
         case kCBLLogDomainReplicator:
             return @"Replicator";
-            break;
         case kCBLLogDomainNetwork:
             return @"Network";
-            break;
         case kCBLLogDomainListener:
             return @"Listener";
-            break;
         case kCBLLogDomainPeerDiscovery:
             return @"PeerDiscovery";
-            break;
         case kCBLLogDomainMDNS:
             return @"mDNS";
-            break;
         case kCBLLogDomainMultipeer:
             return @"Multipeer";
-            break;
         default:
             return @"Default";
+    }
+}
+
+- (os_log_type_t) osLogTypeForLevel: (CBLLogLevel)level {
+    switch (level) {
+        case kCBLLogLevelDebug:
+        case kCBLLogLevelVerbose:
+            return OS_LOG_TYPE_DEBUG;
+        case kCBLLogLevelInfo:
+            return OS_LOG_TYPE_INFO;
+        case kCBLLogLevelWarning:
+            return OS_LOG_TYPE_DEFAULT;
+        case kCBLLogLevelError:
+            return OS_LOG_TYPE_ERROR;
+        default:
+            return OS_LOG_TYPE_DEFAULT;
+    }
+}
+
+- (os_log_t) osLogForDomain: (CBLLogDomain)domain {
+    switch (domain) {
+        case kCBLLogDomainDatabase: {
+            static os_log_t log = os_log_create(kSubsystem, "Database");
+            return log;
+        }
+        case kCBLLogDomainQuery: {
+            static os_log_t log = os_log_create(kSubsystem, "Query");
+            return log;
+        }
+        case kCBLLogDomainReplicator: {
+            static os_log_t log = os_log_create(kSubsystem, "Replicator");
+            return log;
+        }
+        case kCBLLogDomainNetwork: {
+            static os_log_t log = os_log_create(kSubsystem, "Network");
+            return log;
+        }
+        case kCBLLogDomainListener: {
+            static os_log_t log = os_log_create(kSubsystem, "Listener");
+            return log;
+        }
+        case kCBLLogDomainPeerDiscovery: {
+            static os_log_t log = os_log_create(kSubsystem, "PeerDiscovery");
+            return log;
+        }
+        case kCBLLogDomainMDNS: {
+            static os_log_t log = os_log_create(kSubsystem, "mDNS");
+            return log;
+        }
+        case kCBLLogDomainMultipeer: {
+            static os_log_t log = os_log_create(kSubsystem, "Multipeer");
+            return log;
+        }
+        default: {
+            static os_log_t log = os_log_create(kSubsystem, "Default");
+            return log;
+        }
     }
 }
 
