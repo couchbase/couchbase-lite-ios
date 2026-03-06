@@ -137,13 +137,19 @@ public class Query {
     public func changePublisher(on queue: DispatchQueue = .main) -> AnyPublisher<QueryChange, Never> {
         let subject = PassthroughSubject<QueryChange, Never>()
         
-        let token = self.addChangeListener(withQueue: queue) { change in
-            subject.send(change)
-        }
-
+        var token: ListenerToken?
+        
         return subject
             .receive(on: queue)
-            .handleEvents(receiveCancel: { token.remove() })
+            .handleEvents(
+                receiveSubscription: { [weak self] _ in
+                    guard let self else { return }
+                    token = self.addChangeListener(withQueue: queue) { change in
+                        subject.send(change)
+                    }
+                },
+                receiveCancel: { token?.remove() }
+            )
             .eraseToAnyPublisher()
     }
     

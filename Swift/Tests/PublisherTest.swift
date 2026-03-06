@@ -133,22 +133,20 @@ class PublisherTest: CBLTestCase {
     func testQueryChangePublisher() throws {
         let expect1 = self.expectation(description: "10 rows")
         let expect2 = self.expectation(description: "11 rows")
-        expect1.assertForOverFulfill = true
-        expect2.assertForOverFulfill = true
         
         try createDocNumbered(defaultCollection!, start: 0, num: 10)
-        let query = try self.db.createQuery("select * from _ where number1 < 10")
+        let query = try self.db.createQuery("select * from _ where number1 <= 10")
         
         query.changePublisher()
             .sink { change in
                 XCTAssertNotNil(change.query)
                 XCTAssertNil(change.error)
                 let rows = Array(change.results!)
-
-                switch rows.count {
-                    case 10: expect1.fulfill()
-                    case 11: expect2.fulfill()
-                    default: XCTFail("Unexpected number of results: \(rows.count)")
+                
+                if rows.count == 10 {
+                    expect1.fulfill()
+                } else if rows.count == 11 {
+                    expect2.fulfill()
                 }
             }
             .store(in: &cancellables)
@@ -156,8 +154,39 @@ class PublisherTest: CBLTestCase {
         XCTAssert(cancellables.count == 1)
         
         wait(for: [expect1], timeout: expTimeout)
-        try createDocNumbered(defaultCollection!, start: -1, num: 10)
+        
+        try createDocNumbered(defaultCollection!, start: 10, num: 1)
         
         wait(for: [expect2], timeout: expTimeout)
+    }
+    
+    // CBL-7250 : Query's changePublisher may miss the first result when subscribed
+    //            on a different queue
+    func testQueryChangePublisherFirstResultOnBackgroundQueue() throws {
+        let expect = self.expectation(description: "Received first result")
+        
+        try createDocNumbered(defaultCollection!, start: 0, num: 10)
+        
+        let query = try self.db.createQuery("select * from _ where number1 <= 10")
+        
+        // Get the publisher that will report the results on a background queue.
+        let queue = DispatchQueue(label: "bg-queue")
+        let publisher = query.changePublisher(on: queue)
+        
+        // Wait to ensure that the initial results are not fired before
+        // subscribing for the change results.
+        Thread.sleep(forTimeInterval: 0.5)
+        
+        // Now subscribe for the change results.
+        publisher
+            .sink { change in
+                XCTAssertNil(change.error)
+                let rows = Array(change.results!)
+                XCTAssertEqual(rows.count, 10)
+                expect.fulfill()
+            }
+            .store(in: &self.cancellables)
+        
+        wait(for: [expect], timeout: expTimeout)
     }
 }
