@@ -530,20 +530,27 @@
     AssertNil(error);
     
     CBLDatabase* db2 = [self openDBNamed: kDatabaseName error: &error];
-    CBLCollection* col2 = [db2 createCollectionWithName: @"colA"
-                                                  scope: @"scopeA" error: &error];
-    AssertEqualObjects(col, col2);
-    AssertEqual(col2.count, 10);
     AssertNil(error);
     
-    AssertEqual([self.db collections: @"scopeA" error: &error].count, 1);
-    AssertNil(error);
-    AssertEqual([db2 collections: @"scopeA" error: &error].count, 1);
-    AssertNil(error);
-    
-    [self createDocNumbered: col start: 10 num: 10];
-    AssertEqual(col.count, 20);
-    AssertEqual(col2.count, 20);
+    @try {
+        CBLCollection* col2 = [db2 createCollectionWithName: @"colA"
+                                                      scope: @"scopeA" error: &error];
+        AssertEqualObjects(col, col2);
+        AssertEqual(col2.count, 10);
+        AssertNil(error);
+        
+        AssertEqual([self.db collections: @"scopeA" error: &error].count, 1);
+        AssertNil(error);
+        AssertEqual([db2 collections: @"scopeA" error: &error].count, 1);
+        AssertNil(error);
+        
+        [self createDocNumbered: col start: 10 num: 10];
+        AssertEqual(col.count, 20);
+        AssertEqual(col2.count, 20);
+    }
+    @finally {
+        [self closeDatabase: db2];
+    }
 }
 
 - (void) testDeleteThenGetCollectionFromDifferentDatabaseInstance {
@@ -557,19 +564,25 @@
     
     CBLDatabase* db2 = [self openDBNamed: kDatabaseName error: &error];
     AssertNil(error);
-    CBLCollection* col2 = [db2 collectionWithName: @"colA" scope: @"scopeA" error: &error];
-    AssertNil(error);
-    AssertEqualObjects(col, col2);
     
-    Assert([self.db deleteCollectionWithName: @"colA" scope: @"scopeA" error: &error]);
-    AssertEqual(col.count, 0);
-    AssertEqual(col2.count, 0);
-    AssertNil(error);
-    
-    AssertNil([self.db collectionWithName: @"colA" scope: @"scopeA" error: &error]);
-    AssertNil(error);
-    AssertNil([db2 collectionWithName: @"colA" scope: @"scopeA" error: &error]);
-    AssertNil(error);
+    @try {
+        CBLCollection* col2 = [db2 collectionWithName: @"colA" scope: @"scopeA" error: &error];
+        AssertNil(error);
+        AssertEqualObjects(col, col2);
+        
+        Assert([self.db deleteCollectionWithName: @"colA" scope: @"scopeA" error: &error]);
+        AssertEqual(col.count, 0);
+        AssertEqual(col2.count, 0);
+        AssertNil(error);
+        
+        AssertNil([self.db collectionWithName: @"colA" scope: @"scopeA" error: &error]);
+        AssertNil(error);
+        AssertNil([db2 collectionWithName: @"colA" scope: @"scopeA" error: &error]);
+        AssertNil(error);
+    }
+    @finally {
+        [self closeDatabase: db2];
+    }
 }
 
 - (void) testDeleteAndRecreateThenGetCollectionFromDifferentDatabaseInstance {
@@ -583,35 +596,41 @@
     
     CBLDatabase* db2 = [self openDBNamed: kDatabaseName error: &error];
     AssertNil(error);
-    CBLCollection* col2 = [db2 collectionWithName: @"colA" scope: @"scopeA" error: &error];
-    AssertEqual(col2.count, 10);
-    AssertNil(error);
     
-    // make sure both instances are same
-    AssertEqualObjects(col, col2);
-    
-    // Delete the collection from db:
-    Assert([self.db deleteCollectionWithName: @"colA" scope: @"scopeA" error: &error]);
-    AssertNil(error);
-    
-    AssertNil([self.db collectionWithName: @"colA" scope: @"scopeA" error: &error]);
-    AssertNil(error);
-    
-    error = nil;
-    AssertNil([db2 collectionWithName: @"colA" scope: @"scopeA" error: &error]);
-    AssertNil(error);
-    
-    // Recreate:
-    error = nil;
-    CBLCollection* col3 = [self.db createCollectionWithName: @"colA"
-                                                      scope: @"scopeA" error: &error];
-    AssertEqual(col3.count, 0);
-    AssertNil(error);
-    
-    [self createDocNumbered: col3 start: 0 num: 3];
-    CBLCollection* col4 = [db2 collectionWithName: @"colA" scope: @"scopeA" error: &error];
-    AssertEqualObjects(col3, col4);
-    AssertNil(error);
+    @try {
+        CBLCollection* col2 = [db2 collectionWithName: @"colA" scope: @"scopeA" error: &error];
+        AssertEqual(col2.count, 10);
+        AssertNil(error);
+        
+        // make sure both instances are same
+        AssertEqualObjects(col, col2);
+        
+        // Delete the collection from db:
+        Assert([self.db deleteCollectionWithName: @"colA" scope: @"scopeA" error: &error]);
+        AssertNil(error);
+        
+        AssertNil([self.db collectionWithName: @"colA" scope: @"scopeA" error: &error]);
+        AssertNil(error);
+        
+        error = nil;
+        AssertNil([db2 collectionWithName: @"colA" scope: @"scopeA" error: &error]);
+        AssertNil(error);
+        
+        // Recreate:
+        error = nil;
+        CBLCollection* col3 = [self.db createCollectionWithName: @"colA"
+                                                          scope: @"scopeA" error: &error];
+        AssertEqual(col3.count, 0);
+        AssertNil(error);
+        
+        [self createDocNumbered: col3 start: 0 num: 3];
+        CBLCollection* col4 = [db2 collectionWithName: @"colA" scope: @"scopeA" error: &error];
+        AssertEqualObjects(col3, col4);
+        AssertNil(error);
+    }
+    @finally {
+        [self closeDatabase: db2];
+    }
 }
 
 #pragma mark - 8.4 Listeners
@@ -834,11 +853,16 @@
 - (void) testUseCollectionAPIOnDeletedCollectionDeletedFromDifferentDBInstance {
     NSError* error = nil;
     CBLDatabase* db2 = [self openDBNamed: kDatabaseName error: &error];
-    [self testUseInvalidCollection: @"colA" onAction: ^{
-        NSError* er = nil;
-        Assert([db2 deleteCollectionWithName: @"colA" scope: nil error: &er]);
-        AssertNil(er);
-    }];
+    @try {
+        [self testUseInvalidCollection: @"colA" onAction: ^{
+            NSError* er = nil;
+            Assert([db2 deleteCollectionWithName: @"colA" scope: nil error: &er]);
+            AssertNil(er);
+        }];
+    }
+    @finally {
+        [self closeDatabase: db2];
+    }
 }
 
 - (void) testUseCollectionAPIWhenDatabaseIsClosed {
@@ -1062,8 +1086,15 @@
 
 - (void) testUseScopeAPIAfterDeletingAllCollectionsFromDifferentDBInstance {
     NSError* error = nil;
-    CBLDatabase* db = [self openDBNamed: kDatabaseName error: &error];
-    [self testUseScopeAPIAfterDeletingAllCollectionsFrom: db];
+    CBLDatabase* db2 = [self openDBNamed: kDatabaseName error: &error];
+    AssertNil(error);
+    
+    @try {
+        [self testUseScopeAPIAfterDeletingAllCollectionsFrom: db2];
+    }
+    @finally {
+        [self closeDatabase: db2];
+    }
 }
 
 - (void) testUseScopeAPIAfterDeletingAllCollectionsFrom: (CBLDatabase*)db {

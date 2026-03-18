@@ -433,6 +433,8 @@ class CollectionTest: CBLTestCase {
         try createDocNumbered(col, start: 0, num: 10)
         
         let db2 = try openDB(name: databaseName)
+        defer { XCTAssertNoThrow(try db2.close()) }
+        
         let col2 = try db2.createCollection(name: "colA", scope: "scopeA")
         
         XCTAssertEqual(col.name, col2.name)
@@ -455,6 +457,8 @@ class CollectionTest: CBLTestCase {
         try createDocNumbered(col, start: 0, num: 10)
         
         let db2 = try openDB(name: databaseName)
+        defer { XCTAssertNoThrow(try db2.close()) }
+        
         let col2 = try db2.createCollection(name: "colA", scope: "scopeA")
         
         try self.db.deleteCollection(name: "colA", scope: "scopeA")
@@ -472,6 +476,8 @@ class CollectionTest: CBLTestCase {
         XCTAssertEqual(col.count, 10)
         
         let db2 = try openDB(name: databaseName)
+        defer { XCTAssertNoThrow(try db2.close()) }
+        
         let col2 = try db2.createCollection(name: "colA", scope: "scopeA")
         XCTAssertEqual(col2.count, 10)
         
@@ -736,6 +742,8 @@ class CollectionTest: CBLTestCase {
     
     func testUseCollectionAPIOnDeletedCollectionDeletedFromDifferentDBInstance() throws {
         let db2 = try openDB(name: databaseName)
+        defer { XCTAssertNoThrow(try db2.close()) }
+        
         try testUseInvalidCollection("colA") {
             try db2.deleteCollection(name: "colA")
         }
@@ -911,6 +919,7 @@ class CollectionTest: CBLTestCase {
     
     func testUseScopeAPIAfterDeletingAllCollectionsFromDifferentDBInstance() throws {
         let db2 = try openDB(name: databaseName)
+        defer { XCTAssertNoThrow(try db2.close()) }
         
         try testUseScopeAPIAfterDeletingAllCollectionsFrom(db2)
     }

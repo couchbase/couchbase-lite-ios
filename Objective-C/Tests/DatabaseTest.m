@@ -864,12 +864,16 @@
     CBLDatabaseConfiguration* config = _db.config;
     NSString* dir = config.directory;
     
+    // Capture the DB path before closing it
+    NSString* dbPath = _db.path;
+    [self closeDatabase: _db];
+    
     // Make sure no an existing database at the new location:
     Assert([CBLDatabase deleteDatabase: dbName inDirectory: dir error: nil]);
     
     // Copy:
     NSError* error;
-    Assert([CBLDatabase copyFromPath: _db.path toDatabase: dbName withConfig: config error: &error],
+    Assert([CBLDatabase copyFromPath: dbPath toDatabase: dbName withConfig: config error: &error],
            @"Error when copying the database: %@", error);
     
     // Verify:
@@ -926,9 +930,13 @@
     NSString* dir = config.directory;
     [[NSFileManager defaultManager] removeItemAtPath: dir error: nil];
     
+    // Capture the DB path before closing it
+    NSString* dbPath = _db.path;
+    [self closeDatabase: _db];
+    
     // Copy:
     NSError* error;
-    Assert([CBLDatabase copyFromPath: _db.path toDatabase: dbName withConfig: config error: &error],
+    Assert([CBLDatabase copyFromPath: dbPath toDatabase: dbName withConfig: config error: &error],
            @"Error when copying the database: %@", error);
     
     // Verify:
@@ -974,8 +982,12 @@
     CBLDatabase* nudb = [[CBLDatabase alloc] initWithName: dbName config: config  error: &error];
     Assert(nudb, @"Cannot open the new database: %@", error);
     
+    // Capture the DB path before closing it
+    NSString* dbPath = _db.path;
+    [self closeDatabase: _db];
+    
     [self expectError: NSPOSIXErrorDomain code: EEXIST in: ^BOOL(NSError** error2) {
-        return [CBLDatabase copyFromPath: self->_db.path toDatabase: dbName withConfig: config error: error2];
+        return [CBLDatabase copyFromPath: dbPath toDatabase: dbName withConfig: config error: error2];
     }];
     
     // Clean up:
