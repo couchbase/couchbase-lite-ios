@@ -259,9 +259,13 @@ class DatabaseTest: CBLTestCase {
         
         // Make sure no an existing database at the new location:
         try Database.delete(withName: dbName, inDirectory: dir)
+
+        // Close: The database must be closed before it can be copied
+        let dbPath = try XCTUnwrap(db.path)
+        try db.close()
         
         // Copy:
-        try Database.copy(fromPath: db.path!, toDatabase: dbName, withConfig: config)
+        try Database.copy(fromPath: dbPath, toDatabase: dbName, withConfig: config)
         
         // Verify:
         XCTAssert(Database.exists(withName: dbName, inDirectory: dir))

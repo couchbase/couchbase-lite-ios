@@ -58,6 +58,8 @@ class ReplicatorTest_Collection: ReplicatorTest {
         let col1a = try self.db.createCollection(name: "colA", scope: "scopeA")
         
         let db2 = try openDB(name: databaseName)
+        defer { XCTAssertNoThrow(try db2.close()) }
+        
         let col1b = try db2.createCollection(name: "colB", scope: "scopeA")
         
         let url = URL(string: "wss://foo")!
@@ -65,7 +67,6 @@ class ReplicatorTest_Collection: ReplicatorTest {
         
         let colConfigs = CollectionConfiguration.fromCollections([col1a, col1b])
        
-        
         expectException(exception: .invalidArgumentException) {
             let _ = ReplicatorConfiguration(collections: colConfigs, target: target)
         }
