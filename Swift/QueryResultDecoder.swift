@@ -47,24 +47,37 @@ internal struct QueryResultDecoder: Decoder {
 
 private struct QueryResultDecodingContainer<Key: CodingKey> : KeyedDecodingContainerProtocol {
     let queryResult: Result
-    let nestedDocument: DictionaryObject?
+    let nestedDict: DictionaryObject?
     
     init(queryResult: Result, dataKey: String? = nil) {
         self.queryResult = queryResult
         // The actual document may be in a nested dictionary, if `SELECT id, *` was used
-        self.nestedDocument = dataKey != nil ? queryResult.dictionary(forKey: dataKey!) : nil
+        if let dataKey {
+            self.nestedDict = queryResult.dictionary(forKey: dataKey)
+        } else {
+            self.nestedDict = nil
+        }
     }
 
     var codingPath: [any CodingKey] = []
     
-    var allKeys: [Key] { queryResult.keys.compactMap { Key(stringValue: $0) } }
+    var allKeys: [Key] {
+        var keys = queryResult.keys
+        if let nested = nestedDict {
+            for key in nested.keys where !keys.contains(key) {
+                keys.append(key)
+            }
+        }
+        return keys.compactMap { Key(stringValue: $0) }
+    }
     
     func contains(_ key: Key) -> Bool {
-        queryResult.contains(key: key.stringValue)
+        queryResult.contains(key: key.stringValue) ||
+            nestedDict?.contains(key: key.stringValue) == true
     }
     
     func decodeNil(forKey key: Key) throws -> Bool {
-        if let value = queryResult.value(forKey: key.stringValue) ?? nestedDocument?.value(forKey: key.stringValue) {
+        if let value = queryResult.value(forKey: key.stringValue) ?? nestedDict?.value(forKey: key.stringValue) {
             if value is NSNull {
                 return true
             } else {
@@ -76,7 +89,7 @@ private struct QueryResultDecodingContainer<Key: CodingKey> : KeyedDecodingConta
     
     func decode<T>(_ type: T.Type, forKey key: Key) throws -> T where T : Decodable {
         guard let value = queryResult.value(forKey: key.stringValue)
-                ?? nestedDocument?.value(forKey: key.stringValue) else {
+                ?? nestedDict?.value(forKey: key.stringValue) else {
             throw CBLError.create(CBLErrorInvalidQuery, description: "Query is missing field '\(key.stringValue)'")
         }
         guard let fleeceValue = FleeceValue(value, as: T.self) else {
@@ -93,7 +106,7 @@ private struct QueryResultDecodingContainer<Key: CodingKey> : KeyedDecodingConta
     
     func nestedContainer<NestedKey>(keyedBy type: NestedKey.Type, forKey key: Key) throws -> KeyedDecodingContainer<NestedKey> where NestedKey : CodingKey {
         guard let nestedValue = queryResult.value(forKey: key.stringValue)
-                ?? nestedDocument?.value(forKey: key.stringValue) else {
+                ?? nestedDict?.value(forKey: key.stringValue) else {
             throw CBLError.create(CBLErrorInvalidQuery, description: "Query is missing field '\(key.stringValue)'")
         }
         guard let nested = nestedValue as? DictionaryObject else {
@@ -105,7 +118,7 @@ private struct QueryResultDecodingContainer<Key: CodingKey> : KeyedDecodingConta
     
     func nestedUnkeyedContainer(forKey key: Key) throws -> any UnkeyedDecodingContainer {
         guard let nestedValue = queryResult.value(forKey: key.stringValue)
-                ?? nestedDocument?.value(forKey: key.stringValue) else {
+                ?? nestedDict?.value(forKey: key.stringValue) else {
             throw CBLError.create(CBLErrorInvalidQuery, description: "Query is missing field '\(key.stringValue)'")
         }
         guard let nested = nestedValue as? ArrayObject else {
@@ -117,7 +130,7 @@ private struct QueryResultDecodingContainer<Key: CodingKey> : KeyedDecodingConta
     
     func superDecoder() throws -> any Decoder {
         guard let nestedValue = queryResult.value(forKey: "super")
-                ?? nestedDocument?.value(forKey: "super") else {
+                ?? nestedDict?.value(forKey: "super") else {
             throw CBLError.create(CBLErrorInvalidQuery, description: "Query is missing field 'super'")
         }
         guard let nested = nestedValue as? DictionaryObject else {
@@ -129,7 +142,7 @@ private struct QueryResultDecodingContainer<Key: CodingKey> : KeyedDecodingConta
     
     func superDecoder(forKey key: Key) throws -> any Decoder {
         guard let nestedValue = queryResult.value(forKey: key.stringValue)
-                ?? nestedDocument?.value(forKey: key.stringValue) else {
+                ?? nestedDict?.value(forKey: key.stringValue) else {
             throw CBLError.create(CBLErrorInvalidQuery, description: "Query is missing field '\(key.stringValue)'")
         }
         guard let nested = nestedValue as? DictionaryObject else {
