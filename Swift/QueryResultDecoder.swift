@@ -52,7 +52,11 @@ private struct QueryResultDecodingContainer<Key: CodingKey> : KeyedDecodingConta
     init(queryResult: Result, dataKey: String? = nil) {
         self.queryResult = queryResult
         // The actual document may be in a nested dictionary, if `SELECT id, *` was used
-        self.nestedDict = dataKey != nil ? queryResult.dictionary(forKey: dataKey!) : nil
+        if let dataKey {
+            self.nestedDict = queryResult.dictionary(forKey: dataKey)
+        } else {
+            self.nestedDict = nil
+        }
     }
 
     var codingPath: [any CodingKey] = []
@@ -69,7 +73,7 @@ private struct QueryResultDecodingContainer<Key: CodingKey> : KeyedDecodingConta
     
     func contains(_ key: Key) -> Bool {
         queryResult.contains(key: key.stringValue) ||
-            nestedDict?.value(forKey: key.stringValue) != nil
+            nestedDict?.contains(key: key.stringValue) == true
     }
     
     func decodeNil(forKey key: Key) throws -> Bool {
