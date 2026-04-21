@@ -26,3 +26,6 @@ vendor/couchbase-lite-core-EE
 
 # AppCode
 .idea
+
+# Agents
+settings.local.json
