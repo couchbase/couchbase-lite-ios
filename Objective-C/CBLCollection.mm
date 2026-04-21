@@ -455,7 +455,7 @@ NSString* const kCBLDefaultCollectionName = @"_default";
         if (timestamp == 0) {
             return nil;
         }
-        return [NSDate dateWithTimeIntervalSince1970: (timestamp/msec)];
+        return [NSDate dateWithTimeIntervalSince1970: ((double)timestamp/msec)];
     }
 }
 

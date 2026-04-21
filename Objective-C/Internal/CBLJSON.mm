@@ -96,7 +96,7 @@ static NSDateFormatter* getISO8601Formatter() {
     int64_t time = fleece::ParseISO8601Date(string.UTF8String);
     if (time == fleece::kInvalidDate)
         return NAN;
-    return time / 1000.0 + k1970ToReferenceDate;
+    return (double)time / 1000.0 + k1970ToReferenceDate;
 }
 
 + (NSDate*) dateWithJSONObject: (id)jsonObject {

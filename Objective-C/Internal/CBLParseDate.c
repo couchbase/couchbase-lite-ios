@@ -333,5 +333,5 @@ double CBLParseISO8601Date(const char* zDate) {
     if (parseYyyyMmDd(zDate,&x))
         return NAN;
     computeJD(&x);
-    return x.iJD/1000.0 - 210866760000.0;
+    return (double)x.iJD/1000.0 - 210866760000.0;
 }
