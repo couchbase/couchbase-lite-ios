@@ -900,13 +900,17 @@ static C4DatabaseConfig2 c4DatabaseConfig2 (CBLDatabaseConfiguration *config) {
 }
 
 - (void) unregisterActiveService: (id<CBLDatabaseService>)service {
+    BOOL shouldSignal = NO;
     CBL_LOCK(_mutex) {
         [_activeServices removeObject: service];
-        if (_activeServices.count == 0) {
-            [_closeCondition lock];
-            [_closeCondition broadcast];
-            [_closeCondition unlock];
-        }
+        shouldSignal = (_activeServices.count == 0);
+    }
+    // Broadcast after releasing CBL_LOCK(_mutex) to keep lock order consistent
+    // with close() and avoid deadlocking on _mutex and _closeCondition.
+    if (shouldSignal) {
+        [_closeCondition lock];
+        [_closeCondition broadcast];
+        [_closeCondition unlock];
     }
 }
 
