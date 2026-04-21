@@ -126,7 +126,11 @@ using namespace fleece;
         _database = db;
         _error = nil;
         _hasAttachment = false;
-        _context = { .database = _database, .encodingError = &_error, .outHasAttachment = &_hasAttachment };
+        _context = {
+            .database = _database,
+            .outHasAttachment = &_hasAttachment,
+            .encodingError = &_error
+        };
     }
     return self;
 }

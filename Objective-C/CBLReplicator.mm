@@ -285,10 +285,10 @@ typedef enum {
             .collection = col.c4spec,
             .push = mkmode(isPush(_config.replicatorType), _config.continuous),
             .pull = mkmode(isPull(_config.replicatorType), _config.continuous),
+            .optionsDictFleece  = dict,
             .pushFilter = filter(colConfig.pushFilter, true),
             .pullFilter = filter(colConfig.pullFilter, false),
-            .callbackContext    = (__bridge void*)self,
-            .optionsDictFleece  = dict,
+            .callbackContext    = (__bridge void*)self
         };
         
         cols.push_back(c);

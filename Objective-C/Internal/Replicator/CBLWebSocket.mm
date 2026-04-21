@@ -122,9 +122,9 @@ NSString * const kCBLWebSocketUseTLSServerAuthCallback = @"serverAuthCallback";
     return {
         .framing = kC4WebSocketClientFraming,
         .open = &doOpen,
-        .close = &doClose,
         .write = &doWrite,
         .completedReceive = &doCompletedReceive,
+        .close = &doClose,
         .dispose = &doDispose,
     };
 }

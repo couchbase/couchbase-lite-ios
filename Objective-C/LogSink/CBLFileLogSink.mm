@@ -75,10 +75,10 @@
         header = CBLStringBytes([CBLVersion userAgent], false);
         
         options = {
-            .base_path = directory,
             .log_level = (C4LogLevel)logSink.level,
-            .max_rotate_count = static_cast<int32_t>(logSink.maxKeptFiles - 1),
+            .base_path = directory,
             .max_size_bytes = static_cast<int64_t>(logSink.maxFileSize),
+            .max_rotate_count = static_cast<int32_t>(logSink.maxKeptFiles - 1),
             .use_plaintext = static_cast<bool>(logSink.usePlaintext),
             .header = header
         };
