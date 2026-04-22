@@ -226,6 +226,7 @@ typedef void (^MultipeerCollectionConfigureBlock)(CBLMultipeerCollectionConfigur
     XCTestExpectation* xActive = [self expectationWithDescription: @"Active"];
     id<CBLListenerToken> token1 =
     [repl addStatusListenerWithQueue: _listenerQueue listener: ^(CBLMultipeerReplicatorStatus* status) {
+        if (status.transport != kCBLMultipeerTransportNone) { return; } // Ignore per transport status
         AssertNil(status.error);
         if (status.active) {
             [xActive fulfill];
@@ -259,6 +260,7 @@ typedef void (^MultipeerCollectionConfigureBlock)(CBLMultipeerCollectionConfigur
     XCTestExpectation* xInactive = [self expectationWithDescription: @"Inactive"];
     id<CBLListenerToken> token = [repl addStatusListenerWithQueue: _listenerQueue
                                                          listener: ^(CBLMultipeerReplicatorStatus* status) {
+        if (status.transport != kCBLMultipeerTransportNone) { return; } // Ignore per transport status
         AssertNil(status.error);
         if (!status.active) {
             [xInactive fulfill];
@@ -477,6 +479,7 @@ typedef void (^MultipeerCollectionConfigureBlock)(CBLMultipeerCollectionConfigur
     
     id<CBLListenerToken> token = [repl addStatusListenerWithQueue: nil
                                                          listener: ^(CBLMultipeerReplicatorStatus* status) {
+        if (status.transport != kCBLMultipeerTransportNone) { return; } // Ignore per transport status
         AssertNil(status.error);
         if (status.active) {
             [xActive fulfill];
@@ -522,6 +525,7 @@ typedef void (^MultipeerCollectionConfigureBlock)(CBLMultipeerCollectionConfigur
     XCTestExpectation* xInactive = [self expectationWithDescription: @"Inactive"];
     id<CBLListenerToken> token = [repl addStatusListenerWithQueue: nil
                                                          listener: ^(CBLMultipeerReplicatorStatus* status) {
+        if (status.transport != kCBLMultipeerTransportNone) { return; } // Ignore per transport status
         if (!status.active) {
             [xInactive fulfill];
         }
@@ -561,6 +565,7 @@ typedef void (^MultipeerCollectionConfigureBlock)(CBLMultipeerCollectionConfigur
     XCTestExpectation* xActive = [self expectationWithDescription: @"Active"];
     XCTestExpectation* xUnactive = [self expectationWithDescription: @"Inactive"];
     id<CBLListenerToken> token = [repl addStatusListenerWithQueue: nil listener: ^(CBLMultipeerReplicatorStatus* status) {
+        if (status.transport != kCBLMultipeerTransportNone) { return; } // Ignore per transport status
         AssertNil(status.error);
         if (status.active) {
             [xActive fulfill];
@@ -943,7 +948,6 @@ typedef void (^MultipeerCollectionConfigureBlock)(CBLMultipeerCollectionConfigur
     
     XCTestExpectation* xPeer1Online = [self expectationWithDescription: @"Peer#1 Online"];
     XCTestExpectation* xPeer1Offline = [self expectationWithDescription: @"Peer#1 Offline"];
-    xPeer1Offline.assertForOverFulfill = NO;
     
     id<CBLListenerToken> token2 = [repl2 addPeerDiscoveryStatusListenerWithQueue: _listenerQueue
                                                                         listener: ^(CBLPeerDiscoveryStatus *status) {
@@ -1436,19 +1440,20 @@ typedef void (^MultipeerCollectionConfigureBlock)(CBLMultipeerCollectionConfigur
      - collections: Collection configs containing the default collection.
  2. Get the peerID of the replicator and and check that its data length is 32 bytes.
  3. Start MultipeerReplicator#1 and wait until the replicator is active.
- 4. Stop MultipeerReplicator#1 and wait until the replicator is inactive.
- 5. Get the peerID of the replicator and and check that its data length is 32 bytes.
+ 4. Get the peerID of the replicator and and check that its data is the same as the step2.
+ 5. Stop MultipeerReplicator#1 and wait until the replicator is inactive.
+ 6. Get the peerID of the replicator and and check that its data is the same as the step2.
  */
 - (void) testPeerID {
     CBLMultipeerReplicator *repl = [self multipeerReplicatorForDatabase: self.db];
-    AssertNotNil(repl.peerID);
-    AssertEqual(repl.peerID.bytes.length, 32);
+    CBLPeerID* peerID = repl.peerID;
+    AssertEqual(peerID.bytes.length, 32);
     
     [self startMultipeerReplicator: repl];
-    [self stopMultipeerReplicator: repl];
+    AssertEqualObjects(peerID.bytes, repl.peerID.bytes);
     
-    AssertNotNil(repl.peerID);
-    AssertEqual(repl.peerID.bytes.length, 32);
+    [self stopMultipeerReplicator: repl];
+    AssertEqualObjects(peerID.bytes, repl.peerID.bytes);
 }
 
 /**
@@ -1595,6 +1600,136 @@ typedef void (^MultipeerCollectionConfigureBlock)(CBLMultipeerCollectionConfigur
     
     [self stopMultipeerReplicator: repl1];
     [self stopMultipeerReplicator: repl2];
+}
+
+#pragma mark - Transport Status
+
+/**
+ ### 19. TestGetTransportStatus
+
+ #### Description
+ Test that getting status returns the correct status for the transport.
+
+ #### Steps
+ 1. Create a MultipeerReplicator with the default config (WiFi only).
+ 2. Call `getStatus(wifi)` before starting and verify the status is non-nil, active is false, error is null.
+ 3. Start the replicator and wait until it is active.
+ 4. Call `getStatus(wifi)` and verify the status is non-null, active is true, error is null,
+ and transport is wifi.
+ 5. Stop the replicator and wait until it is inactive.
+ 6. Call `getStatus(wifi)` and verify the status is non-null, active is false, error is null.
+ */
+- (void) testGetTransportStatus {
+    CBLMultipeerReplicator* repl = [self multipeerReplicatorForDatabase: self.db];
+
+    CBLMultipeerReplicatorStatus* status = [repl statusForTransport: kCBLMultipeerTransportWifi];
+    AssertNotNil(status);
+    AssertFalse(status.active);
+    AssertNil(status.error);
+
+    [self startMultipeerReplicator: repl];
+
+    status = [repl statusForTransport: kCBLMultipeerTransportWifi];
+    AssertNotNil(status);
+    Assert(status.active);
+    AssertNil(status.error);
+    AssertEqual(status.transport, kCBLMultipeerTransportWifi);
+
+    [self stopMultipeerReplicator: repl];
+
+    status = [repl statusForTransport: kCBLMultipeerTransportWifi];
+    AssertNotNil(status);
+    AssertFalse(status.active);
+    AssertNil(status.error);
+}
+
+/**
+ ### 20. TestGetTransportStatusNotConfigured
+
+ #### Description
+ Test that getting status returns null for a transport that is not configured.
+
+ #### Steps
+ 1. Create a MultipeerReplicator with the default config (WiFi only).
+ 2. Start the replicator and wait until it is active.
+ 3. Call `getStatus(bluetooth)` — verify it returns nil (Bluetooth not configured).
+ 4. Stop the replicator and wait until it is inactive.
+ */
+- (void) testGetTransportStatusNotConfigured {
+    CBLMultipeerReplicator* repl = [self multipeerReplicatorForDatabase: self.db];
+
+    [self startMultipeerReplicator: repl];
+
+    AssertNil([repl statusForTransport: kCBLMultipeerTransportBluetooth]);
+
+    [self stopMultipeerReplicator: repl];
+}
+
+/**
+ ### 21. TestGetTransportStatusBeforeStart
+
+ #### Description
+ Test that getting status returns inactive status when the replicator has not been started.
+
+ #### Steps
+ 1. Create a MultipeerReplicator with the default config (WiFi only).
+ 2. Call `getStatus(wifi)` and verify the status is non-null, active is false, error is null.
+ */
+- (void) testGetTransportStatusBeforeStart {
+    CBLMultipeerReplicator* repl = [self multipeerReplicatorForDatabase: self.db];
+
+    CBLMultipeerReplicatorStatus* status = [repl statusForTransport: kCBLMultipeerTransportWifi];
+    AssertNotNil(status);
+    AssertFalse(status.active);
+    AssertNil(status.error);
+}
+
+/**
+ ### 22. TestTransportSpecificStatusListener
+
+ #### Description
+ Test that the status listener receives both transport-specific and aggregate status events
+ when the replicator starts and stops.
+
+ #### Steps
+ 1. Create a MultipeerReplicator with the default config (WiFi only).
+ 2. Add a status listener that separates transport-specific and aggregate statuses.
+ 3. Start the replicator and wait until:
+     - A transport-specific active status is received with transport == .wifi.
+     - An aggregate active status is received (transport == null).
+ 4. Stop the replicator and wait until:
+     - A transport-specific inactive status is received with transport == .wifi.
+     - An aggregate inactive status is received (transport == null).
+ 5. Remove the listener.
+ */
+- (void) testTransportSpecificStatusListener {
+    CBLMultipeerReplicator* repl = [self multipeerReplicatorForDatabase: self.db];
+
+    XCTestExpectation* xWifiActive = [self expectationWithDescription: @"WiFi Active"];
+    XCTestExpectation* xAggregateActive = [self expectationWithDescription: @"Aggregate Active"];
+    XCTestExpectation* xWifiInactive = [self expectationWithDescription: @"WiFi Inactive"];
+    XCTestExpectation* xAggregateInactive = [self expectationWithDescription: @"Aggregate Inactive"];
+
+    id<CBLListenerToken> token =
+    [repl addStatusListenerWithQueue: _listenerQueue
+                            listener: ^(CBLMultipeerReplicatorStatus* status) {
+        if (status.transport == kCBLMultipeerTransportNone) {
+            AssertNil(status.error);
+            if (status.active) { [xAggregateActive fulfill]; }
+            else { [xAggregateInactive fulfill]; }
+        } else if (status.transport == kCBLMultipeerTransportWifi) {
+            if (status.active) { [xWifiActive fulfill]; }
+            else { [xWifiInactive fulfill]; }
+        }
+    }];
+
+    [repl start];
+    [self waitForExpectations: @[xWifiActive, xAggregateActive] timeout: kExpTimeout];
+
+    [repl stop];
+    [self waitForExpectations: @[xWifiInactive, xAggregateInactive] timeout: kExpTimeout];
+
+    [token remove];
 }
 
 @end
