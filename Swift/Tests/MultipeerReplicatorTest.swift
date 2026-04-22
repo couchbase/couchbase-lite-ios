@@ -180,6 +180,7 @@ class MultipeerReplicatorTest: CBLTestCase {
     func startMultipeerReplicator(_ repl: MultipeerReplicator) {
         let xActive = expectation(description: "Active")
         let token1 = repl.addStatusListener(on: listenerQueue) { status in
+            guard status.transport == nil else { return } // Ignore per transport status
             XCTAssertNil(status.error)
             if status.active {
                 xActive.fulfill()
@@ -202,6 +203,7 @@ class MultipeerReplicatorTest: CBLTestCase {
     func stopMultipeerReplicator(_ repl: MultipeerReplicator) {
         let xInactive = expectation(description: "Inactive")
         let token = repl.addStatusListener(on: nil) { status in
+            guard status.transport == nil else { return } // Ignore per transport status
             XCTAssertNil(status.error)
             if !status.active {
                 xInactive.fulfill()
@@ -348,8 +350,8 @@ class MultipeerReplicatorTest: CBLTestCase {
      4. Check that the configuration cannot be created as the collections are empty.
      */
     func testConfigurationValidation() throws {
-        throw XCTSkip("Swift's Precondition cannot be asserted. Enable manually when needed.")
-        
+        try XCTSkipIf(true, "Swift's Precondition cannot be asserted. Enable manually when needed.")
+
         // Create the collection and identity
         let collection = try db.defaultCollection()
         let identity = try createIdentity()
@@ -401,6 +403,7 @@ class MultipeerReplicatorTest: CBLTestCase {
         let xInactive = expectation(description: "Inactive")
             
         let token = repl.addStatusListener(on: nil) { status in
+            guard status.transport == nil else { return } // Ignore per transport status
             XCTAssertNil(status.error)
             if status.active {
                 xActive.fulfill()
@@ -445,6 +448,7 @@ class MultipeerReplicatorTest: CBLTestCase {
         let xInactive = expectation(description: "Inactive")
 
         let token = repl.addStatusListener(on: nil) { status in
+            guard status.transport == nil else { return } // Ignore per transport status
             if !status.active {
                 xInactive.fulfill()
             }
@@ -485,6 +489,7 @@ class MultipeerReplicatorTest: CBLTestCase {
         let xInactive = expectation(description: "Inactive")
 
         _ = repl.addStatusListener(on: nil) { status in
+            guard status.transport == nil else { return } // Ignore per transport status
             XCTAssertNil(status.error)
             if status.active {
                 xActive.fulfill()
@@ -842,7 +847,6 @@ class MultipeerReplicatorTest: CBLTestCase {
         // Expectation: repl2 discovers repl1 online and then offline
         let xPeer1Online = expectation(description: "Peer#1 Online")
         let xPeer1Offline = expectation(description: "Peer#1 Offline")
-        xPeer1Offline.assertForOverFulfill = false
         
         let token2 = repl2.addPeerDiscoveryStatusListener(on: listenerQueue) { status in
             XCTAssertEqual(status.peerID, repl1.peerID)
@@ -1326,19 +1330,20 @@ class MultipeerReplicatorTest: CBLTestCase {
          - collections: Collection configs containing the default collection.
      2. Get the peerID of the replicator and and check that its data length is 32 bytes.
      3. Start MultipeerReplicator#1 and wait until the replicator is active.
-     4. Stop MultipeerReplicator#1 and wait until the replicator is inactive.
-     5. Get the peerID of the replicator and and check that its data length is 32 bytes.
+     4. Get the peerID of the replicator and and check that its data is the same as the step2.
+     5. Stop MultipeerReplicator#1 and wait until the replicator is inactive.
+     6. Get the peerID of the replicator and and check that its data is the same as the step2.
      */
     func testPeerID() throws {
         let repl = try multipeerReplicator(for: db)
-        XCTAssertNotNil(repl.peerID)
-        XCTAssertEqual(repl.peerID.bytes.count, 32)
+        let peerID = repl.peerID
+        XCTAssertEqual(peerID.bytes.count, 32)
         
         startMultipeerReplicator(repl)
+        XCTAssertEqual(peerID.bytes, repl.peerID.bytes)
+
         stopMultipeerReplicator(repl)
-        
-        XCTAssertNotNil(repl.peerID)
-        XCTAssertEqual(repl.peerID.bytes.count, 32)
+        XCTAssertEqual(peerID.bytes, repl.peerID.bytes)
     }
     
     /**
@@ -1480,5 +1485,134 @@ class MultipeerReplicatorTest: CBLTestCase {
         
         stopMultipeerReplicator(repl1)
         stopMultipeerReplicator(repl2)
+    }
+    
+    // MARK: - Transport Status
+
+    /**
+     ### 19. TestGetTransportStatus
+
+     #### Description
+     Test that getting status returns the correct status for the transport.
+
+     #### Steps
+     1. Create a MultipeerReplicator with the default config (WiFi only).
+     2. Call `getStatus(wifi)` before starting and verify the status is non-nil, active is false, error is null.
+     3. Start the replicator and wait until it is active.
+     4. Call `getStatus(wifi)` and verify the status is non-null, active is true, error is null,
+       and transport is wifi.
+     5. Stop the replicator and wait until it is inactive.
+     6. Call `getStatus(wifi)` and verify the status is non-null, active is false, error is null.
+     */
+    func testGetTransportStatus() throws {
+        let repl = try multipeerReplicator(for: db)
+
+        var status = repl.status(for: .wifi)
+        XCTAssertNotNil(status)
+        XCTAssertFalse(status!.active)
+        XCTAssertNil(status!.error)
+
+        startMultipeerReplicator(repl)
+
+        status = repl.status(for: .wifi)
+        XCTAssertNotNil(status)
+        XCTAssertTrue(status!.active)
+        XCTAssertNil(status!.error)
+        XCTAssertEqual(status!.transport, .wifi)
+
+        stopMultipeerReplicator(repl)
+
+        status = repl.status(for: .wifi)
+        XCTAssertNotNil(status)
+        XCTAssertFalse(status!.active)
+        XCTAssertNil(status!.error)
+    }
+
+    /**
+     ### 20. TestGetTransportStatusNotConfigured
+
+     #### Description
+     Test that getting status returns null for a transport that is not configured.
+
+     #### Steps
+     1. Create a MultipeerReplicator with the default config (WiFi only).
+     2. Start the replicator and wait until it is active.
+     3. Call `getStatus(bluetooth)` — verify it returns nil (Bluetooth not configured).
+     4. Stop the replicator and wait until it is inactive.
+     */
+    func testGetTransportStatusNotConfigured() throws {
+        let repl = try multipeerReplicator(for: db)
+
+        startMultipeerReplicator(repl)
+
+        XCTAssertNil(repl.status(for: .bluetooth))
+
+        stopMultipeerReplicator(repl)
+    }
+
+    /**
+     ### 21. TestGetTransportStatusBeforeStart
+
+     #### Description
+     Test that getting status returns inactive status when the replicator has not been started.
+
+     #### Steps
+     1. Create a MultipeerReplicator with the default config (WiFi only).
+     2. Call `getStatus(wifi)` and verify the status is non-null, active is false, error is null.
+     */
+    func testGetTransportStatusBeforeStart() throws {
+        let repl = try multipeerReplicator(for: db)
+        let status = repl.status(for: .wifi)
+        XCTAssertNotNil(status)
+        XCTAssertFalse(status!.active)
+        XCTAssertNil(status!.error)
+    }
+
+    /**
+     ### 22. TestTransportSpecificStatusListener
+
+     #### Description
+     Test that the status listener receives both transport-specific and aggregate status events
+     when the replicator starts and stops.
+
+     #### Steps
+     1. Create a MultipeerReplicator with the default config (WiFi only).
+     2. Add a status listener that separates transport-specific and aggregate statuses.
+     3. Start the replicator and wait until:
+         - A transport-specific active status is received with transport == .wifi.
+         - An aggregate active status is received (transport == null).
+     4. Stop the replicator and wait until:
+         - A transport-specific inactive status is received with transport == .wifi.
+         - An aggregate inactive status is received (transport == null).
+     5. Remove the listener.
+     */
+    func testTransportSpecificStatusListener() throws {
+        let repl = try multipeerReplicator(for: db)
+
+        let xWifiActive = expectation(description: "WiFi Active")
+        let xAggregateActive = expectation(description: "Aggregate Active")
+        let xWifiInactive = expectation(description: "WiFi Inactive")
+        let xAggregateInactive = expectation(description: "Aggregate Inactive")
+
+        let token = repl.addStatusListener(on: listenerQueue) { status in
+            if let transport = status.transport {
+                if transport == .wifi {
+                    if status.active { xWifiActive.fulfill() }
+                    else { xWifiInactive.fulfill() }
+                }
+            } else {
+                XCTAssertNil(status.error)
+                if status.active { xAggregateActive.fulfill() }
+                else { xAggregateInactive.fulfill() }
+            }
+        }
+
+        repl.start()
+        wait(for: [xWifiActive, xAggregateActive], timeout: expTimeout)
+
+        repl.stop()
+        wait(for: [xWifiInactive, xAggregateInactive], timeout: expTimeout)
+
+        token.remove()
     }
 }
