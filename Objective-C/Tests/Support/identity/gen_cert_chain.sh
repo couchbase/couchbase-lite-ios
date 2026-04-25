@@ -44,7 +44,7 @@ authorityKeyIdentifier = keyid:always,issuer
 basicConstraints = critical, CA:TRUE
 keyUsage = critical, keyCertSign, cRLSign
 CFG
-) -out root.crt
+) -out root.pem
 
 # ---- Intermediate CA (signed by Root) ----
 openssl genrsa -out int.key 2048 2>/dev/null
@@ -57,8 +57,8 @@ subjectKeyIdentifier = hash
 authorityKeyIdentifier = keyid:always,issuer
 CFG
 
-openssl x509 -req -in int.csr -CA root.crt -CAkey root.key -CAcreateserial \
-    -out int.crt -days "$INT_DAYS" -sha256 -extfile int.ext 2>/dev/null
+openssl x509 -req -in int.csr -CA root.pem -CAkey root.key -CAcreateserial \
+    -out int.pem -days "$INT_DAYS" -sha256 -extfile int.ext 2>/dev/null
 
 # ---- Leaf (signed by Intermediate) ----
 openssl genrsa -out leaf.key 2048 2>/dev/null
@@ -72,18 +72,20 @@ subjectKeyIdentifier = hash
 authorityKeyIdentifier = keyid,issuer
 CFG
 
-openssl x509 -req -in leaf.csr -CA int.crt -CAkey int.key -CAcreateserial \
-    -out leaf.crt -days "$LEAF_DAYS" -sha256 -extfile leaf.ext 2>/dev/null
+openssl x509 -req -in leaf.csr -CA int.pem -CAkey int.key -CAcreateserial \
+    -out leaf.pem -days "$LEAF_DAYS" -sha256 -extfile leaf.ext 2>/dev/null
 
+echo "==================== leaf key ===================="
+cat leaf.key
 echo "==================== leaf (cert1) ===================="
-cat leaf.crt
+cat leaf.pem
 echo "==================== inter (cert2) ===================="
-cat int.crt
+cat int.pem
 echo "==================== root (cert3) ===================="
-cat root.crt
+cat root.pem
 
 echo ""
 echo "Expirations:"
-echo -n "  leaf:         "; openssl x509 -in leaf.crt -noout -enddate
-echo -n "  inter:        "; openssl x509 -in int.crt  -noout -enddate
-echo -n "  root:         "; openssl x509 -in root.crt -noout -enddate
+echo -n "  leaf:         "; openssl x509 -in leaf.pem -noout -enddate
+echo -n "  inter:        "; openssl x509 -in int.pem  -noout -enddate
+echo -n "  root:         "; openssl x509 -in root.pem -noout -enddate
