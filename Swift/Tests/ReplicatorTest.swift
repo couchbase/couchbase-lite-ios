@@ -1333,6 +1333,45 @@ class ReplicatorTest_Main: ReplicatorTest {
         XCTAssertNil(config.collections.first?.pullFilter)
         XCTAssertNil(config.collections.first?.pushFilter)
     }
+    
+#if COUCHBASE_ENTERPRISE
+    
+    // MARK: Correlation ID
+
+    // Spec: https://github.com/couchbaselabs/couchbase-lite-api/blob/master/spec/tests/T0013-CorrelationID.md
+    //
+    // 1. TestGetCorrelationID
+    //
+    // Description:
+    //   Test get the correlation id from the replicator.
+    //   Note: Alternatively this test can be tested DatabaseEndpoint.
+    //
+    // Steps:
+    //   1. Start a URLEndpointListener.
+    //   2. Creates a replicator with an endpoint connecting the URLEndpointListener.
+    //        - Continuous: No
+    //        - Type: Push-and-Pull
+    //   3. Gets the correlationID and checks that the value is null.
+    //   4. Starts the replicator and wait until the replicator stopped.
+    //   5. Gets the correlationID and checks that the value is not null or empty.
+    func testGetCorrelationID() throws {
+        let target = DatabaseEndpoint(database: otherDB!)
+        let config = self.config(collections: [defaultCollection!],
+                                 target: target,
+                                 type: .pushAndPull,
+                                 continuous: false)
+
+        run(config: config, reset: false, expectedError: nil) { r in
+            XCTAssertNil(r.correlationID)
+        }
+
+        let corrID = repl.correlationID
+        XCTAssertNotNil(corrID)
+        XCTAssertFalse(corrID?.isEmpty ?? true)
+    }
+    
+#endif
+    
 }
 
 class TestConflictResolver: ConflictResolverProtocol {
