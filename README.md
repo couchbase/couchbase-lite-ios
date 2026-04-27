@@ -9,7 +9,9 @@ Couchbase Lite implementation is on top of [Couchbase Lite Core](https://github.
 
 ## Requirements
 
-- iOS 15.0+ | macOS 13.0+
+- Xcode 26.4+
+- iOS 15.0+
+- macOS 13.0+
 
 ## Installation
 
@@ -38,29 +40,13 @@ More detailed information on how to setup is available here: [swift package mana
 
 ### CocoaPods
 
-You can use [CocoaPods](https://cocoapods.org/) to install `CouchbaseLite` for Objective-C API or `CouchbaseLite-Swift` for Swift API by adding it in your [Podfile](https://guides.cocoapods.org/using/the-podfile.html):
+Swift Package Manager is the recommended installation method for new projects. [CocoaPods](https://cocoapods.org/) remains supported; add the pod that matches the API and edition you want to your [Podfile](https://guides.cocoapods.org/using/the-podfile.html):
 
-#### Objective-C
+| API         | Community Edition           | Enterprise Edition                     |
+| ----------- | --------------------------- | -------------------------------------- |
+| Objective-C | `CouchbaseLite`             | `CouchbaseLite-Enterprise`             |
+| Swift       | `CouchbaseLite-Swift`       | `CouchbaseLite-Swift-Enterprise`       |
 
-##### Community Edition
-```
-target '<your target name>' do
-  use_frameworks!
-  pod 'CouchbaseLite'
-end
-```
-
-##### Enterprise Edition
-```
-target '<your target name>' do
-  use_frameworks!
-  pod 'CouchbaseLite-Enterprise'
-end
-```
-
-#### Swift
-
-##### Community Edition
 ```
 target '<your target name>' do
   use_frameworks!
@@ -68,31 +54,7 @@ target '<your target name>' do
 end
 ```
 
-##### Enterprise Edition
-```
-target '<your target name>' do
-  use_frameworks!
-  pod 'CouchbaseLite-Swift-Enterprise'
-end
-```
-
-### Carthage
-
-You can use [Carthage](https://github.com/Carthage/Carthage) to install `CouchbaseLite` by adding it in your [Cartfile](https://github.com/Carthage/Carthage/blob/master/Documentation/Artifacts.md#cartfile):
-
-##### Community Edition
-```
-binary "https://packages.couchbase.com/releases/couchbase-lite-ios/carthage/CouchbaseLite-Community.json"
-```
-
-##### Enterprise Edition
-```
-binary "https://packages.couchbase.com/releases/couchbase-lite-ios/carthage/CouchbaseLite-Enterprise.json"
-```
-
-> When running `carthage update or build`, Carthage will build both CouchbaseLite and CouchbaseLiteSwift framework.
-
-## How to build the framework files.
+## How to build the framework files
 
 1. Clone the repo and update submodules
 
@@ -102,13 +64,13 @@ $ cd couchbase-lite-ios
 $ git submodule update --init --recursive
 ```
 
-2. If not already installed, install _doxygen_, `brew install doxygen`
-
-3. Run ./Scripts/build_framework.sh to build a platform framework which could be either an Objective-C or a Swift framework. The supported platforms include iOS, tvOS, and macOS.
-
+2. Run ./Scripts/build_xcframework.sh to build an XCFramework for either Swift or Objective-C API.
 ```
-$ ./Scripts/build_framework.sh -s "CBL ObjC" -p iOS -o output    // For building the ObjC framework for iOS
-$ ./Scripts/build_framework.sh -s "CBL Swift" -p iOS -o output   // For building the Swift framework for iOS
+# For building the Swift XCFramework
+$ ./Scripts/build_xcframework.sh -s CBL_Swift -o output
+
+# For building the ObjC XCFramework
+$ ./Scripts/build_xcframework.sh -s CBL_ObjC -o output
 ```
 
 ## Documentation

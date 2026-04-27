@@ -43,9 +43,8 @@ Key EE paths in `../couchbase-lite-ios-ee/`:
 
 - Plan first before making changes unless the task is trivial.
 - Keep the plan short and concrete so the developer can review it quickly.
-- Prefer Xcode MCP or other IDE-integrated Xcode tools when available.
-- If Xcode MCP is not available, confirm with the developer whether they want to validate in Xcode, use `xcodebuild`, or run the tests themselves.
-- After making changes, use the narrowest reasonable validation.
+- Use `xcodebuild` for building and running tests.
+- After making changes, ensure the build succeeds and run any relevant tests. Prefer the narrowest reasonable scope, and batch several small edits before building rather than rebuilding after each one.
 
 ## Guardrails
 
