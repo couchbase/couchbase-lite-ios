@@ -96,6 +96,14 @@ public final class Replicator {
     public var serverCertificate: SecCertificate? {
         return impl.serverCertificate
     }
+
+    /// The ID used to correlate the replication session with the remote endpoint.
+    ///
+    /// This value is intended for logging and diagnostics, and is `nil` until the
+    /// replicator receives a correlation ID from the remote endpoint.
+    public var correlationID: String? {
+        return impl.correlationID
+    }
     
     /// Starts the replicator. This method returns immediately; the replicator runs asynchronously
     /// and will report its progress through the replicator change notification.

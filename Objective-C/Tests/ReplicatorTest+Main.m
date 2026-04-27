@@ -1580,4 +1580,35 @@
     [token1 remove];
 }
 
+#pragma mark - Correlation ID
+
+// Spec: https://github.com/couchbaselabs/couchbase-lite-api/blob/master/spec/tests/T0013-CorrelationID.md
+//
+// 1. TestGetCorrelationID
+//
+// Description:
+//   Test get the correlation id from the replicator.
+//   Note: Alternatively this test can be tested DatabaseEndpoint.
+//
+// Steps:
+//   1. Start a URLEndpointListener.
+//   2. Creates a replicator with an endpoint connecting the URLEndpointListener.
+//        - Continuous: No
+//        - Type: Push-and-Pull
+//   3. Gets the correlationID and checks that the value is null.
+//   4. Starts the replicator and wait until the replicator stopped.
+//   5. Gets the correlationID and checks that the value is not null or empty.
+- (void) testGetCorrelationID {
+    CBLReplicatorConfiguration* config = [self configWithTarget: _target
+                                                           type: kCBLReplicatorTypePushAndPull
+                                                     continuous: NO];
+
+    __block CBLReplicator* replicator;
+    [self run: config reset: NO errorCode: 0 errorDomain: nil onReplicatorReady: ^(CBLReplicator* r) {
+        replicator = r;
+        AssertNil(r.correlationID);
+    }];
+    Assert(replicator.correlationID.length > 0);
+}
+
 @end

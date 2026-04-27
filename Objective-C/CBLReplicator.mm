@@ -450,6 +450,17 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
     }
 }
 
+#pragma mark - Correlation ID
+
+- (NSString*) correlationID {
+    CBL_LOCK(self) {
+        if (!_repl)
+            return nil;
+        NSString* result = sliceResult2string(c4repl_getCorrelationID(_repl));
+        return result.length > 0 ? result : nil;
+    }
+}
+
 #pragma mark - CHANGE NOTIFIERS:
 
 - (id<CBLListenerToken>) addChangeListener: (void (^)(CBLReplicatorChange*))listener {

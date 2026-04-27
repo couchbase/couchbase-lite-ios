@@ -51,6 +51,11 @@ NS_ASSUME_NONNULL_BEGIN
     for releasing the certificate object when the application code finishes using the certificate. */
 @property (readonly, copy, atomic, nullable) __attribute__((NSObject)) SecCertificateRef serverCertificate;
 
+/** The ID used to correlate the replication session with the remote endpoint.
+    This value is intended for logging and diagnostics, and is `nil` until
+    the replicator receives a correlation ID from the remote endpoint. */
+@property (readonly, copy, atomic, nullable) NSString* correlationID;
+
 /** Initializes a replicator with the given configuration. */
 - (instancetype) initWithConfig: (CBLReplicatorConfiguration*)config;
 
