@@ -48,7 +48,7 @@ pipeline {
                 """
             }
         }
-        stage('Build'){
+        stage('Test'){
             steps {
                 sh """ 
 		            ./couchbase-lite-ios/Scripts/pull_request_build_test.sh
