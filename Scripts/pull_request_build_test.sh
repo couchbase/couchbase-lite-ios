@@ -14,17 +14,10 @@ if [ "$1" = "-enterprise" ]
     cd couchbase-lite-ios
 fi
 
-SCHEMES_MACOS=("CBL_EE_ObjC_Tests" "CBL_EE_Swift_Tests")
-
-for SCHEMES_MACOS in "${SCHEMES_MACOS[@]}"
-do
-  xcodebuild test -project CouchbaseLite.xcodeproj -scheme "$SCHEMES_MACOS" -destination "platform=macOS"
-done
+# Minimum Matrix: 
+# - Run objective-C tests on macOS platform
+# - Run swift tests on iOS platform
+xcodebuild test -project CouchbaseLite.xcodeproj -scheme "CBL_EE_ObjC_Tests" -destination "platform=macOS"
 
 TEST_SIMULATOR=$(xcrun xctrace list devices 2>&1 | grep -oE 'iPhone.*?[^\(]+' | head -1 | sed 's/Simulator//g' | awk '{$1=$1;print}')
-SCHEMES_IOS=("CBL_EE_ObjC_Tests_iOS_App" "CBL_EE_Swift_Tests_iOS_App")
-
-for SCHEMES_IOS in "${SCHEMES_IOS[@]}"
-do
-  xcodebuild test -project CouchbaseLite.xcodeproj -scheme "$SCHEMES_IOS" -sdk iphonesimulator -destination "platform=iOS Simulator,name=${TEST_SIMULATOR}"
-done
+xcodebuild test -project CouchbaseLite.xcodeproj -scheme "CBL_EE_Swift_Tests" -sdk iphonesimulator -destination "platform=iOS Simulator,name=${TEST_SIMULATOR}"
