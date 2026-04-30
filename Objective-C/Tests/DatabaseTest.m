@@ -2055,8 +2055,8 @@
     CBLQuery* q = [CBLQueryBuilder select: @[[CBLQuerySelectResult expression: key]]
                                      from: [CBLQueryDataSource database: self.db]
                                     where: [key greaterThan: [CBLQueryExpression integer: 9]]];
-    NSString* explain = [q explain: &error];
-    Assert([explain rangeOfString: @"USING INDEX KeyIndex"].location != NSNotFound);
+    
+    Assert([self isUsingIndexNamed: @"KeyIndex" forQuery: q]);
     
     // Reindex:
     Assert([_db performMaintenance: kCBLMaintenanceTypeReindex error: &error],
@@ -2064,8 +2064,7 @@
     
     // Check if the index is still there and used:
     AssertEqual(self.db.indexes.count, 1u);
-    explain = [q explain: &error];
-    Assert([explain rangeOfString: @"USING INDEX KeyIndex"].location != NSNotFound);
+    Assert([self isUsingIndexNamed: @"KeyIndex" forQuery: q]);
 }
 
 - (void) testPerformMaintenanceIntegrityCheck {
