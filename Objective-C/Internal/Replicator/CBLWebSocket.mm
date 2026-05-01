@@ -113,9 +113,9 @@ struct PendingWrite {
     return {
         .framing = kC4WebSocketClientFraming,
         .open = &doOpen,
-        .close = &doClose,
         .write = &doWrite,
         .completedReceive = &doCompletedReceive,
+        .close = &doClose,
         .dispose = &doDispose,
     };
 }
@@ -207,8 +207,10 @@ static void doDispose(C4Socket* s) {
         _queue = dispatch_queue_create(queueName.UTF8String, DISPATCH_QUEUE_SERIAL);
         
         _sockfd = -1;
-        _networkInterface = _replicator.config.networkInterface;
-        if (_networkInterface) {
+        
+        NSString* inf = _replicator.config.networkInterface;
+        if (inf.length > 0) {
+            _networkInterface = inf;
             queueName = [NSString stringWithFormat: @"%@-SocketConnect", queueName];
             _socketConnectQueue = dispatch_queue_create(queueName.UTF8String, DISPATCH_QUEUE_SERIAL);
         }
@@ -612,9 +614,15 @@ static inline NSError* posixError(int errNo, NSString* msg) {
     if (_logic.useTLS) {
         CBLLogVerbose(WebSocket, @"%@: Enabling TLS...", self);
         NSMutableDictionary* settings = [NSMutableDictionary dictionary];
-        if (_connectedThruProxy)
-            [settings setObject: _logic.directHost
-                         forKey: (__bridge id)kCFStreamSSLPeerName];
+        
+        // Set the actual hostname used for certificate verification during the TLS handshake
+        // when connecting through a proxy or a specified network interface. The hostname will
+        // appear in the Server Name Indication (SNI) field of the TLS ClientHello message.
+        if (_connectedThruProxy || _networkInterface) {
+            NSString* hostName = _logic.directHost;
+            CBLLogVerbose(WebSocket, @"%@: Setting TLS peer (SNI) hostname: %@", self, hostName);
+            [settings setObject: hostName forKey: (__bridge id)kCFStreamSSLPeerName];
+        }
         
         if (_options[kC4ReplicatorOptionPinnedServerCert])
             [settings setObject: @NO
