@@ -1,0 +1,10 @@
+on:
+  pull_request:
+    types: [opened]
+    branches: ['**/release/**']
+
+jobs:
+  warn-release:
+    uses: couchbase/couchbase-lite-core/.github/workflows/warn_release.yml@master
+    permissions:
+      pull-requests: write
