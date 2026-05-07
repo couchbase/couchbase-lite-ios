@@ -250,6 +250,12 @@ class Favourites : Codable, Equatable {
     @DocumentID var id: String?
     var colour: String?
     var animal: Animal?
+
+    init(id: String? = nil, colour: String? = nil, animal: Animal? = nil) {
+        self.id = id
+        self.colour = colour
+        self.animal = animal
+    }
     
     static func == (lhs: Favourites, rhs: DictionaryProtocol) -> Bool {
         // use DictionaryEquatable protocol to test equality
