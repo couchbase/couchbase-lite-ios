@@ -547,6 +547,28 @@ class CodableTest: CBLTestCase {
         XCTAssert(profile == document)
     }
     
+    // (CBL-8156) Test that optional properties are correctly decoded when using dataKey
+    func testQueryResultDecodeWithDataKeyOptionalProperties() throws {
+        // 1. Save a Favourites object with some optional fields set and some nil
+        let favourites = Favourites(colour: "blue", animal: Animal(name: "Whale", legs: nil))
+        try defaultCollection!.save(from: favourites)
+        
+        // 2. Query with SELECT meta().id AS id, * (the dataKey pattern)
+        let query = try db.createQuery("SELECT meta().id AS id, * FROM _ LIMIT 1")
+        
+        // 3. Execute the query and decode with dataKey
+        let result = try query.execute().next()!
+        let decoded = try result.data(as: Favourites.self, dataKey: "_")
+        
+        // 4. Assert the decoded object matches the original
+        XCTAssertEqual(decoded.id, favourites.id)
+        XCTAssertEqual(decoded.colour, "blue")
+        XCTAssertNotNil(decoded.animal)
+        XCTAssertEqual(decoded.animal?.name, "Whale")
+        XCTAssertNil(decoded.animal?.legs)
+        XCTAssertEqual(decoded, favourites)
+    }
+    
     // 10. TestQueryResultSetDecode
     func testQueryResultSetDecode() throws {
         // 1. Save 'p-0001', 'p-0002', 'p-0003' from the dataset
