@@ -286,6 +286,13 @@ public struct ReplicatorConfiguration {
     /// Initializes a ReplicatorConfiguration's builder with the given
     /// local database and the replication target.
     ///
+    /// When using this initializer, the default collection of the provided
+    /// database is automatically included in the configuration.
+    ///
+    /// If you do not intend to replicate the default collection, use
+    /// `init(target:)` instead and explicitly add the intended collections
+    /// to avoid unintended behavior.
+    ///
     /// - Parameters:
     ///   - database: The local database.
     ///   - target: The replication target.
@@ -312,7 +319,7 @@ public struct ReplicatorConfiguration {
     /// configuration is specified, a default empty configuration will be applied.
     @discardableResult
     public mutating func addCollection(_ collection: Collection,
-                              config: CollectionConfiguration? = nil) -> ReplicatorConfiguration {
+                                       config: CollectionConfiguration? = nil) -> ReplicatorConfiguration {
         
         if !collection.impl.isValid {
             fatalError("Attempt to add an invalid collection.")
