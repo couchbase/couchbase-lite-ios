@@ -210,6 +210,13 @@ __deprecated_msg(" Use [... initWithTarget:] and [config addCollection: config:]
  Initializes a CBLReplicatorConfiguration with the local database and
  the target endpoint.
  
+ When using this initializer, the default collection of the provided
+ database is automatically included in the configuration.
+
+ If you do not intend to replicate the default collection, use
+ initWithTarget: instead, and explicitly add the intended collections
+ to avoid unintended behavior.
+ 
  @param database The database.
  @param target The target endpoint.
  @return The CBLReplicatorConfiguration object.
