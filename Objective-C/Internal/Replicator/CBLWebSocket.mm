@@ -187,6 +187,9 @@ static void doDispose(C4Socket* s) {
     self = [super init];
     if (self) {
         _c4socket = c4socket;
+        // Retain the C4Socket so it cannot be freed while it's still in use.
+        // Balanced by the c4socket_release in -c4SocketClosed:, after c4socket_closed() is called.
+        c4socket_retain(c4socket);
         _options = AllocedDict(options);
         
         _context = context;
@@ -239,37 +242,6 @@ static void doDispose(C4Socket* s) {
 
 - (void) dispose {
     CBLLogVerbose(WebSocket, @"%@: CBLWebSocket is being disposed", self);
-    
-    // This has to be done synchronously, because _c4socket will be freed when this method returns
-    [self callC4Socket: ^(C4Socket *socket) {
-        // A lock is necessary as the socket could be accessed from another thread under the dispatch
-        // queue, otherwise crash will happen as the c4socket will be freed after this.
-        // The c4socket doesn't call dispose under a mutex so this is safe from being deadlock.
-        c4Socket_setNativeHandle(socket, nullptr);
-        self->_c4socket = nullptr;
-    }];
-
-    dispatch_async(_queue, ^{
-        // CBSE-16151:
-        //
-        // The CBLWebSocket may be called to dispose() by the c4socket before the
-        // disconnect() can happen. For example, if the CBLWebSocket cannot
-        // call c4socket_closed() callback before the timeout (5 seconds),
-        // the c4socket will call to dispose() the CBLWebSocket right away.
-        //
-        // Therefore, before CBLWebSocket is dealloc, we need to ensure that the
-        // disconnect() is called to close the network steams and sockets. This
-        // needs to be done under the same queue that the network streams and
-        // c4socket's handlers/callbacks are using to avoid threading issues.
-        //
-        // Note: the CBLWebSocket will be retained until this block is called
-        // even though the _keepMeAlive is set to nil at the end of this
-        // dispose method.
-        if ([self isConnected]) {
-            [self disconnect];
-        }
-    });
-    
     // Remove the self-reference, so this object will be dealloced.
     self->_keepMeAlive = nil;
 }
@@ -959,9 +931,15 @@ static BOOL checkHeader(NSDictionary* headers, NSString* header, NSString* expec
 }
 
 - (void) c4SocketClosed: (C4Error)c4err {
+    // After the final c4socket_closed(), the c4socket can be released (retained in init). The release
+    // is done outside the lock since it may drop the last reference and trigger deallocation.
+    __block C4Socket* closedSocket = nullptr;
     [self callC4Socket:^(C4Socket *socket) {
         c4socket_closed(socket, c4err);
+        closedSocket = socket;
+        self->_c4socket = nullptr;
     }];
+    c4socket_release(closedSocket);
 }
 
 #pragma mark - TLS Support:
