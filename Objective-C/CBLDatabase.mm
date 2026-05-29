@@ -821,7 +821,7 @@ static const C4DatabaseConfig2 kDBConfig = {
     if (!_c4db)
         return convertError(err, outError);
     
-    CBLLogVerbose(Database, @"%@: Openned database (c4db=%p) successfully at path %@", self, _c4db, path);
+    CBLLogVerbose(Database, @"%@: Opened database (c4db=%p) successfully at path %@", self, _c4db, path);
     
     _sharedKeys = c4db_getFLSharedKeys(_c4db);
         
