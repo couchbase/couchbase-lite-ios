@@ -66,7 +66,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic, readonly, nullable) FLDict fleeceData;
 
-- (void) setFleece: (FLDict)data;
+// Sets and retains the fleece document which owns the backing data.
+// Returns NO if the document's root value is not a dictionary.
+- (BOOL) setFleeceDoc: (FLDoc)doc;
 
 - (instancetype) initWithCollection: (nullable CBLCollection*)collection
                          documentID: (NSString*)documentID

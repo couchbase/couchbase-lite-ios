@@ -52,8 +52,6 @@ using namespace fleece;
         _revID = nil;
         
         [self setC4Doc: c4Doc];
-        
-        CBLLogVerbose(Database, @"%@ init doc", self.fullDescription);
     }
     return self;
 }
@@ -187,11 +185,6 @@ using namespace fleece;
     return [_dict toJSON];
 }
 
-- (void)setFleece:(FLDict)data {
-    _fleeceData = data;
-    [self updateDictionary];
-}
-
 #pragma mark - Internal
 
 - (C4Database*) c4db {
@@ -208,9 +201,17 @@ using namespace fleece;
 }
 
 - (void) updateDictionary {
+    [self updateDictionaryWithFleeceDoc: nullptr];
+}
+
+// `fleeceDoc`, if non-null, owns the bytes (and shared-keys Scope) backing _fleeceData;
+// the DocContext retains it so the data stays valid for the lifetime of the dictionary.
+- (void) updateDictionaryWithFleeceDoc: (FLDoc)fleeceDoc {
     if (_fleeceData) {
         CBLDatabase* db = _collection.database;
-        _root.reset(new MRoot<id>(new cbl::DocContext(db, _c4Doc), Dict(_fleeceData), self.isMutable));
+        // The body is backed by either `fleeceDoc` (encoder output) or `_c4Doc`, never both.
+        CBLC4Document* c4Doc = fleeceDoc ? nil : _c4Doc;
+        _root.reset(new MRoot<id>(new cbl::DocContext(db, c4Doc, fleeceDoc), Dict(_fleeceData), self.isMutable));
         [db safeBlock:^{
             self->_dict = self->_root->asNative();
         }];
@@ -220,6 +221,23 @@ using namespace fleece;
         _dict = self.isMutable ? (id)[[CBLNewDictionary alloc] init]
                                : [[CBLDictionary alloc] initEmpty];
     }
+}
+
+// Sets the document body from a Fleece doc produced by CBLEncoder. Returns NO if the
+// encoded root is not a dictionary. The DocContext built in -updateDictionaryWithFleeceDoc:
+// retains `doc`, keeping its bytes AND their shared-keys Scope alive for as long as the
+// dictionary uses them.
+- (BOOL) setFleeceDoc: (FLDoc)doc {
+    FLDict root = FLValue_AsDict(FLDoc_GetRoot(doc));
+    if (!root)
+        return NO;
+    // Serialize the body mutation like -setC4Doc: does, so it is safe even if the
+    // document is shared (don't rely on the caller passing an unshared document).
+    CBL_LOCK(self) {
+        _fleeceData = root;
+        [self updateDictionaryWithFleeceDoc: doc];
+    }
+    return YES;
 }
 
 - (CBLC4Document*) c4Doc {

@@ -19,15 +19,12 @@
 
 #import "fleece/Fleece.hh"
 #import "CBLFleece.hh"
-#import "MRoot.hh"
 #import "CBLEncoder.h"
 #import "CBLCoreBridge.h"
 #import "CBLStatus.h"
 #import "CBLStringBytes.h"
 #import "CBLDatabase+Internal.h"
 #import "CBLDocument+Internal.h"
-
-using namespace fleece;
 
 @implementation CBLEncoder {
     FLEncoder _encoder;
@@ -77,17 +74,14 @@ using namespace fleece;
 
 - (BOOL)finishIntoDocument:(CBLDocument*)document error:(NSError**)outError {
     FLError error {};
-    FLDoc fldoc = FLEncoder_FinishDoc(_encoder, &error);
-    if (!fldoc) {
+    FLDoc doc = FLEncoder_FinishDoc(_encoder, &error);
+    if (!doc) {
         return convertError(error, outError);
     }
-    Doc doc { fldoc };
-    Dict fleeceData = doc.asDict();
-    if (!fleeceData) {
-        return NO;
-    }
-    [document setFleece: (FLDict)fleeceData];
-    return YES;
+    // setFleeceDoc: retains the doc so the doc can be released here.
+    BOOL ok = [document setFleeceDoc: doc];
+    FLDoc_Release(doc);
+    return ok;
 }
 
 - (void)reset {

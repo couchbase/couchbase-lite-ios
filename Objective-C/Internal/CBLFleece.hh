@@ -57,17 +57,24 @@ namespace cbl {
     // Doc Context
     class DocContext : public fleece::MContext {
     public:
-        DocContext(CBLDatabase *db, CBLC4Document* __nullable doc);
-        
+        /// Holds a document's Fleece body alive. The body has at most one owner that the
+        /// context retains: `doc` (the C4Document a loaded body was read from) or `fleeceDoc`
+        /// (the in-memory Fleece doc that produced the body, e.g. via CBLEncoder).
+        /// Both are nil when the body is kept alive elsewhere, e.g. the transient FLDict
+        /// passed to a replication filter, or a subclass that owns the backing (QueryResultContext).
+        DocContext(CBLDatabase *db, CBLC4Document* __nullable doc,
+                   FLDoc __nullable fleeceDoc = nullptr);
+
         CBLDatabase* database() const   {return _db;}
         CBLC4Document* __nullable document() const {return _doc;}
         NSMapTable* fleeceToNSStrings() const {return _fleeceToNSStrings;}
-        
+
         id toObject(fleece::Value);
-        
+
         private:
         CBLDatabase *_db;
         CBLC4Document* __nullable _doc;
+        fleece::Doc _fleeceDoc;
         NSMapTable* _fleeceToNSStrings;
     };
 }

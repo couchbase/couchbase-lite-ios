@@ -33,12 +33,16 @@
 @end
 
 namespace cbl {
-    DocContext::DocContext(CBLDatabase *db, CBLC4Document *doc)
+    DocContext::DocContext(CBLDatabase *db, CBLC4Document *doc, FLDoc fleeceDoc)
     :fleece::MContext(fleece::alloc_slice())
     ,_db(db)
     ,_doc(doc)
+    ,_fleeceDoc(fleeceDoc)      // fleece::Doc(FLDoc) retains; ~Doc releases
     ,_fleeceToNSStrings(FLCreateSharedStringsTable())
-    { }
+    {
+        Assert(!doc || !fleeceDoc,
+               @"A document body cannot be backed by both a C4Document and a Fleece doc");
+    }
     
     
     id DocContext::toObject(fleece::Value value) {
