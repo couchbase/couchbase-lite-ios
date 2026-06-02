@@ -2,7 +2,7 @@ pipeline {
     options {
         disableConcurrentBuilds() 
     }
-    agent { label 'sonoma'  }
+    agent { label 'tahoe'  }
     stages {
         stage('Cleanup'){
             steps {
