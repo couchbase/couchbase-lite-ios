@@ -273,7 +273,11 @@ class LogSinkTest: CBLTestCase {
         // Disable file logging
         LogSinks.file = nil
         writeAllLogs(message)
-        
+
+        // LiteCore log filenames are millisecond-resolution; sleep so re-enabled files get new
+        // names instead of truncating the first batch (otherwise < 8 files hold the message).
+        Thread.sleep(forTimeInterval: 0.1)
+
         // Re-enable file logging
         LogSinks.file = FileLogSink(level: .verbose,
                                     directory: logFileDirectory,

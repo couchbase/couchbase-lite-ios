@@ -282,9 +282,12 @@
     // Disable file logging
     CBLLogSinks.file = nil;
     [self writeAllLogs: inputString];
-    
+
+    // LiteCore log filenames are millisecond-resolution; sleep so re-enabled files get new
+    // names instead of truncating the first batch (otherwise < 8 files hold the message).
+    [NSThread sleepForTimeInterval: 0.1];
+
     // Re-enable file logging
-    
     CBLLogSinks.file = [[CBLFileLogSink alloc] initWithLevel: kCBLLogLevelVerbose
                                                    directory: logFileDirectory
                                                 usePlaintext: YES
