@@ -28,8 +28,6 @@ static void initialize(void)
     {
         initialized = 1;
         
-        c4log_enableFatalExceptionBacktrace();
-        
 #ifdef DEBUG
         c4log_warnOnErrors(true);
 #endif
