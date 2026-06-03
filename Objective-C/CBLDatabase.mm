@@ -314,11 +314,8 @@ static const C4DatabaseConfig2 kDBConfig = {
     [CBLPrecondition assertNotNil: block name: @"block"];
     
     CBL_LOCK(_mutex) {
-        if (![self mustBeOpen: outError])
-            return false;
-        
         [self mustBeOpen];
-        
+
         C4Transaction transaction(_c4db);
         if (outError)
             *outError = nil;
@@ -351,11 +348,10 @@ static const C4DatabaseConfig2 kDBConfig = {
 
 - (BOOL) maybeBatch: (NSError**)outError usingBlockWithError: (BOOL (NS_NOESCAPE ^)(NSError**))block {
     [CBLPrecondition assertNotNil: block name: @"block"];
-    
+
     CBL_LOCK(_mutex) {
-        if (![self mustBeOpen: outError])
-            return false;
-        
+        [self mustBeOpen];
+
         C4Transaction transaction(_c4db);
         if (outError)
             *outError = nil;
@@ -454,11 +450,9 @@ static const C4DatabaseConfig2 kDBConfig = {
 
 - (BOOL) delete: (NSError**)outError {
     CBL_LOCK(_mutex) {
-        if (![self mustBeOpen: outError]) {
-            return NO;
-        }
+        [self mustBeOpen];
     }
-    
+
     if (![self close: outError]) {
         return NO;
     }
@@ -470,10 +464,8 @@ static const C4DatabaseConfig2 kDBConfig = {
 
 - (BOOL) performMaintenance: (CBLMaintenanceType)type error: (NSError**)outError {
     CBL_LOCK(_mutex) {
-        if (![self mustBeOpen: outError]) {
-            return NO;
-        }
-        
+        [self mustBeOpen];
+
         C4Error err;
         if (!c4db_maintenance(_c4db, (C4MaintenanceType)type, &err)) {
             return convertError(err, outError);

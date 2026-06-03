@@ -343,20 +343,12 @@ using namespace fleece;
             return YES;
         }
         
+        [self.database mustBeOpenLocked];
+
         // Compile JSON query:
         __block C4Error c4Err {};
         __block C4Query* query = nil;
-        __block NSError* openError = nil;
         [self.database safeBlock: ^{
-            // Note:
-            // The logic to check open is an optional extra safeguard here as LiteCore
-            // should already handle it. Also for improvement, checking whether database
-            // is open is better to be done inside the database with a method such as
-            // - (BOOL) withLockedOpenDatabase: (NSError **)outError
-            //                           block: (BOOL (^)(CBLDatabase *db, NSError **blockError))block;
-            if (![self.database mustBeOpen: &openError]) {
-                return;
-            }
             if (self->_language == kC4JSONQuery) {
                 assert(self->_json);
                 query = c4query_new2(self.database.c4db,
@@ -369,11 +361,7 @@ using namespace fleece;
         }];
         
         if (!query) {
-            if (openError) {
-                if (outError) *outError = openError;
-            } else {
-                convertError(c4Err, outError);
-            }
+            convertError(c4Err, outError);
             return NO;
         }
         
