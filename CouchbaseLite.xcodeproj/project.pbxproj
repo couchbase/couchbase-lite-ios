@@ -467,6 +467,14 @@
 		40DBB72D2FD003B600DAE154 /* DatabaseLegacyTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40DBB72B2FD003B600DAE154 /* DatabaseLegacyTest.swift */; };
 		40DBB72E2FD003B600DAE154 /* DatabaseLegacyTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40DBB72B2FD003B600DAE154 /* DatabaseLegacyTest.swift */; };
 		40DBB72F2FD003B600DAE154 /* DatabaseLegacyTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40DBB72B2FD003B600DAE154 /* DatabaseLegacyTest.swift */; };
+		40DBB7322FD00EB500DAE154 /* CBLReplicatorConfiguration+Swift.m in Sources */ = {isa = PBXBuildFile; fileRef = 40DBB7312FD00EB500DAE154 /* CBLReplicatorConfiguration+Swift.m */; };
+		40DBB7332FD00EB500DAE154 /* CBLReplicatorConfiguration+Swift.h in Headers */ = {isa = PBXBuildFile; fileRef = 40DBB7302FD00EB500DAE154 /* CBLReplicatorConfiguration+Swift.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		40DBB7362FD00EB500DAE154 /* CBLReplicatorConfiguration+Swift.m in Sources */ = {isa = PBXBuildFile; fileRef = 40DBB7312FD00EB500DAE154 /* CBLReplicatorConfiguration+Swift.m */; };
+		40DBB7372FD00EB500DAE154 /* CBLReplicatorConfiguration+Swift.h in Headers */ = {isa = PBXBuildFile; fileRef = 40DBB7302FD00EB500DAE154 /* CBLReplicatorConfiguration+Swift.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		40DBB73B2FD01EBD00DAE154 /* ReplicatorLegacyTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 40DBB73A2FD01EBD00DAE154 /* ReplicatorLegacyTest.m */; };
+		40DBB73C2FD01EBD00DAE154 /* ReplicatorLegacyTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 40DBB73A2FD01EBD00DAE154 /* ReplicatorLegacyTest.m */; };
+		40DBB73E2FD01EDF00DAE154 /* ReplicatorLegacyTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40DBB73D2FD01EDF00DAE154 /* ReplicatorLegacyTest.swift */; };
+		40DBB73F2FD01EDF00DAE154 /* ReplicatorLegacyTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40DBB73D2FD01EDF00DAE154 /* ReplicatorLegacyTest.swift */; };
 		40E46AE82DD6A4E7007E495D /* CBLMultipeerReplicatorConfiguration.h in Headers */ = {isa = PBXBuildFile; fileRef = 40E46AE12DD6A4E7007E495D /* CBLMultipeerReplicatorConfiguration.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		40E46AE92DD6A4E7007E495D /* CBLMultipeerCollectionConfiguration.h in Headers */ = {isa = PBXBuildFile; fileRef = 40E46ADB2DD6A4E7007E495D /* CBLMultipeerCollectionConfiguration.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		40E46AEA2DD6A4E7007E495D /* CBLMultipeerEventTypes.h in Headers */ = {isa = PBXBuildFile; fileRef = 40E46ADD2DD6A4E7007E495D /* CBLMultipeerEventTypes.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -1805,8 +1813,6 @@
 		AE5CA64E2E590AF1003A9E89 /* DateTimeQueryFunctionTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AC83BC721C026D100792098 /* DateTimeQueryFunctionTest.m */; };
 		AE5CA6502E590B79003A9E89 /* AuthenticatorTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1ADA05382240218F0068F745 /* AuthenticatorTest.m */; };
 		AE5CA6512E590BFC003A9E89 /* MiscCppTest.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1A4FE769225ED344009D5F43 /* MiscCppTest.mm */; };
-		AE5CA6AC2E5E2584003A9E89 /* CBLMessageEndpointListenerConfiguration+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = AE5CA6AB2E5E2584003A9E89 /* CBLMessageEndpointListenerConfiguration+Internal.h */; };
-		AE5CA6AD2E5E2584003A9E89 /* CBLMessageEndpointListenerConfiguration+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = AE5CA6AB2E5E2584003A9E89 /* CBLMessageEndpointListenerConfiguration+Internal.h */; };
 		AE5F25582CAC310700AAB7F4 /* UnnestArrayIndexTest.m in Sources */ = {isa = PBXBuildFile; fileRef = AE5F25492CAC30DC00AAB7F4 /* UnnestArrayIndexTest.m */; };
 		AE5F25592CAC310800AAB7F4 /* UnnestArrayIndexTest.m in Sources */ = {isa = PBXBuildFile; fileRef = AE5F25492CAC30DC00AAB7F4 /* UnnestArrayIndexTest.m */; };
 		AE5F255A2CAC310900AAB7F4 /* UnnestArrayIndexTest.m in Sources */ = {isa = PBXBuildFile; fileRef = AE5F25492CAC30DC00AAB7F4 /* UnnestArrayIndexTest.m */; };
@@ -2497,6 +2503,10 @@
 		40DBB7232FCFF7B900DAE154 /* DatabaseChange.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatabaseChange.swift; sourceTree = "<group>"; };
 		40DBB7262FD0039800DAE154 /* DatabaseLegacyTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DatabaseLegacyTest.m; sourceTree = "<group>"; };
 		40DBB72B2FD003B600DAE154 /* DatabaseLegacyTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatabaseLegacyTest.swift; sourceTree = "<group>"; };
+		40DBB7302FD00EB500DAE154 /* CBLReplicatorConfiguration+Swift.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "CBLReplicatorConfiguration+Swift.h"; sourceTree = "<group>"; };
+		40DBB7312FD00EB500DAE154 /* CBLReplicatorConfiguration+Swift.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "CBLReplicatorConfiguration+Swift.m"; sourceTree = "<group>"; };
+		40DBB73A2FD01EBD00DAE154 /* ReplicatorLegacyTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ReplicatorLegacyTest.m; sourceTree = "<group>"; };
+		40DBB73D2FD01EDF00DAE154 /* ReplicatorLegacyTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReplicatorLegacyTest.swift; sourceTree = "<group>"; };
 		40E46AD92DD6A4E7007E495D /* CBLMultipeerCertificateAuthenticator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLMultipeerCertificateAuthenticator.h; sourceTree = "<group>"; };
 		40E46ADA2DD6A4E7007E495D /* CBLMultipeerCertificateAuthenticator.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CBLMultipeerCertificateAuthenticator.m; sourceTree = "<group>"; };
 		40E46ADB2DD6A4E7007E495D /* CBLMultipeerCollectionConfiguration.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLMultipeerCollectionConfiguration.h; sourceTree = "<group>"; };
@@ -2997,7 +3007,6 @@
 		AE2424BF2E799CAC004A86D9 /* generate_release_zip.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = generate_release_zip.sh; sourceTree = "<group>"; };
 		AE5803A32B99C67D001A1BE3 /* VectorSearchTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VectorSearchTest.swift; sourceTree = "<group>"; };
 		AE5803D72B9B5B2A001A1BE3 /* WordEmbeddingModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WordEmbeddingModel.swift; sourceTree = "<group>"; };
-		AE5CA6AB2E5E2584003A9E89 /* CBLMessageEndpointListenerConfiguration+Internal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "CBLMessageEndpointListenerConfiguration+Internal.h"; sourceTree = "<group>"; };
 		AE5F25492CAC30DC00AAB7F4 /* UnnestArrayIndexTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = UnnestArrayIndexTest.m; sourceTree = "<group>"; };
 		AE6660DF2DDF720900860706 /* WeakHolder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeakHolder.swift; sourceTree = "<group>"; };
 		AE83D0822C0637ED0055D2CF /* CBLIndexUpdater.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLIndexUpdater.h; sourceTree = "<group>"; };
@@ -3250,6 +3259,8 @@
 				9374A8A5201FC53600BA0D9E /* CBLReplicator+Backgrounding.m */,
 				2728509C1E99CA4D009CA22F /* CBLReplicator+Internal.h */,
 				93B41CC81F04730500A7F114 /* CBLReplicatorChange+Internal.h */,
+				40DBB7302FD00EB500DAE154 /* CBLReplicatorConfiguration+Swift.h */,
+				40DBB7312FD00EB500DAE154 /* CBLReplicatorConfiguration+Swift.m */,
 				40E46B122DD6A7B5007E495D /* CBLReplicatorStatus+Internal.h */,
 				276740B51EE7381E0036DE42 /* CBLTrustCheck.h */,
 				276740B61EE7381E0036DE42 /* CBLTrustCheck.mm */,
@@ -3319,6 +3330,7 @@
 				93EB25A321CDCC160006FB88 /* PredictiveQueryTest.swift */,
 				93AE16E2221DC92E00539C05 /* PredictiveQueryTest+CoreML.swift */,
 				AE9D61A02D6F453C00A6EB82 /* PublisherTest.swift */,
+				40DBB73D2FD01EDF00DAE154 /* ReplicatorLegacyTest.swift */,
 				93DB80021ED8FE5100C4F845 /* ReplicatorTest.swift */,
 				1AC754622897A9C9006CF48F /* ReplicatorTest+Collection.swift */,
 				1AA3D6B022A1A3490098E16B /* ReplicatorTest+CustomConflict.swift */,
@@ -3565,7 +3577,6 @@
 				40FC1AC22B9286E700394276 /* CBLMessageEndpoint+Internal.h */,
 				40FC1AC42B9286E700394276 /* CBLMessageSocket.h */,
 				40FC1AC32B9286E700394276 /* CBLMessageSocket.mm */,
-				AE5CA6AB2E5E2584003A9E89 /* CBLMessageEndpointListenerConfiguration+Internal.h */,
 			);
 			path = Replicator;
 			sourceTree = "<group>";
@@ -4443,6 +4454,7 @@
 				1AF555C322946ED90077DF6D /* QueryTest+Main.m */,
 				1AAF6371226A8B060016754C /* QueryTest+Meta.m */,
 				1AAF6382226A8DBF0016754C /* QueryTest+Join.m */,
+				40DBB73A2FD01EBD00DAE154 /* ReplicatorLegacyTest.m */,
 				1A4160D6228367520061A567 /* ReplicatorTest.h */,
 				27E35A811E8B3B3A00E103F9 /* ReplicatorTest.m */,
 				1A4160D922836C7F0061A567 /* ReplicatorTest+Main.m */,
@@ -4841,6 +4853,7 @@
 				934A279A1F30E5FA003946A7 /* CBLCompoundExpression.h in Headers */,
 				1A3470E1266F415E0042C6BA /* CBLIndexSpec.h in Headers */,
 				934A278D1F30E5A5003946A7 /* CBLAggregateExpression.h in Headers */,
+				40DBB7372FD00EB500DAE154 /* CBLReplicatorConfiguration+Swift.h in Headers */,
 				937F02A31EFC7DCC00060D64 /* CBLChangeListenerToken.h in Headers */,
 				934A27A01F30E61B003946A7 /* CBLPropertyExpression.h in Headers */,
 				272850A71E99CAA4009CA22F /* CBLReplicator+Internal.h in Headers */,
@@ -4977,7 +4990,6 @@
 				40FC1C0A2B928ADC00394276 /* CBLURLEndpointListener+Swift.h in Headers */,
 				9343EFC2207D611600F19A89 /* CBLVersion.h in Headers */,
 				40FC1C192B928B5000394276 /* CBLCoreMLPredictiveModel+Internal.h in Headers */,
-				AE5CA6AD2E5E2584003A9E89 /* CBLMessageEndpointListenerConfiguration+Internal.h in Headers */,
 				40FC1BFF2B928AB100394276 /* CBLCert.h in Headers */,
 				40FC1C1F2B928B5000394276 /* CBLNoneVectorEncoding.h in Headers */,
 				1AC7EC2A249DA24E00978C2E /* Foundation+CBL.h in Headers */,
@@ -5214,7 +5226,6 @@
 				9343F0E8207D61AB00F19A89 /* CBLDictionary+Swift.h in Headers */,
 				9343F0E9207D61AB00F19A89 /* CBLQueryParameters.h in Headers */,
 				9343F0EA207D61AB00F19A89 /* CBLMutableFragment.h in Headers */,
-				AE5CA6AC2E5E2584003A9E89 /* CBLMessageEndpointListenerConfiguration+Internal.h in Headers */,
 				9343F0EB207D61AB00F19A89 /* CBLDatabaseConfiguration.h in Headers */,
 				40D6BCB82DDD176700F209D7 /* CBLPeerID.h in Headers */,
 				40D6BCB92DDD176700F209D7 /* CBLMultipeerReplicatorConfiguration.h in Headers */,
@@ -5245,6 +5256,7 @@
 				AEAFDCEA2D10576400BA5C9C /* CBLLogSinks+Internal.h in Headers */,
 				40815F9B2F0F2279004D8590 /* CBLMultipeerTransportTypes.h in Headers */,
 				40FC1B742B92889800394276 /* CBLReplicatorConfiguration+ServerCert.h in Headers */,
+				40DBB7332FD00EB500DAE154 /* CBLReplicatorConfiguration+Swift.h in Headers */,
 				9343F0F1207D61AB00F19A89 /* CBLSessionAuthenticator.h in Headers */,
 				400AAFDC2C2A843B00DB6223 /* CBLExtension.h in Headers */,
 				1A53B2932966EA2A0010A73E /* CBLQueryFullTextIndexExpressionProtocol.h in Headers */,
@@ -6475,6 +6487,7 @@
 				27E35A921E8C4F4300E103F9 /* Replicator.swift in Sources */,
 				1ACAB8C8266723AE00B4F8E5 /* main.m in Sources */,
 				938CDF251E807F86002EE790 /* FromRouter.swift in Sources */,
+				40DBB7362FD00EB500DAE154 /* CBLReplicatorConfiguration+Swift.m in Sources */,
 				9384D8431FC405D200FE89D8 /* CBLQueryFullTextFunction.m in Sources */,
 				93E17F101ED3BA7800671CA1 /* CBLDocumentChange.m in Sources */,
 				409389F22D4AB99900691393 /* FileLogSink.swift in Sources */,
@@ -6709,6 +6722,7 @@
 				1A8F850A2893F32F008C4333 /* QueryTest+Collection.swift in Sources */,
 				93095B2F246CF1F0005633B4 /* TLSIdentityTest.swift in Sources */,
 				934608F0247F35D500CF2F27 /* URLEndpointListenerTest.swift in Sources */,
+				40DBB73F2FD01EDF00DAE154 /* ReplicatorLegacyTest.swift in Sources */,
 				93BB1CB0246BB2DE004FFA00 /* QueryTest.swift in Sources */,
 				EA7999892D70C62D002C8D71 /* CodableTest.swift in Sources */,
 				93BB1CA8246BB2D4004FFA00 /* DocumentTest.swift in Sources */,
@@ -7012,6 +7026,7 @@
 				409389F32D4AB99900691393 /* FileLogSink.swift in Sources */,
 				9343F04E207D61AB00F19A89 /* HavingRouter.swift in Sources */,
 				40FC1C5D2B928C1600394276 /* ListenerAuthenticator.swift in Sources */,
+				40DBB7322FD00EB500DAE154 /* CBLReplicatorConfiguration+Swift.m in Sources */,
 				9343F04F207D61AB00F19A89 /* CBLMutableFragment.m in Sources */,
 				9343F050207D61AB00F19A89 /* CBLArray.mm in Sources */,
 				9343F051207D61AB00F19A89 /* WhereRouter.swift in Sources */,
@@ -7186,6 +7201,7 @@
 				1A4160DB22836E8C0061A567 /* ReplicatorTest+Main.m in Sources */,
 				930C7F9220FE4F7500C74A12 /* CBLMockConnectionErrorLogic.m in Sources */,
 				AE5F255A2CAC310900AAB7F4 /* UnnestArrayIndexTest.m in Sources */,
+				40DBB73B2FD01EBD00DAE154 /* ReplicatorLegacyTest.m in Sources */,
 				1AA6744B227924120018CC6D /* QueryTest+Join.m in Sources */,
 				934EF8312460D0770053A47C /* TLSIdentityTest.m in Sources */,
 				40600A422DD6B6A500E696B7 /* MultipeerReplicatorTest.m in Sources */,
@@ -7259,6 +7275,7 @@
 				9343F176207D633300F19A89 /* DocumentTest.m in Sources */,
 				1A13DD4228B882A800BC1084 /* URLEndpointListenerTest+Main.m in Sources */,
 				AEFEED782D4A8D82008AF4C2 /* PartialIndexTest.m in Sources */,
+				40DBB73C2FD01EBD00DAE154 /* ReplicatorLegacyTest.m in Sources */,
 				9388CBAE21BD9187005CA66D /* DocumentExpirationTest.m in Sources */,
 				9343F177207D633300F19A89 /* DictionaryTest.m in Sources */,
 				93EB25CD21CDD12A0006FB88 /* PredictiveQueryTest.m in Sources */,
@@ -7312,6 +7329,7 @@
 				1A8F850B2893F330008C4333 /* QueryTest+Collection.swift in Sources */,
 				93095B30246CF1F1005633B4 /* TLSIdentityTest.swift in Sources */,
 				934608F1247F35D500CF2F27 /* URLEndpointListenerTest.swift in Sources */,
+				40DBB73E2FD01EDF00DAE154 /* ReplicatorLegacyTest.swift in Sources */,
 				69845B0723354D0A00CC16BB /* DateTimeQueryFunctionTest.swift in Sources */,
 				EA79998A2D70C62D002C8D71 /* CodableTest.swift in Sources */,
 				9343F194207D636300F19A89 /* FragmentTest.swift in Sources */,

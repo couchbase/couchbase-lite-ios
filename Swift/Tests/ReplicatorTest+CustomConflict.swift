@@ -33,8 +33,8 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
         let config = config(configs: [colConfig], target: target, type: .pull, continuous: false)
         repl = Replicator(config: config)
         
-        XCTAssertNotNil(config.collections.first?.conflictResolver)
-        XCTAssertNotNil(repl.config.collections.first?.conflictResolver)
+        XCTAssertNotNil(config.collectionConfigs.first?.conflictResolver)
+        XCTAssertNotNil(repl.config.collectionConfigs.first?.conflictResolver)
     }
     
     #if COUCHBASE_ENTERPRISE

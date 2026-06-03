@@ -21,11 +21,14 @@
 #import "CBLTLSIdentity+Internal.h"
 #import "CBLURLEndpointListener+Internal.h"
 #import "CBLURLEndpointListenerConfiguration+Internal.h"
-#import "CBLMessageEndpointListenerConfiguration+Internal.h"
 #import "CollectionUtils.h"
 #import "URLEndpointListenerTest.h"
 
 @implementation CBLURLEndpointListener (Test)
+
+// localURL reads the deprecated config.database to build the test URL:
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
 
 - (NSURL*) localURL {
     assert(self.port > 0);
@@ -40,6 +43,8 @@
 - (CBLURLEndpoint*) localEndpoint {
     return [[CBLURLEndpoint alloc] initWithURL: self.localURL];
 }
+
+#pragma clang diagnostic pop
 
 @end
 
