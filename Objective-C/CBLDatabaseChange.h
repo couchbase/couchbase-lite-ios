@@ -1,5 +1,5 @@
 //
-//  CBLDocumentChange.h
+//  CBLDatabaseChange.h
 //  CouchbaseLite
 //
 //  Copyright (c) 2024 Couchbase, Inc All rights reserved.
@@ -20,21 +20,23 @@
 #import <Foundation/Foundation.h>
 
 @class CBLDatabase;
+@class CBLCollection;
 
-/** Document change information  */
-@interface CBLDocumentChange : NSObject
+NS_ASSUME_NONNULL_BEGIN
 
-/** The collection. */
-@property (readonly, nonatomic) CBLCollection* collection;
+/** Database Change information  */
+__deprecated
+@interface CBLDatabaseChange : NSObject
 
 /** The database. */
-@property (readonly, nonatomic) CBLDatabase* database
-__deprecated_msg("Use collection instead.");
+@property (readonly, nonatomic) CBLDatabase* database;
 
-/** The ID  of the document that changed. */
-@property (readonly, nonatomic) NSString* documentID;
+/** The IDs of the document that changed. */
+@property (readonly, nonatomic) NSArray<NSString*>* documentIDs;
 
 /** Not available */
 - (instancetype) init NS_UNAVAILABLE;
 
 @end
+
+NS_ASSUME_NONNULL_END

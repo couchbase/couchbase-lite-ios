@@ -1,5 +1,5 @@
 //
-//  CBLDocumentChange.m
+//  DatabaseChange.swift
 //  CouchbaseLite
 //
 //  Copyright (c) 2017 Couchbase, Inc All rights reserved.
@@ -17,26 +17,16 @@
 //  limitations under the License.
 //
 
-#import "CBLCollection+Internal.h"
-#import "CBLDatabase+Internal.h"
-#import "CBLDocumentChange.h"
-#import "CBLErrors.h"
+import Foundation
 
-@implementation CBLDocumentChange
-
-@synthesize documentID=_documentID, collection=_collection, database=_database;
-
-- (nullable instancetype) initWithCollection: (CBLCollection*)collection
-                                  documentID: (NSString*)documentID
-                                       error: (NSError**)error
-{
-    self = [super init];
-    if (self) {
-        _database = collection.database;;
-        _collection = collection;
-        _documentID = documentID;
-    }
-    return self;
+/// Database Change information
+@available(*, deprecated)
+public struct DatabaseChange {
+    
+    /// The database.
+    public let database: Database
+    
+    /// The IDs of the document that changed.
+    public let documentIDs: [String]
 }
 
-@end

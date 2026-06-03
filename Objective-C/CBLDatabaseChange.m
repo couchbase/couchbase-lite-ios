@@ -1,5 +1,5 @@
 //
-//  CBLDocumentChange.m
+//  CBLDatabaseChange.m
 //  CouchbaseLite
 //
 //  Copyright (c) 2017 Couchbase, Inc All rights reserved.
@@ -17,26 +17,30 @@
 //  limitations under the License.
 //
 
-#import "CBLCollection+Internal.h"
+#import "CBLDatabaseChange.h"
 #import "CBLDatabase+Internal.h"
-#import "CBLDocumentChange.h"
-#import "CBLErrors.h"
 
-@implementation CBLDocumentChange
+// TODO: Remove https://issues.couchbase.com/browse/CBL-3206
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-implementations"
 
-@synthesize documentID=_documentID, collection=_collection, database=_database;
+@implementation CBLDatabaseChange
 
-- (nullable instancetype) initWithCollection: (CBLCollection*)collection
-                                  documentID: (NSString*)documentID
-                                       error: (NSError**)error
+@synthesize database=_database, documentIDs=_documentIDs, isExternal=_isExternal;
+
+- (instancetype) initWithDatabase: (CBLDatabase*)database
+                      documentIDs: (NSArray *)documentIDs
+                       isExternal: (BOOL)isExternal
 {
     self = [super init];
     if (self) {
-        _database = collection.database;;
-        _collection = collection;
-        _documentID = documentID;
+        _database = database;
+        _documentIDs = documentIDs;
+        _isExternal = isExternal;
     }
     return self;
 }
 
 @end
+
+#pragma clang diagnostic pop

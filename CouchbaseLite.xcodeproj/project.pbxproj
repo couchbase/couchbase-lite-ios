@@ -449,6 +449,24 @@
 		40D6BCD22DDD69C000F209D7 /* MultipeerReplicator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40D6BCD12DDD69C000F209D7 /* MultipeerReplicator.swift */; };
 		40D6BCD42DDF89C100F209D7 /* MultipeerReplicatorTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40D6BCD32DDF89C100F209D7 /* MultipeerReplicatorTest.swift */; };
 		40D6BCD52DDF89C100F209D7 /* MultipeerReplicatorTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40D6BCD32DDF89C100F209D7 /* MultipeerReplicatorTest.swift */; };
+		40DBB70A2FCFF76E00DAE154 /* CBLDatabaseChange.h in Headers */ = {isa = PBXBuildFile; fileRef = 40DBB7082FCFF76E00DAE154 /* CBLDatabaseChange.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		40DBB70B2FCFF76E00DAE154 /* CBLDatabaseChange.m in Sources */ = {isa = PBXBuildFile; fileRef = 40DBB7092FCFF76E00DAE154 /* CBLDatabaseChange.m */; };
+		40DBB70C2FCFF76E00DAE154 /* CBLDatabaseChange.m in Sources */ = {isa = PBXBuildFile; fileRef = 40DBB7092FCFF76E00DAE154 /* CBLDatabaseChange.m */; };
+		40DBB70D2FCFF76E00DAE154 /* CBLDatabaseChange.h in Headers */ = {isa = PBXBuildFile; fileRef = 40DBB7082FCFF76E00DAE154 /* CBLDatabaseChange.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		40DBB70E2FCFF76E00DAE154 /* CBLDatabaseChange.h in Headers */ = {isa = PBXBuildFile; fileRef = 40DBB7082FCFF76E00DAE154 /* CBLDatabaseChange.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		40DBB70F2FCFF76E00DAE154 /* CBLDatabaseChange.m in Sources */ = {isa = PBXBuildFile; fileRef = 40DBB7092FCFF76E00DAE154 /* CBLDatabaseChange.m */; };
+		40DBB7102FCFF76E00DAE154 /* CBLDatabaseChange.m in Sources */ = {isa = PBXBuildFile; fileRef = 40DBB7092FCFF76E00DAE154 /* CBLDatabaseChange.m */; };
+		40DBB7112FCFF76E00DAE154 /* CBLDatabaseChange.h in Headers */ = {isa = PBXBuildFile; fileRef = 40DBB7082FCFF76E00DAE154 /* CBLDatabaseChange.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		40DBB7242FCFF7B900DAE154 /* DatabaseChange.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40DBB7232FCFF7B900DAE154 /* DatabaseChange.swift */; };
+		40DBB7252FCFF7B900DAE154 /* DatabaseChange.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40DBB7232FCFF7B900DAE154 /* DatabaseChange.swift */; };
+		40DBB7272FD0039800DAE154 /* DatabaseLegacyTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 40DBB7262FD0039800DAE154 /* DatabaseLegacyTest.m */; };
+		40DBB7282FD0039800DAE154 /* DatabaseLegacyTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 40DBB7262FD0039800DAE154 /* DatabaseLegacyTest.m */; };
+		40DBB7292FD0039800DAE154 /* DatabaseLegacyTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 40DBB7262FD0039800DAE154 /* DatabaseLegacyTest.m */; };
+		40DBB72A2FD0039800DAE154 /* DatabaseLegacyTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 40DBB7262FD0039800DAE154 /* DatabaseLegacyTest.m */; };
+		40DBB72C2FD003B600DAE154 /* DatabaseLegacyTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40DBB72B2FD003B600DAE154 /* DatabaseLegacyTest.swift */; };
+		40DBB72D2FD003B600DAE154 /* DatabaseLegacyTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40DBB72B2FD003B600DAE154 /* DatabaseLegacyTest.swift */; };
+		40DBB72E2FD003B600DAE154 /* DatabaseLegacyTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40DBB72B2FD003B600DAE154 /* DatabaseLegacyTest.swift */; };
+		40DBB72F2FD003B600DAE154 /* DatabaseLegacyTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = 40DBB72B2FD003B600DAE154 /* DatabaseLegacyTest.swift */; };
 		40E46AE82DD6A4E7007E495D /* CBLMultipeerReplicatorConfiguration.h in Headers */ = {isa = PBXBuildFile; fileRef = 40E46AE12DD6A4E7007E495D /* CBLMultipeerReplicatorConfiguration.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		40E46AE92DD6A4E7007E495D /* CBLMultipeerCollectionConfiguration.h in Headers */ = {isa = PBXBuildFile; fileRef = 40E46ADB2DD6A4E7007E495D /* CBLMultipeerCollectionConfiguration.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		40E46AEA2DD6A4E7007E495D /* CBLMultipeerEventTypes.h in Headers */ = {isa = PBXBuildFile; fileRef = 40E46ADD2DD6A4E7007E495D /* CBLMultipeerEventTypes.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -2474,6 +2492,11 @@
 		40D6BCCF2DDD4B7200F209D7 /* MultipeerEventTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultipeerEventTypes.swift; sourceTree = "<group>"; };
 		40D6BCD12DDD69C000F209D7 /* MultipeerReplicator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultipeerReplicator.swift; sourceTree = "<group>"; };
 		40D6BCD32DDF89C100F209D7 /* MultipeerReplicatorTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultipeerReplicatorTest.swift; sourceTree = "<group>"; };
+		40DBB7082FCFF76E00DAE154 /* CBLDatabaseChange.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLDatabaseChange.h; sourceTree = "<group>"; };
+		40DBB7092FCFF76E00DAE154 /* CBLDatabaseChange.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CBLDatabaseChange.m; sourceTree = "<group>"; };
+		40DBB7232FCFF7B900DAE154 /* DatabaseChange.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatabaseChange.swift; sourceTree = "<group>"; };
+		40DBB7262FD0039800DAE154 /* DatabaseLegacyTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DatabaseLegacyTest.m; sourceTree = "<group>"; };
+		40DBB72B2FD003B600DAE154 /* DatabaseLegacyTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DatabaseLegacyTest.swift; sourceTree = "<group>"; };
 		40E46AD92DD6A4E7007E495D /* CBLMultipeerCertificateAuthenticator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLMultipeerCertificateAuthenticator.h; sourceTree = "<group>"; };
 		40E46ADA2DD6A4E7007E495D /* CBLMultipeerCertificateAuthenticator.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CBLMultipeerCertificateAuthenticator.m; sourceTree = "<group>"; };
 		40E46ADB2DD6A4E7007E495D /* CBLMultipeerCollectionConfiguration.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLMultipeerCollectionConfiguration.h; sourceTree = "<group>"; };
@@ -3281,6 +3304,7 @@
 				1A6084EB2875842A0037C66F /* CollectionTest.swift */,
 				27BE3B4C1E4E51C80012B74A /* DatabaseTest.swift */,
 				9369A6B6207DEB5F009B5B83 /* DatabaseEncryptionTest.swift */,
+				40DBB72B2FD003B600DAE154 /* DatabaseLegacyTest.swift */,
 				1A8DD7D921C9876E00741C47 /* DateTimeQueryFunctionTest.swift */,
 				93C3985E1EC66A89005A7A96 /* DictionaryTest.swift */,
 				27BE3B4E1E4E65EB0012B74A /* DocumentTest.swift */,
@@ -3827,6 +3851,7 @@
 				1AAFB679284A266F00878453 /* CollectionChange.swift */,
 				1AAFB67A284A266F00878453 /* CollectionChangeObservable.swift */,
 				275F928B1E4D3119007FD5A2 /* Database.swift */,
+				40DBB7232FCFF7B900DAE154 /* DatabaseChange.swift */,
 				27BE3B531E4E92210012B74A /* Database+Query.swift */,
 				93C18E691FB638620029B567 /* DatabaseConfiguration.swift */,
 				93CED8CA20488BD400E6F0A4 /* DocumentChange.swift */,
@@ -3864,6 +3889,8 @@
 				1ABA639F288135A1005835E7 /* CBLCollectionTypes.h */,
 				93BFCD9E1E0385EA00E52F8A /* CBLDatabase.h */,
 				93BFCD9F1E0385EA00E52F8A /* CBLDatabase.mm */,
+				40DBB7082FCFF76E00DAE154 /* CBLDatabaseChange.h */,
+				40DBB7092FCFF76E00DAE154 /* CBLDatabaseChange.m */,
 				93C18E7E1FB638E80029B567 /* CBLDatabaseConfiguration.h */,
 				93C18E7F1FB638E80029B567 /* CBLDatabaseConfiguration.m */,
 				1A8E2FB628FF75D500E141A8 /* CBLDefaults.h */,
@@ -4393,6 +4420,7 @@
 				1AC16CE6287D4D820041728F /* CollectionTest.m */,
 				9385F3021FC645AE00032037 /* ConcurrentTest.m */,
 				9378C5901E25B3F0001BB196 /* DatabaseTest.m */,
+				40DBB7262FD0039800DAE154 /* DatabaseLegacyTest.m */,
 				9369A6AC207DD0ED009B5B83 /* DatabaseEncryptionTest.m */,
 				1AC83BC721C026D100792098 /* DateTimeQueryFunctionTest.m */,
 				9352945E1E51708E005CE4E8 /* DictionaryTest.m */,
@@ -4698,6 +4726,7 @@
 				1A34715F2671C9230042C6BA /* CBLValueIndexConfiguration.h in Headers */,
 				9374A89F201FC49800BA0D9E /* MYBackgroundMonitor.h in Headers */,
 				2753AFF61EC39CA200C12E98 /* CBLHTTPLogic.h in Headers */,
+				40DBB7112FCFF76E00DAE154 /* CBLDatabaseChange.h in Headers */,
 				93B5036F1E64B0A0002C4680 /* CBLMisc.h in Headers */,
 				9308F3F71E64B21D00F53EE4 /* CollectionUtils.h in Headers */,
 				93EC42E01FB386BE00D54BB4 /* CBLQueryExpression+Internal.h in Headers */,
@@ -5034,6 +5063,7 @@
 				69002EBD234E695600776107 /* CBLErrorMessage.h in Headers */,
 				9343EFEB207D611600F19A89 /* CBLArray.h in Headers */,
 				9343EFEC207D611600F19A89 /* CBLStringBytes.h in Headers */,
+				40DBB70D2FCFF76E00DAE154 /* CBLDatabaseChange.h in Headers */,
 				40815F9A2F0F2279004D8590 /* CBLMultipeerTransportTypes.h in Headers */,
 				9343EFED207D611600F19A89 /* CBLNewDictionary.h in Headers */,
 				40FC1C7C2B92D0E200394276 /* CBLClientCertificateAuthenticator.h in Headers */,
@@ -5211,6 +5241,7 @@
 				40FC1C102B928ADD00394276 /* CBLURLEndpointListener+Internal.h in Headers */,
 				40FC1B722B92889800394276 /* CBLDatabaseEndpoint.h in Headers */,
 				40FC1B842B9288A800394276 /* CBLMessageEndpoint.h in Headers */,
+				40DBB70E2FCFF76E00DAE154 /* CBLDatabaseChange.h in Headers */,
 				AEAFDCEA2D10576400BA5C9C /* CBLLogSinks+Internal.h in Headers */,
 				40815F9B2F0F2279004D8590 /* CBLMultipeerTransportTypes.h in Headers */,
 				40FC1B742B92889800394276 /* CBLReplicatorConfiguration+ServerCert.h in Headers */,
@@ -5381,6 +5412,7 @@
 				93CD02661E9FFEC500AFB3FA /* CBLMutableArray.h in Headers */,
 				1AAB2779227793AD0037A880 /* CBLConflictResolver.h in Headers */,
 				1AAFB674284A263C00878453 /* CBLQueryFactory.h in Headers */,
+				40DBB70A2FCFF76E00DAE154 /* CBLDatabaseChange.h in Headers */,
 				934F4C101E1EF19000F90659 /* CollectionUtils.h in Headers */,
 				931C14681EAAD6730094F9B2 /* CBLMutableArrayFragment.h in Headers */,
 				275229C71E776BC100E630FA /* CBLReplicator.h in Headers */,
@@ -6512,6 +6544,7 @@
 				93FD618E2020757500E7F6A1 /* CBLIndex.m in Sources */,
 				9322DCF51F14654E00C4ACF7 /* Limit.swift in Sources */,
 				938E38841F3A5BB4006806C7 /* CBLQueryCollation.m in Sources */,
+				40DBB7102FCFF76E00DAE154 /* CBLDatabaseChange.m in Sources */,
 				401D7FC42C3F82C300DAAB62 /* CBLQueryIndex.mm in Sources */,
 				9384D80C1FC3F75700FE89D8 /* CBLQueryArrayFunction.m in Sources */,
 				EA60E2602D81E92700DDB1A9 /* QueryResultSetDecoder.swift in Sources */,
@@ -6554,6 +6587,7 @@
 				938CDF221E807F51002EE790 /* Expression.swift in Sources */,
 				2753AFF81EC39CA200C12E98 /* CBLHTTPLogic.m in Sources */,
 				409F44B22DF3B09F00BB7851 /* CBLAppBackgroundingMonitor.m in Sources */,
+				40DBB7252FCFF7B900DAE154 /* DatabaseChange.swift in Sources */,
 				938CDF1C1E807F23002EE790 /* Where.swift in Sources */,
 				40ECAE872E0E08CC00C109A6 /* Precondition.swift in Sources */,
 				275F92A61E4D3A91007FD5A2 /* MutableDocument.swift in Sources */,
@@ -6617,6 +6651,7 @@
 				1A6084F828758AE00037C66F /* CollectionTest.swift in Sources */,
 				934C2CDE1F4FC0D20010316F /* CBLTestHelper.m in Sources */,
 				1A690CD6242150DE0084D017 /* ReplicatorTest+PendingDocIds.swift in Sources */,
+				40DBB72F2FD003B600DAE154 /* DatabaseLegacyTest.swift in Sources */,
 				AE9D61A32D6F453C00A6EB82 /* PublisherTest.swift in Sources */,
 				93F74A9B1EC554D5001289F8 /* FragmentTest.swift in Sources */,
 				EA7999882D70C62D002C8D71 /* CodableTest.swift in Sources */,
@@ -6663,6 +6698,7 @@
 				1A13DD4428B882BA00BC1084 /* URLEndpointListenerTest+Collection.swift in Sources */,
 				93BB1CA1246BB2CA004FFA00 /* DateTimeQueryFunctionTest.swift in Sources */,
 				93BB1C9F246BB2C5004FFA00 /* DatabaseEncryptionTest.swift in Sources */,
+				40DBB72D2FD003B600DAE154 /* DatabaseLegacyTest.swift in Sources */,
 				1AC754702897ADA2006CF48F /* ReplicatorTest+Collection.swift in Sources */,
 				93BB1CA9246BB2D4004FFA00 /* DocumentExpirationTest.swift in Sources */,
 				93BB1CA7246BB2D4004FFA00 /* DictionaryTest.swift in Sources */,
@@ -6818,6 +6854,7 @@
 				9343EF78207D611600F19A89 /* MYErrorUtils.m in Sources */,
 				40FC1BE52B928A4F00394276 /* CBLQueryFunction+Prediction.m in Sources */,
 				9343EF79207D611600F19A89 /* CBLFullTextIndex.m in Sources */,
+				40DBB70C2FCFF76E00DAE154 /* CBLDatabaseChange.m in Sources */,
 				9343EF7A207D611600F19A89 /* CBLReplicatorConfiguration.m in Sources */,
 				935A58BC21AFA34D009A29CB /* CBLDocumentReplication.mm in Sources */,
 				40FC1C302B928BB000394276 /* CBLMessageSocket.mm in Sources */,
@@ -7080,6 +7117,7 @@
 				9343F08F207D61AB00F19A89 /* Where.swift in Sources */,
 				9343F090207D61AB00F19A89 /* MutableDocument.swift in Sources */,
 				9343F091207D61AB00F19A89 /* QueryChange.swift in Sources */,
+				40DBB70F2FCFF76E00DAE154 /* CBLDatabaseChange.m in Sources */,
 				9343F092207D61AB00F19A89 /* CBLSessionAuthenticator.m in Sources */,
 				9343F093207D61AB00F19A89 /* CBLQueryVariableExpression.m in Sources */,
 				40E46B1B2DD6A808007E495D /* CBLConflictResolverService.m in Sources */,
@@ -7099,6 +7137,7 @@
 				9343F099207D61AB00F19A89 /* Select.swift in Sources */,
 				9343F09A207D61AB00F19A89 /* CBLQueryExpression.m in Sources */,
 				40FC1B682B9287BD00394276 /* CBLTLSIdentity.mm in Sources */,
+				40DBB7242FCFF7B900DAE154 /* DatabaseChange.swift in Sources */,
 				9343F09B207D61AB00F19A89 /* OrderBy.swift in Sources */,
 				9343F09C207D61AB00F19A89 /* CBLQueryResultSet.mm in Sources */,
 				9343F09D207D61AB00F19A89 /* CBLQueryBuilder.m in Sources */,
@@ -7138,6 +7177,7 @@
 			files = (
 				9343F139207D61EC00F19A89 /* NotificationTest.m in Sources */,
 				1A2F2C3727FD5B3300084B3C /* TrustCheckTest.m in Sources */,
+				40DBB7282FD0039800DAE154 /* DatabaseLegacyTest.m in Sources */,
 				40938A512D4B464500691393 /* CBLTestCustomLogSink.m in Sources */,
 				930C7F9420FE4F7500C74A12 /* CBLMockConnection.m in Sources */,
 				9343F13A207D61EC00F19A89 /* MiscTest.m in Sources */,
@@ -7230,6 +7270,7 @@
 				933F841E220BA4100093EC88 /* PredictiveQueryTest+CoreML.m in Sources */,
 				1A2F2C3627FD5B2200084B3C /* TrustCheckTest.m in Sources */,
 				1A961801289BF7F90037E78E /* URLEndpointListenerTest+Collection.m in Sources */,
+				40DBB7272FD0039800DAE154 /* DatabaseLegacyTest.m in Sources */,
 				AE006DE52B7BB22000884E2B /* CBLWordEmbeddingModel.m in Sources */,
 				1A93FAFC24F735250015D54D /* ReplicatorTest+PendingDocIds.m in Sources */,
 				9343F17B207D633300F19A89 /* ArrayTest.m in Sources */,
@@ -7260,6 +7301,7 @@
 				1A13DD4328B882BA00BC1084 /* URLEndpointListenerTest+Collection.swift in Sources */,
 				9343F18F207D636300F19A89 /* ArrayTest.swift in Sources */,
 				1A690CD7242150DF0084D017 /* ReplicatorTest+PendingDocIds.swift in Sources */,
+				40DBB72C2FD003B600DAE154 /* DatabaseLegacyTest.swift in Sources */,
 				1AC754712897ADA3006CF48F /* ReplicatorTest+Collection.swift in Sources */,
 				9343F190207D636300F19A89 /* ReplicatorTest.swift in Sources */,
 				9343F191207D636300F19A89 /* NotificationTest.swift in Sources */,
@@ -7341,6 +7383,7 @@
 				9385F3041FC645D300032037 /* ConcurrentTest.m in Sources */,
 				93CD018E1E95546200AFB3FA /* QueryTest.m in Sources */,
 				273E555D1F79AF69000182F1 /* ArrayTest.m in Sources */,
+				40DBB7292FD0039800DAE154 /* DatabaseLegacyTest.m in Sources */,
 				1AC16CF3287D4D960041728F /* CollectionTest.m in Sources */,
 				931C146B1EAAF0960094F9B2 /* FragmentTest.m in Sources */,
 				273E555E1F79AF79000182F1 /* MiscTest.m in Sources */,
@@ -7372,6 +7415,7 @@
 				934F4C111E1EF19000F90659 /* CollectionUtils.m in Sources */,
 				934F4C5B1E1EF25E00F90659 /* Test.m in Sources */,
 				AEA74F482CFE0BC3005F4810 /* CBLCustomLogSink.m in Sources */,
+				40DBB70B2FCFF76E00DAE154 /* CBLDatabaseChange.m in Sources */,
 				72A879F01E2DD51C008466FF /* CBLBlob.mm in Sources */,
 				934A278E1F30E5A5003946A7 /* CBLAggregateExpression.m in Sources */,
 				934F4CAE1E241FB500F90659 /* CBLJSON.mm in Sources */,
@@ -7475,6 +7519,7 @@
 				72A87A0F1E32E858008466FF /* NotificationTest.m in Sources */,
 				9388CC3E21C1E2AD005CA66D /* LogTest.m in Sources */,
 				93384F8C1EB151C100976B41 /* MiscTest.m in Sources */,
+				40DBB72A2FD0039800DAE154 /* DatabaseLegacyTest.m in Sources */,
 				1ACDD8C323FF5BB200AF5D56 /* ReplicatorTest+PendingDocIds.m in Sources */,
 				9388CBAB21BD916F005CA66D /* DocumentExpirationTest.m in Sources */,
 				1AF555C422946ED90077DF6D /* QueryTest+Main.m in Sources */,
@@ -7519,6 +7564,7 @@
 				1A6084F728758ADF0037C66F /* CollectionTest.swift in Sources */,
 				1A93FB0A24F737330015D54D /* ReplicatorTest+PendingDocIds.swift in Sources */,
 				AE9D61A12D6F453C00A6EB82 /* PublisherTest.swift in Sources */,
+				40DBB72E2FD003B600DAE154 /* DatabaseLegacyTest.swift in Sources */,
 				93BB1C99246BB2AB004FFA00 /* ArrayTest.swift in Sources */,
 				EA7999872D70C62D002C8D71 /* CodableTest.swift in Sources */,
 				40938A0E2D4AFA5900691393 /* LogSinkTest.swift in Sources */,

@@ -25,6 +25,7 @@
 #import "CBLCookieStore.h"
 #import "CBLDatabase.h"
 #import "CBLDatabaseConfiguration.h"
+#import "CBLDatabaseChange.h"
 #import "CBLMutableDocument.h"
 #import "CBLDocumentChange.h"
 #import "CBLReplicator.h"
@@ -69,6 +70,11 @@ NS_ASSUME_NONNULL_BEGIN
 // This is currently used for creating a CBLDictionary as an input of the predict()
 // method of the PredictiveModel.
 - (instancetype) initWithC4Database: (C4Database*)c4db;
+
+- (CBLCollection*) defaultCollectionOrThrow;
+- (BOOL) withDefaultCollectionAndError: (NSError**)error block: (BOOL (^)(CBLCollection*, NSError**))block;
+- (nullable id) withDefaultCollectionForObjectAndError: (NSError**)error
+                                                 block: (id _Nullable (^)(CBLCollection*, NSError**))block;
 
 - (id) mutex;
 
@@ -119,5 +125,20 @@ NS_ASSUME_NONNULL_BEGIN
                                        error: (NSError**)error;
 
 @end
+
+
+// CBLDatabaseChange:
+
+@interface CBLDatabaseChange ()
+
+/** check whether the changes are from the current database object or not. */
+@property (readonly, nonatomic) BOOL isExternal;
+
+- (instancetype) initWithDatabase: (CBLDatabase*)database
+                      documentIDs: (NSArray*)documentIDs
+                       isExternal: (BOOL)isExternal;
+
+@end
+
 
 NS_ASSUME_NONNULL_END

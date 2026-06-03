@@ -197,8 +197,80 @@ static const C4DatabaseConfig2 kDBConfig = {
     }
 }
 
+- (uint64_t) count {
+    return [self defaultCollection: nil].count;
+}
+
 - (CBLDatabaseConfiguration*) config {
     return _config;
+}
+
+#pragma mark - GET EXISTING DOCUMENT
+
+- (nullable CBLDocument*) documentWithID: (NSString*)documentID {
+    return [self withDefaultCollectionForObjectAndError: nil block: ^id(CBLCollection* collection, NSError** err) {
+        return [[self defaultCollectionOrThrow] documentWithID: documentID error: err];
+    }];
+}
+
+#pragma mark - SUBSCRIPTION
+
+- (CBLDocumentFragment*) objectForKeyedSubscript: (NSString*)documentID {
+    id result = [self withDefaultCollectionForObjectAndError: nil block: ^id(CBLCollection* collection, NSError** err) {
+        return [collection objectForKeyedSubscript: documentID];
+    }];
+    assert(result != nil);
+    return result;
+}
+
+#pragma mark - SAVE
+
+- (BOOL) saveDocument: (CBLMutableDocument*)document error:(NSError**)error {
+    return [self saveDocument: document
+           concurrencyControl: kCBLConcurrencyControlLastWriteWins
+                        error: error];
+}
+
+- (BOOL) saveDocument: (CBLMutableDocument*)document
+   concurrencyControl: (CBLConcurrencyControl)concurrencyControl
+                error: (NSError**)error {
+    return [self withDefaultCollectionAndError: error block: ^BOOL(CBLCollection* collection, NSError** err) {
+        return [collection saveDocument: document concurrencyControl: concurrencyControl error: err];
+    }];
+}
+
+- (BOOL) saveDocument: (CBLMutableDocument*)document
+      conflictHandler: (BOOL (^)(CBLMutableDocument*, CBLDocument* nullable))conflictHandler
+                error: (NSError**)error {
+    return [self withDefaultCollectionAndError: error block: ^BOOL(CBLCollection* collection, NSError** err) {
+        return [collection saveDocument: document conflictHandler: conflictHandler error: err];
+    }];
+}
+
+- (BOOL) deleteDocument: (CBLDocument*)document error: (NSError**)error {
+    return [self deleteDocument: document
+             concurrencyControl: kCBLConcurrencyControlLastWriteWins
+                          error: error];
+}
+
+- (BOOL) deleteDocument: (CBLDocument*)document
+     concurrencyControl: (CBLConcurrencyControl)concurrencyControl
+                  error: (NSError**)error {
+    return [self withDefaultCollectionAndError: error block: ^BOOL(CBLCollection* collection, NSError** err) {
+        return [collection deleteDocument: document concurrencyControl: concurrencyControl error: err];
+    }];
+}
+
+- (BOOL) purgeDocument: (CBLDocument*)document error: (NSError**)error {
+    return [self withDefaultCollectionAndError: error block: ^BOOL(CBLCollection* collection, NSError** err) {
+        return [collection purgeDocument: document error: err];
+    }];
+}
+
+- (BOOL) purgeDocumentWithID: (NSString*)documentID error: (NSError**)error {
+    return [self withDefaultCollectionAndError: error block: ^BOOL(CBLCollection* collection, NSError** err) {
+        return [collection purgeDocumentWithID: documentID error: err];
+    }];
 }
 
 #pragma mark - Blob Save/Get
@@ -460,6 +532,89 @@ static const C4DatabaseConfig2 kDBConfig = {
     return YES;
 }
 
+#pragma mark - DOCUMENT CHANGES
+
+- (id<CBLListenerToken>) addChangeListener: (void (^)(CBLDatabaseChange*))listener {
+    return [self addChangeListenerWithQueue: nil listener: listener];
+}
+
+- (id<CBLListenerToken>) addChangeListenerWithQueue: (nullable dispatch_queue_t)queue
+                                           listener: (void (^)(CBLDatabaseChange*))listener {
+    return [[self defaultCollectionOrThrow] addChangeListener: ^(CBLCollectionChange *change) {
+        CBLDatabaseChange* dbChange = [[CBLDatabaseChange alloc] initWithDatabase: change.collection.database
+                                                                      documentIDs: change.documentIDs
+                                                                       isExternal: change.isExternal];
+        listener(dbChange);
+    }];
+}
+
+- (id<CBLListenerToken>) addDocumentChangeListenerWithID: (NSString*)id
+                                                listener: (void (^)(CBLDocumentChange*))listener
+{
+    return [self addDocumentChangeListenerWithID: id queue: nil listener: listener];
+}
+
+- (id<CBLListenerToken>) addDocumentChangeListenerWithID: (NSString*)identifier
+                                                   queue: (nullable dispatch_queue_t)queue
+                                                listener: (void (^)(CBLDocumentChange*))listener {
+    return [[self defaultCollectionOrThrow] addDocumentChangeListenerWithID: identifier
+                                                                      queue: queue
+                                                                   listener: listener];
+}
+
+- (void) removeChangeListenerWithToken: (id<CBLListenerToken>)token {
+    return [[self defaultCollectionOrThrow] removeToken: token];
+}
+
+#pragma mark - Index:
+
+- (NSArray<NSString*>*) indexes {
+    id result = [self withDefaultCollectionForObjectAndError: nil block: ^id(CBLCollection* collection, NSError** err) {
+        return [collection indexes: err];
+    }];
+    assert(result != nil);
+    return result;
+}
+
+- (BOOL) createIndex: (CBLIndex*)index withName: (NSString*)name error: (NSError**)error {
+    return [self withDefaultCollectionAndError: error block: ^BOOL(CBLCollection* collection, NSError** err) {
+        return [collection createIndex: index name: name error: err];
+    }];
+}
+
+- (BOOL) createIndexWithConfig: (CBLIndexConfiguration*)config
+                          name: (NSString*)name error: (NSError**)error {
+    return [self createIndex: name withConfig: config error: error];
+}
+
+- (BOOL) createIndex: (NSString*)name withConfig: (id<CBLIndexSpec>)config error: (NSError**)error {
+    return [self withDefaultCollectionAndError: error block: ^BOOL(CBLCollection* collection, NSError** err) {
+        return [collection createIndexWithName: name config: config error: err];
+    }];
+}
+
+- (BOOL) deleteIndexForName: (NSString*)name error: (NSError**)error {
+    return [self withDefaultCollectionAndError: error block: ^BOOL(CBLCollection* collection, NSError** err) {
+        return [collection deleteIndexWithName: name error: err];
+    }];
+}
+
+#pragma mark - DOCUMENT EXPIRATION
+
+- (BOOL) setDocumentExpirationWithID: (NSString*)documentID
+                          expiration: (nullable NSDate*)date
+                               error: (NSError**)error {
+    return [self withDefaultCollectionAndError: error block: ^BOOL(CBLCollection* collection, NSError** err) {
+        return [collection setDocumentExpirationWithID: documentID expiration: date error: err];
+    }];
+}
+
+- (nullable NSDate*) getDocumentExpirationWithID: (NSString*)documentID {
+    return [self withDefaultCollectionForObjectAndError: nil block: ^id(CBLCollection* collection, NSError** err) {
+        return [collection getDocumentExpirationWithID: documentID error: err];
+    }];
+}
+
 #pragma mark - Query
 
 - (nullable CBLQuery*) createQuery: (NSString*)query error: (NSError**)error {
@@ -553,6 +708,55 @@ static const C4DatabaseConfig2 kDBConfig = {
             _defaultCollection = [[CBLCollection alloc] initWithDB: self c4collection: c4col cached: YES];
         }
         return _defaultCollection;
+    }
+}
+
+- (CBLCollection*) defaultCollectionOrThrow {
+    CBL_LOCK(_mutex) {
+        [self mustBeOpen];
+
+        NSError* error;
+        CBLCollection* col = [self defaultCollection: &error];
+        if (!col) {
+            throwIfNotOpenError(error);
+            // Not expect to happen but if it does, log a warning error before raising the exception:
+            CBLWarn(Database, @"%@: Failed to get default collection with error: %@", self, error);
+            [NSException raise: NSInternalInconsistencyException format: @"Unable to get the default collection"];
+        }
+        return col;
+    }
+}
+
+- (BOOL) withDefaultCollectionAndError: (NSError**)error block: (BOOL (^)(CBLCollection*, NSError**))block {
+    NSError* outError = nil;
+    BOOL result = block([self defaultCollectionOrThrow], &outError);
+    if (!result) {
+        throwIfNotOpenError(outError);
+        if (error) *error = outError;
+    }
+    return result;
+}
+
+- (nullable id) withDefaultCollectionForObjectAndError: (NSError**)error
+                                                 block: (id _Nullable (^)(CBLCollection*, NSError**))block
+{
+    NSError* outError = nil;
+    id result = block([self defaultCollectionOrThrow], &outError);
+    if (!result) {
+        throwIfNotOpenError(outError);
+        if (error) *error = outError;
+    }
+    return result;
+}
+
+static void throwNotOpen() {
+    [NSException raise: NSInternalInconsistencyException
+                format: @"The database was closed, or the default collection was deleted."];
+}
+
+static void throwIfNotOpenError(NSError* error) {
+    if (error && error.domain == CBLErrorDomain && error.code == CBLErrorNotOpen) {
+        throwNotOpen();
     }
 }
 
