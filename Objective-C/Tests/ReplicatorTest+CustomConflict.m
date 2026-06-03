@@ -803,8 +803,7 @@
     
 }
 
-// CBL-8383
-- (void) _testConflictResolverReturningBlob {
+- (void) testConflictResolverReturningBlob {
     NSError* error;
     NSString* docID = @"doc";
     NSData* content = [@"I'm a tiger." dataUsingEncoding: NSUTF8StringEncoding];

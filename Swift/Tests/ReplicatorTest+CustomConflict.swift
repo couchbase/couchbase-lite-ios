@@ -528,8 +528,7 @@ class ReplicatorTest_CustomConflict: ReplicatorTest {
         XCTAssertNil(try defaultCollection!.document(id: "doc4"))
     }
     
-    // CBL-8383
-    func _testConflictResolverReturningBlob() throws {
+    func testConflictResolverReturningBlob() throws {
         let docID = "doc"
         let content = "I am a blob".data(using: .utf8)!
         var blob = Blob(contentType: "text/plain", data: content)
