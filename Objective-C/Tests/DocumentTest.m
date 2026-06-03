@@ -22,6 +22,7 @@
 #import "CBLBlob.h"
 #import "CBLJSON.h"
 #import "Foundation+CBL.h"
+#import "CBLDocument+Internal.h"
 
 #define kDocumentTestDate @"2017-01-01T00:00:00.000Z"
 #define kDocumentTestBlob @"i'm blob"
