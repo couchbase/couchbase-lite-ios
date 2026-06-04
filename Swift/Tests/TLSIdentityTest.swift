@@ -232,7 +232,22 @@ class TLSIdentityTest: CBLTestCase {
         identity = try TLSIdentity.identity(withLabel: self.serverCertLabel)
         XCTAssertNil(identity)
     }
-    
+
+    // CBL-7304: deprecated createIdentity(forServer:attributes:expiration:label:)
+    @available(*, deprecated)
+    func testCreateServerIdentityDeprecated() throws {
+        try XCTSkipUnless(keyChainAccessAllowed)
+
+        let identity = try TLSIdentity.createIdentity(forServer: true,
+                                                      attributes: serverCertAttrs,
+                                                      expiration: nil,
+                                                      label: serverCertLabel)
+        XCTAssertEqual(identity.certs.count, 1)
+
+        // Cleanup:
+        try TLSIdentity.deleteIdentity(withLabel: serverCertLabel)
+    }
+
     func testCreateDuplicateServerIdentity() throws {
         try XCTSkipUnless(keyChainAccessAllowed)
         

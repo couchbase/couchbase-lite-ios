@@ -288,6 +288,28 @@
     AssertNil(error);
 }
 
+// CBL-7304: deprecated +createIdentityForServer:attributes:expiration:label:error:
+- (void) testCreateServerIdentityDeprecated {
+    XCTSkipUnless(self.keyChainAccessAllowed);
+
+    NSError* error;
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+    CBLTLSIdentity* identity = [CBLTLSIdentity createIdentityForServer: YES
+                                                           attributes: kServerCertAttrs
+                                                           expiration: nil
+                                                                label: kServerCertLabel
+                                                                error: &error];
+#pragma clang diagnostic pop
+    AssertNotNil(identity);
+    AssertNil(error);
+    AssertEqual(identity.certs.count, 1);
+
+    // Cleanup:
+    Assert([CBLTLSIdentity deleteIdentityWithLabel: kServerCertLabel error: &error]);
+    AssertNil(error);
+}
+
 - (void) testCreateDuplicateServerIdentity {
     XCTSkipUnless(self.keyChainAccessAllowed);
     
