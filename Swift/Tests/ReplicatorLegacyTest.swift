@@ -145,4 +145,30 @@ class ReplicatorLegacyTest: ReplicatorTest {
         XCTAssertEqual(config.collections.count, 1)
         XCTAssertEqual(config.protocolType, .messageStream)
     }
+
+    // MARK: - Replicator.removeChangeListener(withToken:)
+
+    func testRemoveReplicatorChangeListenerWithToken() throws {
+        let target = DatabaseEndpoint(database: otherDB!)
+        var config = ReplicatorConfiguration(target: target)
+        config.addCollection(defaultCollection!)
+        config.replicatorType = .push
+
+        let repl = Replicator(config: config)
+        let token = repl.addChangeListener { (change) in }
+
+        // Remove using the deprecated API; should not crash.
+        repl.removeChangeListener(withToken: token)
+    }
+
+    // MARK: - MessageEndpointListener.removeChangeListener(token:)
+
+    func testRemoveMessageEndpointListenerChangeListener() throws {
+        let config = MessageEndpointListenerConfiguration(collections: [defaultCollection!], protocolType: .messageStream)
+        let listener = MessageEndpointListener(config: config)
+        let token = listener.addChangeListener { (change) in }
+
+        // Remove using the deprecated API; should not crash.
+        listener.removeChangeListener(token: token)
+    }
 }

@@ -147,4 +147,21 @@ class QueryLegacyTest: CBLTestCase {
         let numRows = try verifyQuery(q) { (n, r) in }
         XCTAssertEqual(numRows, 2)
     }
+
+    // MARK: - Query.removeChangeListener(withToken:)
+
+    func testRemoveQueryChangeListenerWithToken() throws {
+        let q = QueryBuilder.select(kDOCID).from(DataSource.collection(defaultCollection!))
+
+        let x = expectation(description: "query change")
+        x.assertForOverFulfill = false
+        let token = q.addChangeListener { (change) in
+            XCTAssertNil(change.error)
+            x.fulfill()
+        }
+        wait(for: [x], timeout: 5.0)
+
+        // Remove using the deprecated API; should not crash.
+        q.removeChangeListener(withToken: token)
+    }
 }

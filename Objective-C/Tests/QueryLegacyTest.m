@@ -145,6 +145,23 @@
     AssertEqual(numRows, 2u);
 }
 
+// MARK: - CBLQuery -removeChangeListenerWithToken:
+
+- (void) testRemoveQueryChangeListenerWithToken {
+    CBLQuery* q = [CBLQueryBuilder select: @[kDOCID] from: kDATA_SRC_DB];
+
+    XCTestExpectation* x = [self expectationWithDescription: @"query change"];
+    x.assertForOverFulfill = NO;
+    id<CBLListenerToken> token = [q addChangeListener: ^(CBLQueryChange* change) {
+        AssertNil(change.error);
+        [x fulfill];
+    }];
+    [self waitForExpectations: @[x] timeout: 5.0];
+
+    // Remove using the deprecated API; should not crash.
+    [q removeChangeListenerWithToken: token];
+}
+
 @end
 
 #pragma clang diagnostic pop

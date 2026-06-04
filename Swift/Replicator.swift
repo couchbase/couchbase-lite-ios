@@ -197,7 +197,15 @@ public final class Replicator {
         })
         return ListenerToken(token)
     }
-    
+
+    /// Removes a change listener with the given listener token.
+    ///
+    /// - Parameter token: The listener token.
+    @available(*, deprecated, message: "Use token.remove() instead.")
+    public func removeChangeListener(withToken token: ListenerToken) {
+        impl.removeChangeListener(with: token.impl)
+    }
+
     // MARK: Combine Publisher
     
     /// Returns a Combine publisher that emits `ReplicatorChange` events when

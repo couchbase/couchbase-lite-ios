@@ -136,6 +136,14 @@ the replicator change notification.
                                                         listener: (void (^)(CBLDocumentReplication*))listener;
 
 /**
+ Removes a change listener with the given listener token.
+
+ @param token The listener token;
+ */
+- (void) removeChangeListenerWithToken: (id<CBLListenerToken>)token
+__deprecated_msg("Use [ListenerToken remove] instead.");
+
+/**
  Get pending document ids for default collection. If the default collection is not part of the
  replication, an Illegal State Exception will be thrown.
  

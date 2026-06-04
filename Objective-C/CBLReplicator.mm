@@ -491,6 +491,10 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
     }
 }
 
+- (void) removeChangeListenerWithToken: (id<CBLListenerToken>)token {
+    [self removeToken: token];
+}
+
 #pragma mark delegate(CBLRemovableListenerToken)
 
 - (void) removeToken: (id)token {

@@ -169,6 +169,36 @@
     AssertEqual(config.protocolType, kCBLProtocolTypeMessageStream);
 }
 
+// MARK: - CBLReplicator -removeChangeListenerWithToken:
+
+- (void) testRemoveReplicatorChangeListenerWithToken {
+    id<CBLEndpoint> target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
+    CBLReplicatorConfiguration* config = [[CBLReplicatorConfiguration alloc] initWithTarget: target];
+    [config addCollection: self.defaultCollection config: nil];
+    config.replicatorType = kCBLReplicatorTypePush;
+
+    CBLReplicator* repl = [[CBLReplicator alloc] initWithConfig: config];
+    id<CBLListenerToken> token = [repl addChangeListener: ^(CBLReplicatorChange* change) { }];
+    AssertNotNil(token);
+
+    // Remove using the deprecated API; should not crash.
+    [repl removeChangeListenerWithToken: token];
+}
+
+// MARK: - CBLMessageEndpointListener -removeChangeListenerWithToken:
+
+- (void) testRemoveMessageEndpointListenerChangeListenerWithToken {
+    CBLMessageEndpointListenerConfiguration* config =
+        [[CBLMessageEndpointListenerConfiguration alloc] initWithCollections: @[self.defaultCollection]
+                                                                protocolType: kCBLProtocolTypeMessageStream];
+    CBLMessageEndpointListener* listener = [[CBLMessageEndpointListener alloc] initWithConfig: config];
+    id<CBLListenerToken> token = [listener addChangeListener: ^(CBLMessageEndpointListenerChange* change) { }];
+    AssertNotNil(token);
+
+    // Remove using the deprecated API; should not crash.
+    [listener removeChangeListenerWithToken: token];
+}
+
 #pragma clang diagnostic pop
 
 @end
