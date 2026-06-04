@@ -1,8 +1,8 @@
 //
-//  CBLLog.h
+//  CBLLogger.h
 //  CouchbaseLite
 //
-//  Copyright (c) 2025 Couchbase, Inc All rights reserved.
+//  Copyright (c) 2024 Couchbase, Inc All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -15,12 +15,22 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
+//
 
-#import <Foundation/Foundation.h>
+#import <CouchbaseLite/CBLLogTypes.h>
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface CBLLog : NSObject
+/**
+ Logger protocol
+ */
+@protocol CBLLogger <NSObject>
+
+/** The minimum log level to be logged. */
+@property (readonly, nonatomic) CBLLogLevel level;
+
+/** The callback log method. */
+- (void) logWithLevel: (CBLLogLevel)level domain: (CBLLogDomain)domain message: (NSString*)message;
 
 @end
 

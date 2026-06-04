@@ -26,21 +26,37 @@ NS_ASSUME_NONNULL_BEGIN
 // Internal Default Log Domain
 extern const CBLLogDomain kCBLLogDomainDefault;
 
+// Tracks which logging API configured a sink, so the deprecated (CBLLog) and the
+// new (CBLLogSinks) logging APIs cannot be used simultaneously.
+typedef NS_ENUM(NSUInteger, CBLLogAPI) {
+    kCBLLogAPINone,
+    kCBLLogAPIOld,
+    kCBLLogAPINew,
+};
+
+@protocol CBLLogApiSource <NSObject>
+
+@property (nonatomic) CBLLogAPI version;
+
+@end
+
 @interface CBLLogSinks ()
 
 + (void) writeCBLLog: (C4LogDomain)domain level: (C4LogLevel)level message: (NSString*)message;
 
-@end
-
-@interface CBLConsoleLogSink () <CBLLogSinkProtocol>
++ (void) checkLogApiVersion: (nullable id<CBLLogApiSource>)source;
 
 @end
 
-@interface CBLCustomLogSink () <CBLLogSinkProtocol>
+@interface CBLConsoleLogSink () <CBLLogSinkProtocol, CBLLogApiSource>
 
 @end
 
-@interface CBLFileLogSink () <CBLLogSinkProtocol>
+@interface CBLCustomLogSink () <CBLLogSinkProtocol, CBLLogApiSource>
+
+@end
+
+@interface CBLFileLogSink () <CBLLogSinkProtocol, CBLLogApiSource>
 
 + (void) setup: (nullable CBLFileLogSink*)logSink;
 

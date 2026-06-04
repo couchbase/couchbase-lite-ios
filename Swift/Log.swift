@@ -20,7 +20,35 @@
 import Foundation
 import CouchbaseLiteSwift_Private
 
+/// Log allows to configure console and file logger or to set a custom logger.
 public final class Log {
+
+    /// Console logger writing log messages to the system console.
+    @available(*, deprecated, message: "Use LogSinks.console instead.")
+    public let console = ConsoleLogger()
+
+    /// File logger writing log messages to files.
+    @available(*, deprecated, message: "Use LogSinks.file instead.")
+    public let file = FileLogger()
+
+    /// For setting a custom logger. Changing the log level of the assigned custom logger will require
+    /// the custom logger to be reassigned so that the change can be affected.
+    @available(*, deprecated, message: "Use LogSinks.custom instead.")
+    public var custom: Logger? {
+        didSet {
+            if let logger = custom {
+                let logLevel = CBLLogLevel(rawValue: UInt(logger.level.rawValue))!
+                CBLDatabase.log().setCustomLoggerWith(logLevel) { (level, domain, message) in
+                    let l = LogLevel(rawValue: UInt8(level.rawValue))!
+                    let d = LogDomain(rawValue: domain.rawValue)!
+                    logger.log(level: l, domain: d, message: message)
+                }
+            } else {
+                CBLDatabase.log().custom = nil
+            }
+        }
+    }
+
     /// Writes a log message to all the enabled log sinks.
     /// - Note: `Unsupported API` Internal used for testing purpose.
     public static func log(domain: LogDomain, level: LogLevel, message: String) {
@@ -28,4 +56,8 @@ public final class Log {
         let cLevel = CBLLogLevel(rawValue: UInt(level.rawValue))!
         CBLLog.writeSwiftLog(cDomain, level: cLevel, message: message)
     }
+
+    // MARK: Internal
+
+    init() { }
 }

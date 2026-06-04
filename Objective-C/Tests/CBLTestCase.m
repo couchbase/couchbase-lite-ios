@@ -20,6 +20,7 @@
 #import "CBLTestCase.h"
 #include "c4.h"
 #import "CollectionUtils.h"
+#import "CBLLogSinks+Reset.h"
 
 #ifdef COUCHBASE_ENTERPRISE
 #define kDatabaseDirName @"CouchbaseLite_EE"
@@ -56,11 +57,15 @@ const NSTimeInterval kExpTimeout = 20.0;
                @"Error deleting CouchbaseLite folder: %@", error);
     }
     [self initDB];
+
+    // Debug logging to be made before this, if any
+    [CBLLogSinks resetApiVersion];
 }
 
 - (void) tearDown {
+    [CBLLogSinks resetApiVersion];
     NSError* error;
-    
+
     Assert([_db close: &error], @"Failed to close db: %@", error);
     _db = nil;
 

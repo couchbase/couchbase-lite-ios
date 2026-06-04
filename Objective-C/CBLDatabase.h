@@ -18,6 +18,7 @@
 //
 
 #import <Foundation/Foundation.h>
+#import <CouchbaseLite/CBLLogger.h>
 #import <CouchbaseLite/CBLQueryFactory.h>
 #import <CouchbaseLite/CBLCollectionTypes.h>
 
@@ -351,6 +352,15 @@ __deprecated_msg("Use [[database defaultCollection] purgeDocumentWithID:error:] 
            toDatabase: (NSString*)name
            withConfig: (nullable CBLDatabaseConfiguration*)config
                 error: (NSError**)error;
+
+#pragma mark - Logging
+
+/**
+ Log object used for configuring console, file, and custom logger.
+
+ @return log object
+ */
++ (CBLLog*) log;
 
 #pragma mark - Change Listener
 

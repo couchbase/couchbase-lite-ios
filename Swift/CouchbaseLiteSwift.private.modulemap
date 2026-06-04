@@ -115,5 +115,11 @@ framework module CouchbaseLiteSwift_Private {
     header "CBLReplicatorConfiguration+Swift.h"
     header "CBLConflictResolverBridge.h"
     header "CBLCollectionConfiguration+Swift.h"
+    header "CBLConsoleLogger.h"
+    header "CBLFileLogger.h"
+    header "CBLLog.h"
+    header "CBLLogFileConfiguration.h"
+    header "CBLLogger.h"
     header "CBLLog+Swift.h"
+    header "CBLLogSinks+Reset.h"
 }

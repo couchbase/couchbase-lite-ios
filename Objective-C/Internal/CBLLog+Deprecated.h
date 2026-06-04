@@ -1,8 +1,8 @@
 //
-//  CBLLog+Swift.h
+//  CBLLog+Deprecated.h
 //  CouchbaseLite
 //
-//  Copyright (c) 2025 Couchbase, Inc All rights reserved.
+//  Copyright (c) 2026 Couchbase, Inc All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -15,21 +15,32 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
+//
 
 #import "CBLLog.h"
-#import "CBLLogTypes.h"
-#import "CBLLogger.h"
+#import "CBLConsoleLogger.h"
+#import "CBLFileLogger.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-typedef void (^CBLCustomLoggerBlock)(CBLLogLevel, CBLLogDomain, NSString*);
+// Internal hooks for the deprecated logging API (CBLLog / CBLConsoleLogger / CBLFileLogger).
+// The deprecated API bridges to the new CBLLogSinks backend.
 
 @interface CBLLog ()
 
-+ (void) writeSwiftLog: (CBLLogDomain)domain level: (CBLLogLevel)level message: (NSString*)message;
++ (instancetype) sharedInstance;
 
-// Used by the deprecated Swift Log.custom to install a custom logger backed by a block.
-- (void) setCustomLoggerWithLevel: (CBLLogLevel)level usingBlock: (CBLCustomLoggerBlock)logger;
+@end
+
+@interface CBLConsoleLogger ()
+
+- (instancetype) initWithDefault;
+
+@end
+
+@interface CBLFileLogger ()
+
+- (instancetype) initWithDefault;
 
 @end
 

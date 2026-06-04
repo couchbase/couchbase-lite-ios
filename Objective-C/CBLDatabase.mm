@@ -30,6 +30,7 @@
 #import "CBLIndexConfiguration+Internal.h"
 #import "CBLIndexSpec.h"
 #import "CBLIndex+Internal.h"
+#import "CBLLog+Deprecated.h"
 #import "CBLLogSinks+Internal.h"
 #import "CBLMisc.h"
 #import "CBLPrecondition.h"
@@ -605,6 +606,12 @@ static const C4DatabaseConfig2 kDBConfig = {
     return [self withDefaultCollectionForObjectAndError: nil block: ^id(CBLCollection* collection, NSError** err) {
         return [collection getDocumentExpirationWithID: documentID error: err];
     }];
+}
+
+#pragma mark - Logging
+
++ (CBLLog*) log {
+    return [CBLLog sharedInstance];
 }
 
 #pragma mark - Query

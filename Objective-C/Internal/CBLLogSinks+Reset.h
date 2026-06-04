@@ -1,5 +1,5 @@
 //
-//  CBLLog+Swift.h
+//  CBLLogSinks+Reset.h
 //  CouchbaseLite
 //
 //  Copyright (c) 2025 Couchbase, Inc All rights reserved.
@@ -15,22 +15,15 @@
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
+//
 
-#import "CBLLog.h"
-#import "CBLLogTypes.h"
-#import "CBLLogger.h"
+#import "CBLLogSinks.h"
 
-NS_ASSUME_NONNULL_BEGIN
+@interface CBLLogSinks ()
 
-typedef void (^CBLCustomLoggerBlock)(CBLLogLevel, CBLLogDomain, NSString*);
-
-@interface CBLLog ()
-
-+ (void) writeSwiftLog: (CBLLogDomain)domain level: (CBLLogLevel)level message: (NSString*)message;
-
-// Used by the deprecated Swift Log.custom to install a custom logger backed by a block.
-- (void) setCustomLoggerWithLevel: (CBLLogLevel)level usingBlock: (CBLCustomLoggerBlock)logger;
+// Resets the committed logging API version. For testing only: allows a test
+// process to exercise both the deprecated (CBLLog) and the new (CBLLogSinks)
+// logging APIs across different test cases.
++ (void) resetApiVersion;
 
 @end
-
-NS_ASSUME_NONNULL_END

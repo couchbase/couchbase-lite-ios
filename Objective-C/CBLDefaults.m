@@ -34,6 +34,14 @@ const uint64_t kCBLDefaultFileLogSinkMaxSize = 524288;
 
 const NSInteger kCBLDefaultFileLogSinkMaxKeptFiles = 2;
 
+#pragma mark - CBLLogFileConfiguration (Deprecated)
+
+const BOOL kCBLDefaultLogFileUsePlaintext = NO;
+
+const uint64_t kCBLDefaultLogFileMaxSize = 524288;
+
+const NSInteger kCBLDefaultLogFileMaxRotateCount = 1;
+
 #pragma mark - CBLFullTextIndexConfiguration
 
 const BOOL kCBLDefaultFullTextIndexIgnoreAccents = NO;

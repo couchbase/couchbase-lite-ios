@@ -44,6 +44,17 @@ extern const uint64_t kCBLDefaultFileLogSinkMaxSize;
 /** [2] 2 files preserved during each log rotation */
 extern const NSInteger kCBLDefaultFileLogSinkMaxKeptFiles;
 
+#pragma mark - CBLLogFileConfiguration (Deprecated)
+
+/** [NO] Plaintext is not used, and instead binary encoding is used in log files */
+extern const BOOL kCBLDefaultLogFileUsePlaintext;
+
+/** [524288] 512 KiB for the size of a log file */
+extern const uint64_t kCBLDefaultLogFileMaxSize;
+
+/** [1] 1 rotated file is preserved during each log rotation */
+extern const NSInteger kCBLDefaultLogFileMaxRotateCount;
+
 #pragma mark - CBLFullTextIndexConfiguration
 
 /** [NO] Accents and ligatures are not ignored when indexing via full text search */
