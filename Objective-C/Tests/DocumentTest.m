@@ -2325,33 +2325,7 @@
 /**  https://github.com/couchbaselabs/couchbase-lite-api/blob/master/spec/tests/T0005-Version-Vector.md  */
  
 /**
- 1. TestDocumentTimestamp
- Description
-    Test that the document's timestamp returns value as expected.
- Steps
-    1. Create a new document with id = "doc1"
-    2. Get document's timestamp and check that the timestamp is 0.
-    3. Save the document into the default collection.
-    4. Get document's timestamp and check that the timestamp is more than 0.
-    5. Get the document id = "doc1" from the database.
-    6. Get document's timestamp and check that the timestamp is the same as the timestamp from step 4.
- */
-- (void) testDocumentTimestamp {
-    NSError* err;
-    
-    CBLMutableDocument* doc = [[CBLMutableDocument alloc] initWithID: @"doc1"];
-    Assert(doc);
-    AssertEqual(doc.timestamp, 0);
-    
-    Assert([self.defaultCollection saveDocument:doc error: &err]);
-    uint64_t timestamp = doc.timestamp;
-    Assert(timestamp > 0);
-    
-    doc = [[self.defaultCollection documentWithID: @"doc1" error: &err] toMutable];
-    AssertEqual(doc.timestamp, timestamp);
-}
-/**
- 2. TestDocumentRevisionHistory
+ 1. TestDocumentRevisionHistory
  Description
     Test that the document's timestamp returns value as expected.
  Steps

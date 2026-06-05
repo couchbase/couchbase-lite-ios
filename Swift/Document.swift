@@ -263,11 +263,7 @@ public class Document : DictionaryProtocol, Equatable, Hashable, Sequence {
     }
     
     // MARK: Internal
-    
-    var timestamp: UInt64 {
-        return impl.timestamp
-    }
-    
+
     init(_ impl: CBLDocument, collection: Collection?) {
         self.impl = impl
         self.collection = collection

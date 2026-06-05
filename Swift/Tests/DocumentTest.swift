@@ -1876,44 +1876,8 @@ class DocumentTest: CBLTestCase {
         useDifferentCollectionInstaceForDocument { try! $0.purge(document: $1) }
     }
 
-    // MARK: toJSONTimestamp & Revision history
+    // MARK: Revision history for Test Server
 
-    //  https://github.com/couchbaselabs/couchbase-lite-api/blob/master/spec/tests/T0005-Version-Vector.md
-     
-    // 1. TestDocumentTimestamp
-    // Description
-    //  Test that the document's timestamp returns value as expected.
-    // Steps
-    //  1. Create a new document with id = "doc1"
-    //  2. Get document's timestamp and check that the timestamp is 0.
-    //  3. Save the document into the default collection.
-    //  4. Get document's timestamp and check that the timestamp is more than 0.
-    //  5. Get the document id = "doc1" from the database.
-    //  6. Get document's timestamp and check that the timestamp is the same as the timestamp from step 4.
-    func testDocumentTimestamp() throws {
-        var doc = MutableDocument(id: "doc1")
-        assert(doc.timestamp == 0)
-        
-        try defaultCollection!.save(document: doc)
-        let timestamp = doc.timestamp
-        assert(timestamp > 0);
-        
-        doc = try defaultCollection!.document(id: "doc1")!.toMutable()
-        assert(doc.timestamp == timestamp)
-    }
-    
-    // 2. TestDocumentRevisionHistory
-    // Description
-    //  Test that the document's timestamp returns value as expected.
-    // Steps
-    //  1. Create a new document with id = "doc1"
-    //  2. Get document's _revisionIDs and check that the value returned is an empty array.
-    //  3. Save the document into the default collection.
-    //  4. Get document's _revisionIDs and check that the value returned is an array containing a
-    //      single revision id which is the revision id of the documnt.
-    //  5. Get the document id = "doc1" from the database.
-    //  6. Get document's _revisionIDs and check that the value returned is an array containing a
-    //      single revision id which is the revision id of the documnt.
     func testDocumentRevisionHistory() throws {
         var doc = MutableDocument(id: "doc1")
         assert(doc._getRevisionHistory() == nil)
