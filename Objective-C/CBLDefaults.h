@@ -39,7 +39,7 @@ extern const BOOL kCBLDefaultDatabaseFullSync;
 extern const BOOL kCBLDefaultFileLogSinkUsePlaintext;
 
 /** [524288] 512 KiB for the size of a log file */
-extern const uint64_t kCBLDefaultFileLogSinkMaxSize;
+extern const long long kCBLDefaultFileLogSinkMaxSize;
 
 /** [2] 2 files preserved during each log rotation */
 extern const NSInteger kCBLDefaultFileLogSinkMaxKeptFiles;
@@ -48,6 +48,9 @@ extern const NSInteger kCBLDefaultFileLogSinkMaxKeptFiles;
 
 /** [NO] Plaintext is not used, and instead binary encoding is used in log files */
 extern const BOOL kCBLDefaultLogFileUsePlaintext;
+
+/** [NO] Plaintext is not used, and instead binary encoding is used in log files */
+extern const BOOL kCBLDefaultLogFileUsePlainText __deprecated_msg("Use kCBLDefaultLogFileUsePlaintext instead.");
 
 /** [524288] 512 KiB for the size of a log file */
 extern const uint64_t kCBLDefaultLogFileMaxSize;
@@ -82,6 +85,9 @@ extern const NSUInteger kCBLDefaultReplicatorMaxAttemptsContinuous;
 
 /** [300] Max wait time between retry attempts in seconds */
 extern const NSTimeInterval kCBLDefaultReplicatorMaxAttemptsWaitTime;
+
+/** [300] Max wait time between retry attempts in seconds */
+extern const NSTimeInterval kCBLDefaultReplicatorMaxAttemptWaitTime __deprecated_msg("Use kCBLDefaultReplicatorMaxAttemptsWaitTime instead.");
 
 /** [YES] Purge documents when a user loses access */
 extern const BOOL kCBLDefaultReplicatorEnableAutoPurge;
