@@ -39,13 +39,13 @@ class ReplicatorTest_Collection: ReplicatorTest {
         
         let config = self.config(collections: [col1a], target: target)
         
-        XCTAssertEqual(config.collections.count, 1)
-        XCTAssertEqual(col1a, config.collections[0].collection)
-    
-        let colConfig = config.collections.first
+        XCTAssertEqual(config.collectionConfigs.count, 1)
+        XCTAssertEqual(col1a, config.collectionConfigs[0].collection)
+
+        let colConfig = config.collectionConfigs.first
         XCTAssertNotNil(colConfig)
-        
-        XCTAssertEqual(colConfig!.collection.fullName, col1a.fullName)
+
+        XCTAssertEqual(colConfig!.collection!.fullName, col1a.fullName)
         XCTAssertNil(colConfig!.documentIDs)
         XCTAssertNil(colConfig!.channels)
         XCTAssertNil(colConfig!.conflictResolver)

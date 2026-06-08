@@ -93,6 +93,14 @@ NS_ASSUME_NONNULL_BEGIN
 - (id<CBLListenerToken>) addChangeListenerWithQueue: (nullable dispatch_queue_t)queue
                                            listener: (void (^)(CBLQueryChange*))listener;
 
+/**
+ Removes a change listener wih the given listener token.
+
+ @param token The listener token.
+ */
+- (void) removeChangeListenerWithToken: (id<CBLListenerToken>)token
+__deprecated_msg("Use [ListenerToken remove] instead.");
+
 /** Not available */
 - (instancetype) init NS_UNAVAILABLE;
 

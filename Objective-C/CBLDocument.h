@@ -34,9 +34,6 @@ NS_ASSUME_NONNULL_BEGIN
 /** The ID representing a document’s revision. */
 @property (readonly, nonatomic, nullable) NSString* revisionID;
 
-/** The hybrid logical timestamp that the revision was created. */
-@property (readonly, nonatomic) uint64_t timestamp;
-
 /** 
  Sequence number of the document in the database.
  This indicates how recently the document has been changed: every time any document is updated,

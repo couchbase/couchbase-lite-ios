@@ -106,7 +106,12 @@ typedef enum {
 @synthesize bgMonitor=_bgMonitor;
 @synthesize dispatchQueue=_dispatchQueue;
 
-- (instancetype) initWithConfig: (CBLReplicatorConfiguration*) config {
+// Too many deprecated config.database usage, hence declared on top!
+// TODO: Remove https://issues.couchbase.com/browse/CBL-3206
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+
+- (instancetype) initWithConfig: (CBLReplicatorConfiguration *)config {
     CBLAssertNotNil(config);
     
     self = [super init];
@@ -115,7 +120,7 @@ typedef enum {
         
         if (config.collections.count == 0)
             [NSException raise: NSInvalidArgumentException
-                        format: @"Attempt to initiate replicator with no collections configured"];
+                        format: @"Attempt to initiate replicator with empty collection"];
         
         _config = [[CBLReplicatorConfiguration alloc] initWithConfig: config readonly: YES];
         _replicatorID = $sprintf(@"CBLRepl@%p", self);
@@ -168,7 +173,7 @@ typedef enum {
 
 - (void) startWithReset: (BOOL)reset {
     CBL_LOCK(self) {
-        CBLLogInfo(Sync, @"%@ Collections[%@] Starting...", self, _config.collectionConfigMap.allKeys);
+        CBLLogInfo(Sync, @"%@ Collections[%@] Starting...", self, _config.collections);
         if (_state != kCBLStateStopped && _state != kCBLStateSuspended) {
             CBLWarn(Sync, @"%@ Replicator has already been started (state = %d, status = %d); ignored.",
                     self,  _state, _rawStatus.level);
@@ -332,7 +337,7 @@ typedef enum {
 }
 
 - (void) createCollectionMap {
-    NSArray* collections = _config.collectionConfigMap.allKeys;
+    NSArray* collections = _config.collections;
     NSMutableDictionary* mdict = [NSMutableDictionary dictionaryWithCapacity: collections.count];
     for (CBLCollection* col in collections)
         [mdict setObject: col forKey: $sprintf(@"%@.%@", col.scope.name, col.name)];
@@ -486,6 +491,10 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
     }
 }
 
+- (void) removeChangeListenerWithToken: (id<CBLListenerToken>)token {
+    [self removeToken: token];
+}
+
 #pragma mark delegate(CBLRemovableListenerToken)
 
 - (void) removeToken: (id)token {
@@ -549,6 +558,13 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
     return [NSSet setWithArray: list];
 }
 
+- (NSSet<NSString*>*) pendingDocumentIDs: (NSError**)error {
+    return [_config.database withDefaultCollectionForObjectAndError: error block:
+                 ^id(CBLCollection* collection, NSError** err) {
+        return [self pendingDocumentIDsForCollection: collection error: err];
+    }];
+}
+
 - (BOOL) isDocumentPending: (NSString *)documentID
                 collection: (CBLCollection *)collection
                      error: (NSError**)error {
@@ -582,6 +598,14 @@ static C4ReplicatorValidationFunction filter(CBLReplicationFilter filter, bool i
     }
 
     return isPending;
+}
+
+- (BOOL) isDocumentPending: (NSString*)documentID error: (NSError**)error {
+    CBLAssertNotNil(documentID);
+    
+    return [_config.database withDefaultCollectionAndError: error block: ^BOOL(CBLCollection* collection, NSError** err) {
+        return [self isDocumentPending: documentID collection: collection error: err];
+    }];
 }
 
 #pragma mark - REACHABILITY:
@@ -805,7 +829,7 @@ static void onDocsEnded(C4Replicator* repl,
     CBLCollection* c = [_collectionMap objectForKey: $sprintf(@"%@.%@", doc.scope, doc.collection)];
     Assert(c, kCBLErrorMessageCollectionNotFoundDuringConflict);
     
-    CBLCollectionConfiguration* colConfig = _config.collectionConfigMap[c];
+    CBLCollectionConfiguration* colConfig = [_config collectionConfig: c];
     Assert(colConfig, kCBLErrorMessageConfigNotFoundDuringConflict);
     
     NSError* error = nil;
@@ -910,7 +934,7 @@ static bool pullFilter(C4CollectionSpec collectionSpec,
     if ((flags & kRevPurged) == kRevPurged)
         docFlags |= kCBLDocumentFlagsAccessRemoved;
     
-    CBLCollectionConfiguration* colConfig = _config.collectionConfigMap[c];
+    CBLCollectionConfiguration* colConfig = [_config collectionConfig: c];
     Assert(colConfig, @"Collection config is not found in the replicator config when " \
            "calling the filter function.");
     return pushing ? colConfig.pushFilter(doc, docFlags) : colConfig.pullFilter(doc, docFlags);
@@ -952,3 +976,5 @@ static bool pullFilter(C4CollectionSpec collectionSpec,
 }
 
 @end
+
+#pragma clang diagnostic pop

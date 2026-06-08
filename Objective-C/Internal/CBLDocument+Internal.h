@@ -66,6 +66,9 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic, readonly, nullable) FLDict fleeceData;
 
+/** The hybrid logical timestamp that the revision was created. */
+@property (nonatomic, readonly) uint64_t timestamp;
+
 // Sets and retains the fleece document which owns the backing data.
 // Returns NO if the document's root value is not a dictionary.
 - (BOOL) setFleeceDoc: (FLDoc)doc;

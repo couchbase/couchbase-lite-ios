@@ -31,7 +31,7 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  The custom conflict resolver function.
  If this value is nil, the default conflict resolver will be used. */
-@property (nonatomic, readonly) CBLCollection* collection;
+@property (nonatomic, readonly, nullable) CBLCollection* collection;
 
 /**
  The custom conflict resolver function.
@@ -70,20 +70,26 @@ NS_ASSUME_NONNULL_BEGIN
 - (instancetype) initWithCollection: (CBLCollection*)collection;
 
 /**
+ Initializes a collection configuration.
+
+ @deprecated Use `-initWithCollection:` instead.
+ */
+- (instancetype) init __deprecated_msg("Use -initWithCollection: instead.");
+
+/**
  Creates an array of `CBLCollectionConfiguration` objects from the given collections.
  
  Each collection is wrapped in a `CBLCollectionConfiguration`using default settings
  (no filters and no custom conflict resolvers).
 
  This is a convenience method for configuring multiple collections with default configurations.
-       
+ If custom configurations are needed, construct `CBLCollectionConfiguration` objects
+ directly instead.
+
  @param collections The collections to replicate.
  @return An array of CBLCollectionConfiguration objects for the given collections.
  */
 + (NSArray<CBLCollectionConfiguration*>*) fromCollections: (NSArray<CBLCollection*>*)collections;
-
-/** Not available */
-- (instancetype) init NS_UNAVAILABLE;
 
 @end
 

@@ -30,9 +30,19 @@ const BOOL kCBLDefaultDatabaseFullSync = NO;
 
 const BOOL kCBLDefaultFileLogSinkUsePlaintext = NO;
 
-const uint64_t kCBLDefaultFileLogSinkMaxSize = 524288;
+const long long kCBLDefaultFileLogSinkMaxSize = 524288;
 
 const NSInteger kCBLDefaultFileLogSinkMaxKeptFiles = 2;
+
+#pragma mark - CBLLogFileConfiguration (Deprecated)
+
+const BOOL kCBLDefaultLogFileUsePlaintext = NO;
+
+const BOOL kCBLDefaultLogFileUsePlainText = NO;
+
+const uint64_t kCBLDefaultLogFileMaxSize = 524288;
+
+const NSInteger kCBLDefaultLogFileMaxRotateCount = 1;
 
 #pragma mark - CBLFullTextIndexConfiguration
 
@@ -53,6 +63,8 @@ const NSUInteger kCBLDefaultReplicatorMaxAttemptsSingleShot = 10;
 const NSUInteger kCBLDefaultReplicatorMaxAttemptsContinuous = NSUIntegerMax;
 
 const NSTimeInterval kCBLDefaultReplicatorMaxAttemptsWaitTime = 300;
+
+const NSTimeInterval kCBLDefaultReplicatorMaxAttemptWaitTime = 300;
 
 const BOOL kCBLDefaultReplicatorEnableAutoPurge = YES;
 

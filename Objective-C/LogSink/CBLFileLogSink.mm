@@ -28,7 +28,7 @@
 @implementation CBLFileLogSink
 
 @synthesize level=_level, directory=_directory, usePlaintext=_usePlaintext;
-@synthesize maxKeptFiles=_maxKeptFiles, maxFileSize=_maxFileSize;
+@synthesize maxKeptFiles=_maxKeptFiles, maxFileSize=_maxFileSize, version=_version;
 
 - (instancetype) initWithLevel: (CBLLogLevel)level
                      directory: (NSString*)directory {
@@ -43,7 +43,7 @@
                      directory: (NSString*)directory
                   usePlaintext: (BOOL)usePlaintext
                   maxKeptFiles: (NSInteger)maxKeptFiles
-                   maxFileSize: (unsigned long long)maxFileSize
+                   maxFileSize: (long long)maxFileSize
 {
     self = [super init];
     if (self) {
@@ -53,6 +53,7 @@
         _usePlaintext = usePlaintext;
         _maxKeptFiles = maxKeptFiles;
         _maxFileSize = maxFileSize;
+        _version = kCBLLogAPINew;
     }
     return self;
 }
@@ -77,7 +78,7 @@
         options = {
             .log_level = (C4LogLevel)logSink.level,
             .base_path = directory,
-            .max_size_bytes = static_cast<int64_t>(logSink.maxFileSize),
+            .max_size_bytes = logSink.maxFileSize,
             .max_rotate_count = static_cast<int32_t>(logSink.maxKeptFiles - 1),
             .use_plaintext = static_cast<bool>(logSink.usePlaintext),
             .header = header

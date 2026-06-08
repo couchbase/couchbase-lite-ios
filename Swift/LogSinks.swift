@@ -108,7 +108,12 @@ public class LogSinks {
             }
         }
     }
-    
+
+    /// Resets the committed logging API version. For testing only.
+    static func _resetApiVersion() {
+        CBLLogSinks.resetApiVersion()
+    }
+
     /// For bridging between swift and objective custom log sink.
     private class CustomLogSinkBridge : NSObject, CBLLogSinkProtocol {
         let logSink: LogSinkProtocol

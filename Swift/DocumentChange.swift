@@ -21,6 +21,11 @@ import Foundation
 
 /// Document change information.
 public struct DocumentChange {
+    
+    /// The database.
+    @available(*, deprecated, message: "Use collection instead.")
+    public let database: Database
+    
     /// The ID of the document that changed.
     public let documentID: String
     

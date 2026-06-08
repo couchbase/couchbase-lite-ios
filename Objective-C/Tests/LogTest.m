@@ -29,6 +29,7 @@
     NSString* logFileDirectory;
     CBLFileLogSink* _fileBackup;
     CBLConsoleLogSink* _consoleBackup;
+    CBLCustomLogSink* _customBackup;
 }
 
 - (void) setUp {
@@ -37,17 +38,22 @@
     logFileDirectory = [NSTemporaryDirectory() stringByAppendingPathComponent: folderName];
     _fileBackup = CBLLogSinks.file;
     _consoleBackup = CBLLogSinks.console;
+    _customBackup = CBLLogSinks.custom;
 }
 
 - (void) tearDown {
+    // Reset the committed logging API version (via super) BEFORE restoring the backed-up
+    // sinks, so a sink captured under a different API version (e.g. from a deprecated-API
+    // test class) restores cleanly. Mirrors Swift LogSinkTest.
+    [super tearDown];
+
     [[NSFileManager defaultManager] removeItemAtPath: logFileDirectory error: nil];
     CBLLogSinks.file = _fileBackup;
     CBLLogSinks.console = _consoleBackup;
-
-    CBLLogSinks.custom = nil;
+    CBLLogSinks.custom = _customBackup;
     _fileBackup = nil;
     _consoleBackup = nil;
-    [super tearDown];
+    _customBackup = nil;
 }
 
 - (NSArray<NSURL*>*) getLogsInDirectory: (NSString*)directory

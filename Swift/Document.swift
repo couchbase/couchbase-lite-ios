@@ -33,10 +33,6 @@ public class Document : DictionaryProtocol, Equatable, Hashable, Sequence {
         return impl.revisionID
     }
     
-    public var timestamp: UInt64 {
-        return impl.timestamp
-    }
-    
     /// Sequence number of the document in the database.
     /// This indicates how recently the document has been changed: every time any document is updated,
     /// the database assigns it the next sequential sequence number. Thus, if a document's `sequence`
@@ -267,7 +263,7 @@ public class Document : DictionaryProtocol, Equatable, Hashable, Sequence {
     }
     
     // MARK: Internal
-    
+
     init(_ impl: CBLDocument, collection: Collection?) {
         self.impl = impl
         self.collection = collection

@@ -152,9 +152,17 @@ public class Query {
             )
             .eraseToAnyPublisher()
     }
-    
+
+    /// Removes a change listener wih the given listener token.
+    ///
+    /// - Parameter token: The listener token.
+    @available(*, deprecated, message: "Use token.remove() instead.")
+    public func removeChangeListener(withToken token: ListenerToken) {
+        token.remove()
+    }
+
     // MARK: Internal
-    
+
     func didRemoveChangeListener(withToken token: ListenerToken) {
         lock.lock()
         defer { lock.unlock() }

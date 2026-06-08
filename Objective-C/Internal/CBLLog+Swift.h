@@ -18,12 +18,18 @@
 
 #import "CBLLog.h"
 #import "CBLLogTypes.h"
+#import "CBLLogger.h"
 
 NS_ASSUME_NONNULL_BEGIN
+
+typedef void (^CBLCustomLoggerBlock)(CBLLogLevel, CBLLogDomain, NSString*);
 
 @interface CBLLog ()
 
 + (void) writeSwiftLog: (CBLLogDomain)domain level: (CBLLogLevel)level message: (NSString*)message;
+
+// Used by the deprecated Swift Log.custom to install a custom logger backed by a block.
+- (void) setCustomLoggerWithLevel: (CBLLogLevel)level usingBlock: (CBLCustomLoggerBlock)logger;
 
 @end
 

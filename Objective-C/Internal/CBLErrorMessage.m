@@ -76,6 +76,8 @@ NSString* const kCBLErrorMessageNoDefaultCollectionInConfig = @"No default colle
 NSString* const kCBLErrorMessageNegativeHeartBeat = @"Attempt to store negative value in heartbeat.";
 NSString* const kCBLErrorMessageNegativeMaxAttemptWaitTime = @"Attempt to store negative value in maxAttemptWaitTime.";
 NSString* const kCBLErrorMessageAccessDBWithoutCollection = @"Attempt to access database property but no collections added.";
+NSString* const kCBLErrorMessageAddInvalidCollection = @"Attempt to add an invalid collection.";
+NSString* const kCBLErrorMessageAddCollectionFromAnotherDB = @"Attempt to add collection from different databases.";
 
 @end
 

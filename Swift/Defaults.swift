@@ -35,10 +35,27 @@ public extension FileLogSink {
     static let defaultUsePlaintext: Bool = false
 
     /// [524288] 512 KiB for the size of a log file
-    static let defaultMaxSize: UInt64 = 524288
+    static let defaultMaxSize: Int64 = 524288
 
     /// [2] 2 files preserved during each log rotation
-    static let defaultMaxKeptFiles: Int = 2
+    static let defaultMaxKeptFiles: Int32 = 2
+
+}
+
+public extension LogFileConfiguration {
+
+    /// [false] Plaintext is not used, and instead binary encoding is used in log files
+    static let defaultUsePlaintext: Bool = false
+
+    /// [false] Plaintext is not used, and instead binary encoding is used in log files
+    /// @available(*, deprecated, message: "Use LogFileConfiguration.defaultUsePlaintext instead.")
+    static let defaultUsePlainText: Bool = false
+
+    /// [524288] 512 KiB for the size of a log file
+    static let defaultMaxSize: UInt64 = 524288
+
+    /// [1] 1 rotated file present (2 total, including the currently active log file)
+    static let defaultMaxRotateCount: Int = 1
 
 }
 
@@ -71,6 +88,10 @@ public extension ReplicatorConfiguration {
 
     /// [300] Max wait time between retry attempts in seconds
     static let defaultMaxAttemptsWaitTime: TimeInterval = 300
+
+    /// [300] Max wait time between retry attempts in seconds
+    /// @available(*, deprecated, message: "Use ReplicatorConfiguration.defaultMaxAttemptsWaitTime instead.")
+    static let defaultMaxAttemptWaitTime: TimeInterval = 300
 
     /// [true] Purge documents when a user loses access
     static let defaultEnableAutoPurge: Bool = true

@@ -30,8 +30,10 @@
 .objc_class_name_CBLConflict
 .objc_class_name_CBLConflictResolver
 .objc_class_name_CBLConsoleLogSink
+.objc_class_name_CBLConsoleLogger
 .objc_class_name_CBLCustomLogSink
 .objc_class_name_CBLDatabase
+.objc_class_name_CBLDatabaseChange
 .objc_class_name_CBLDatabaseConfiguration
 .objc_class_name_CBLDictionary
 .objc_class_name_CBLDocument
@@ -40,6 +42,7 @@
 .objc_class_name_CBLDocumentReplication
 .objc_class_name_CBLEncoder
 .objc_class_name_CBLFileLogSink
+.objc_class_name_CBLFileLogger
 .objc_class_name_CBLFragment
 .objc_class_name_CBLFullTextIndex
 .objc_class_name_CBLFullTextIndexConfiguration
@@ -47,6 +50,8 @@
 .objc_class_name_CBLIndex
 .objc_class_name_CBLIndexBuilder
 .objc_class_name_CBLIndexConfiguration
+.objc_class_name_CBLLog
+.objc_class_name_CBLLogFileConfiguration
 .objc_class_name_CBLLogSinks
 .objc_class_name_CBLMutableArray
 .objc_class_name_CBLMutableDictionary
@@ -96,6 +101,10 @@ _kCBLDefaultCollectionName
 _kCBLDefaultFileLogSinkMaxKeptFiles
 _kCBLDefaultFileLogSinkMaxSize
 _kCBLDefaultFileLogSinkUsePlaintext
+_kCBLDefaultLogFileMaxRotateCount
+_kCBLDefaultLogFileMaxSize
+_kCBLDefaultLogFileUsePlaintext
+_kCBLDefaultLogFileUsePlainText
 _kCBLDefaultFullTextIndexIgnoreAccents
 _kCBLDefaultFileLogSinkUsePlaintext
 _kCBLDefaultFileLogSinkMaxSize
@@ -108,6 +117,7 @@ _kCBLDefaultReplicatorHeartbeat
 _kCBLDefaultReplicatorMaxAttemptsContinuous
 _kCBLDefaultReplicatorMaxAttemptsSingleShot
 _kCBLDefaultReplicatorMaxAttemptsWaitTime
+_kCBLDefaultReplicatorMaxAttemptWaitTime
 _kCBLDefaultReplicatorSelfSignedCertificateOnly
 _kCBLDefaultReplicatorType
 _kCBLDefaultScopeName

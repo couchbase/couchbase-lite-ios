@@ -374,9 +374,9 @@
     NSError* error;
     Assert([self.db delete: &error]);
     AssertNil(error);
-    
-    [self expectError: CBLErrorDomain code: CBLErrorNotOpen in: ^BOOL(NSError** err) {
-        return [self.db delete: err];
+
+    [self expectException: @"NSInternalInconsistencyException" in: ^{
+        [self.db delete: nil];
     }];
 }
 

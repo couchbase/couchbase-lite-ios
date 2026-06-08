@@ -47,9 +47,14 @@
 }
 
 - (nullable CBLDocument*) resolve: (CBLConflict*)conflict {
+    // Note: For the revision tree, the document's timestamp is its revision generation.
     if (conflict.remoteDocument == nil || conflict.localDocument == nil)
         return nil;
     else if (conflict.localDocument.timestamp > conflict.remoteDocument.timestamp)
+        return conflict.localDocument;
+    else if (conflict.localDocument.timestamp < conflict.remoteDocument.timestamp)
+        return conflict.remoteDocument;
+    else if ([conflict.localDocument.revisionID compare: conflict.remoteDocument.revisionID] > 0)
         return conflict.localDocument;
     else
         return conflict.remoteDocument;

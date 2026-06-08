@@ -18,6 +18,7 @@
 //
 #import "CBLLogSinks.h"
 #import "CBLLogSinks+Internal.h"
+#import "CBLLogSinks+Reset.h"
 #import "CBLStringBytes.h"
 #import "CBLLog.h"
 
@@ -41,6 +42,9 @@ static CBLLogLevel _callbackLevel = kCBLLogLevelNone;
 static CBLConsoleLogSink* _console = nil;
 static CBLCustomLogSink* _custom = nil;
 static CBLFileLogSink* _file = nil;
+
+// The logging API (deprecated CBLLog vs new CBLLogSinks) committed to in this session.
+static CBLLogAPI _vAPI;
 
 // Note:
 //
@@ -91,11 +95,16 @@ NSDictionary<NSString*, NSNumber*>* coreDomainNameToCBLLogDomainMap = nil;
         
         // Create the default warning console log:
         self.console = [[CBLConsoleLogSink alloc] initWithLevel: kCBLLogLevelWarning];
+
+        // The default console above does not represent a user's choice of API, so
+        // reset the committed version; the first user call (old or new) will commit it.
+        [self resetApiVersion];
     });
 }
 
 + (void) setConsole:(nullable CBLConsoleLogSink*)console {
     CBL_LOCK(self) {
+        [self checkLogApiVersion: console];
         _console = console;
     }
     [self updateLogLevels];
@@ -109,6 +118,7 @@ NSDictionary<NSString*, NSNumber*>* coreDomainNameToCBLLogDomainMap = nil;
 
 + (void) setCustom: (nullable CBLCustomLogSink*) custom {
     CBL_LOCK(self) {
+        [self checkLogApiVersion: custom];
         _custom = custom;
     }
     [self updateLogLevels];
@@ -122,6 +132,7 @@ NSDictionary<NSString*, NSNumber*>* coreDomainNameToCBLLogDomainMap = nil;
 
 + (void) setFile: (nullable CBLFileLogSink*) file {
     CBL_LOCK(self) {
+        [self checkLogApiVersion: file];
         _file = file;
     }
     [CBLFileLogSink setup: file];
@@ -135,6 +146,20 @@ NSDictionary<NSString*, NSNumber*>* coreDomainNameToCBLLogDomainMap = nil;
 }
 
 #pragma mark - Internal
+
++ (void) resetApiVersion {
+    _vAPI = kCBLLogAPINone;
+}
+
++ (void) checkLogApiVersion: (id<CBLLogApiSource>)source {
+    CBLLogAPI version = source ? source.version : kCBLLogAPINew;
+    if (_vAPI == kCBLLogAPINone) {
+        _vAPI = version;
+    } else if (_vAPI != version) {
+        [NSException raise: NSInternalInconsistencyException
+                    format: @"Cannot use both new and old Logging API simultaneously."];
+    }
+}
 
 + (void) updateLogLevels {
     CBLConsoleLogSink* console = self.console;

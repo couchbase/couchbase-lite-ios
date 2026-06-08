@@ -753,9 +753,6 @@ NSString* const kCBLDefaultCollectionName = @"_default";
                         error: (NSError**)outError
 {
     CBL_LOCK(_mutex) {
-        CBLStringBytes winningRevID;
-        CBLStringBytes losingRevID;
-        
         CBLDatabase* db = self.database;
         if (![self database: db isValid: outError])
             return NO;
@@ -772,21 +769,19 @@ NSString* const kCBLDefaultCollectionName = @"_default";
                 resolvedDoc = remoteDoc;
         }
         
-        if (resolvedDoc == localDoc) {
-            winningRevID = localDoc.revisionID;
-            losingRevID = remoteDoc.revisionID;
-        } else {
+        if (resolvedDoc != localDoc)
             resolvedDoc.collection = self;
-            winningRevID = remoteDoc.revisionID;
-            losingRevID = localDoc.revisionID;
-        }
+        
+        // The remote branch has to win, so that the doc revision history matches the server's.
+        CBLStringBytes winningRevID = remoteDoc.revisionID;
+        CBLStringBytes losingRevID = localDoc.revisionID;
         
         // mergedRevFlags:
         C4RevisionFlags mergedFlags = 0;
         
         // mergedBody:
         alloc_slice mergedBody;
-        if (resolvedDoc != localDoc && resolvedDoc != remoteDoc) {
+        if (resolvedDoc != remoteDoc) {
             if (resolvedDoc) {
                 // Unless the remote revision is being used as-is, we need a new revision:
                 NSError* err = nil;
