@@ -171,4 +171,316 @@ class ReplicatorLegacyTest: ReplicatorTest {
         // Remove using the deprecated API; should not crash.
         listener.removeChangeListener(token: token)
     }
+
+    // MARK: - ReplicatorConfiguration collection management (deprecated, ported from 3.3)
+
+    private func collectionConfig(_ config: ReplicatorConfiguration, col: Collection) -> CollectionConfiguration {
+        guard let colConfig = config.collectionConfig(col) else {
+            fatalError("Collection config is missing!")
+        }
+
+        return colConfig
+    }
+
+    func testCreateConfigWithDatabase() throws {
+        let url = URL(string: "wss://foo")!
+        let target = URLEndpoint(url: url)
+
+        let config = ReplicatorConfiguration(database: db, target: target)
+        XCTAssertEqual(config.collections.count, 1)
+
+        let col = try db.defaultCollection()
+        XCTAssertEqual(col, config.collections[0])
+        XCTAssertEqual(col.name, config.collections[0].name)
+        XCTAssertEqual(col.scope.name, config.collections[0].scope.name)
+
+        guard let colConfig = config.collectionConfig(col) else {
+            XCTFail("Missing default collection")
+            return
+        }
+
+        XCTAssertNil(colConfig.documentIDs)
+        XCTAssertNil(colConfig.channels)
+        XCTAssertNil(colConfig.conflictResolver)
+        XCTAssertNil(colConfig.pushFilter)
+        XCTAssertNil(colConfig.pullFilter)
+
+        XCTAssertEqual(config.database.path, db.path)
+    }
+
+    func testConfigWithDatabaseAndConflictResolver() throws {
+        let url = URL(string: "wss://foo")!
+        let target = URLEndpoint(url: url)
+        var config = ReplicatorConfiguration(database: db, target: target)
+
+        let conflictResolver = TestConflictResolver({ (con: Conflict) -> Document? in
+            return con.remoteDocument
+        })
+        config.conflictResolver = conflictResolver
+        XCTAssertNotNil(conflictResolver)
+
+        var colConfig = collectionConfig(config, col: defaultCollection!)
+        XCTAssert(conflictResolver === (config.conflictResolver as! TestConflictResolver))
+        XCTAssert(conflictResolver === (colConfig.conflictResolver as! TestConflictResolver))
+
+        // Update replicator.conflictResolver
+        let conflictResolver2 = TestConflictResolver({ (con: Conflict) -> Document? in
+            return con.localDocument
+        })
+        XCTAssert(conflictResolver !== conflictResolver2)
+        config.conflictResolver = conflictResolver2
+
+        colConfig = collectionConfig(config, col: defaultCollection!)
+        XCTAssert(conflictResolver2 === (config.conflictResolver as! TestConflictResolver))
+        XCTAssert(conflictResolver2 === (colConfig.conflictResolver as! TestConflictResolver))
+
+        // Update collectionConfig.conflictResolver
+        let conflictResolver3 = TestConflictResolver({ (con: Conflict) -> Document? in
+            return nil
+        })
+        XCTAssert(conflictResolver2 !== conflictResolver3)
+        colConfig = collectionConfig(config, col: defaultCollection!)
+        colConfig.conflictResolver = conflictResolver3
+        config.addCollection(defaultCollection!, config: colConfig)
+
+        XCTAssert(conflictResolver3 === (config.conflictResolver as! TestConflictResolver))
+        XCTAssert(conflictResolver3 === (colConfig.conflictResolver as! TestConflictResolver))
+    }
+
+    func testConfigWithDatabaseAndFilters() throws {
+        let url = URL(string: "wss://foo")!
+        let target = URLEndpoint(url: url)
+
+        var config = ReplicatorConfiguration(database: db, target: target)
+        let filter1 = { (doc: Document, flags: DocumentFlags) in return true }
+        let filter2 = { (doc: Document, flags: DocumentFlags) in return true }
+        config.pushFilter = filter1
+        config.pullFilter = nil
+        config.channels = ["c1", "c2", "c3"]
+        config.documentIDs = ["d1", "d2", "d3"]
+
+        var colConfig = collectionConfig(config, col: defaultCollection!)
+        XCTAssertEqual(colConfig.channels, ["c1", "c2", "c3"])
+        XCTAssertEqual(colConfig.documentIDs, ["d1", "d2", "d3"])
+        XCTAssertNotNil(colConfig.pushFilter)
+        XCTAssertNil(colConfig.pullFilter)
+
+        // Update replicator.filters
+        config.pushFilter = nil
+        config.pullFilter = filter2
+        config.channels = ["c1"]
+        config.documentIDs = ["d1"]
+
+        colConfig = collectionConfig(config, col: defaultCollection!)
+        XCTAssertEqual(colConfig.channels, ["c1"])
+        XCTAssertEqual(colConfig.documentIDs, ["d1"])
+        XCTAssertNil(colConfig.pushFilter)
+        XCTAssertNotNil(colConfig.pullFilter)
+
+        // Update collectionConfig.filters
+        colConfig = collectionConfig(config, col: defaultCollection!)
+        colConfig.pushFilter = filter1
+        colConfig.pullFilter = filter2
+        colConfig.channels = ["c1", "c2"]
+        colConfig.documentIDs = ["d1", "d2"]
+        config.addCollection(defaultCollection!, config: colConfig)
+
+        XCTAssertEqual(colConfig.channels, ["c1", "c2"])
+        XCTAssertEqual(colConfig.documentIDs, ["d1", "d2"])
+        XCTAssertNotNil(colConfig.pushFilter)
+        XCTAssertNotNil(colConfig.pullFilter)
+    }
+
+    func testAddCollectionsWithoutCollectionConfig() throws {
+        let col1a = try db.createCollection(name: "colA", scope: "scopeA")
+        let col1b = try db.createCollection(name: "colB", scope: "scopeA")
+
+        let url = URL(string: "wss://foo")!
+        let target = URLEndpoint(url: url)
+        var config = ReplicatorConfiguration(target: target)
+        config.addCollections([col1a, col1b])
+
+        XCTAssertEqual(config.collections.count, 2)
+        XCTAssert(config.collections.contains(where: { $0.name == "colA" && $0.scope.name == "scopeA" }))
+        XCTAssert(config.collections.contains(where: { $0.name == "colB" && $0.scope.name == "scopeA" }))
+
+        let config1 = collectionConfig(config, col: col1a)
+        let config2 = collectionConfig(config, col: col1b)
+
+        XCTAssertNil(config1.conflictResolver)
+        XCTAssertNil(config1.channels)
+        XCTAssertNil(config1.documentIDs)
+        XCTAssertNil(config1.pushFilter)
+        XCTAssertNil(config1.pullFilter)
+
+        XCTAssertNil(config2.conflictResolver)
+        XCTAssertNil(config2.channels)
+        XCTAssertNil(config2.documentIDs)
+        XCTAssertNil(config2.pushFilter)
+        XCTAssertNil(config2.pullFilter)
+    }
+
+    func testAddCollectionsWithCollectionConfig() throws {
+        let col1a = try db.createCollection(name: "colA", scope: "scopeA")
+        let col1b = try db.createCollection(name: "colB", scope: "scopeA")
+
+        let url = URL(string: "wss://foo")!
+        let target = URLEndpoint(url: url)
+        var config = ReplicatorConfiguration(target: target)
+
+        var colConfig = CollectionConfiguration()
+        let conflictResolver = TestConflictResolver({ (con: Conflict) -> Document? in
+            return con.remoteDocument
+        })
+        let filter1 = { (doc: Document, flags: DocumentFlags) in return true }
+        let filter2 = { (doc: Document, flags: DocumentFlags) in return true }
+        colConfig.conflictResolver = conflictResolver
+        colConfig.pushFilter = filter1
+        colConfig.pullFilter = filter2
+        colConfig.channels = ["channel1", "channel2", "channel3"]
+        colConfig.documentIDs = ["doc1", "doc2", "doc3"]
+
+        config.addCollections([col1a, col1b], config: colConfig)
+
+        XCTAssertEqual(config.collections.count, 2)
+        XCTAssert(config.collections.contains(where: { $0.name == "colA" && $0.scope.name == "scopeA" }))
+        XCTAssert(config.collections.contains(where: { $0.name == "colB" && $0.scope.name == "scopeA" }))
+
+        let config1 = collectionConfig(config, col: col1a)
+        let config2 = collectionConfig(config, col: col1b)
+
+        XCTAssertNotNil(config1.pushFilter)
+        XCTAssertNotNil(config1.pullFilter)
+        XCTAssertEqual(config1.channels, ["channel1", "channel2", "channel3"])
+        XCTAssertEqual(config1.documentIDs, ["doc1", "doc2", "doc3"])
+        XCTAssert((config1.conflictResolver as! TestConflictResolver) === conflictResolver)
+
+        XCTAssertNotNil(config2.pushFilter)
+        XCTAssertNotNil(config2.pullFilter)
+        XCTAssertEqual(config2.channels, ["channel1", "channel2", "channel3"])
+        XCTAssertEqual(config2.documentIDs, ["doc1", "doc2", "doc3"])
+        XCTAssert((config2.conflictResolver as! TestConflictResolver) === conflictResolver)
+    }
+
+    func testAddUpdateCollection() throws {
+        let col1a = try db.createCollection(name: "colA", scope: "scopeA")
+        let col1b = try db.createCollection(name: "colB", scope: "scopeA")
+
+        let url = URL(string: "wss://foo")!
+        let target = URLEndpoint(url: url)
+        var config = ReplicatorConfiguration(target: target)
+
+        // add collection 1 with empty config
+        config.addCollection(col1a)
+
+        // Create and add Collection config for collection 2
+        var colConfig = CollectionConfiguration()
+        let conflictResolver = TestConflictResolver({ (con: Conflict) -> Document? in
+            return con.remoteDocument
+        })
+        let filter1 = { (doc: Document, flags: DocumentFlags) in return true }
+        let filter2 = { (doc: Document, flags: DocumentFlags) in return true }
+        colConfig.conflictResolver = conflictResolver
+        colConfig.pushFilter = filter1
+        colConfig.pullFilter = filter2
+        colConfig.channels = ["channel1", "channel2", "channel3"]
+        colConfig.documentIDs = ["doc1", "doc2", "doc3"]
+        config.addCollection(col1b, config: colConfig)
+
+        XCTAssertEqual(config.collections.count, 2)
+        XCTAssert(config.collections.contains(where: { $0.name == "colA" && $0.scope.name == "scopeA" }))
+        XCTAssert(config.collections.contains(where: { $0.name == "colB" && $0.scope.name == "scopeA" }))
+
+        // validate config1 for nil values
+        var config1 = collectionConfig(config, col: col1a)
+        XCTAssertNil(config1.conflictResolver)
+        XCTAssertNil(config1.channels)
+        XCTAssertNil(config1.documentIDs)
+        XCTAssertNil(config1.pushFilter)
+        XCTAssertNil(config1.pullFilter)
+
+        // validate config2 for valid values
+        var config2 = collectionConfig(config, col: col1b)
+        XCTAssertNotNil(config2.pushFilter)
+        XCTAssertNotNil(config2.pullFilter)
+        XCTAssertEqual(config2.channels, ["channel1", "channel2", "channel3"])
+        XCTAssertEqual(config2.documentIDs, ["doc1", "doc2", "doc3"])
+        XCTAssert((config2.conflictResolver as! TestConflictResolver) === conflictResolver)
+
+        // Update in reverse
+        config.addCollection(col1a, config: colConfig)
+        config.addCollection(col1b)
+
+        // validate config1 for valid values
+        config1 = collectionConfig(config, col: col1a)
+        XCTAssertNotNil(config1.pushFilter)
+        XCTAssertNotNil(config1.pullFilter)
+        XCTAssertEqual(config1.channels, ["channel1", "channel2", "channel3"])
+        XCTAssertEqual(config1.documentIDs, ["doc1", "doc2", "doc3"])
+        XCTAssert((config1.conflictResolver as! TestConflictResolver) === conflictResolver)
+
+        // validate config2 for nil
+        config2 = collectionConfig(config, col: col1b)
+        XCTAssertNil(config2.conflictResolver)
+        XCTAssertNil(config2.channels)
+        XCTAssertNil(config2.documentIDs)
+        XCTAssertNil(config2.pushFilter)
+        XCTAssertNil(config2.pullFilter)
+    }
+
+    func testRemoveCollection() throws {
+        let col1a = try db.createCollection(name: "colA", scope: "scopeA")
+        let col1b = try db.createCollection(name: "colB", scope: "scopeA")
+
+        let url = URL(string: "wss://foo")!
+        let target = URLEndpoint(url: url)
+        var config = ReplicatorConfiguration(target: target)
+
+        // Create and add Collection config for both collections.
+        var colConfig = CollectionConfiguration()
+        let conflictResolver = TestConflictResolver({ (con: Conflict) -> Document? in
+            return con.remoteDocument
+        })
+        let filter1 = { (doc: Document, flags: DocumentFlags) in return true }
+        let filter2 = { (doc: Document, flags: DocumentFlags) in return true }
+        colConfig.conflictResolver = conflictResolver
+        colConfig.pushFilter = filter1
+        colConfig.pullFilter = filter2
+        colConfig.channels = ["channel1", "channel2", "channel3"]
+        colConfig.documentIDs = ["doc1", "doc2", "doc3"]
+
+        config.addCollection(col1a, config: colConfig)
+        config.addCollection(col1b, config: colConfig)
+
+        XCTAssertEqual(config.collections.count, 2)
+        XCTAssert(config.collections.contains(where: { $0.name == "colA" && $0.scope.name == "scopeA" }))
+        XCTAssert(config.collections.contains(where: { $0.name == "colB" && $0.scope.name == "scopeA" }))
+
+        // validate config1 for valid values
+        let config1 = collectionConfig(config, col: col1a)
+        XCTAssertNotNil(config1.pushFilter)
+        XCTAssertNotNil(config1.pullFilter)
+        XCTAssertEqual(config1.channels, ["channel1", "channel2", "channel3"])
+        XCTAssertEqual(config1.documentIDs, ["doc1", "doc2", "doc3"])
+        XCTAssert((config1.conflictResolver as! TestConflictResolver) === conflictResolver)
+
+        let config2 = collectionConfig(config, col: col1b)
+        XCTAssertNotNil(config2.pushFilter)
+        XCTAssertNotNil(config2.pullFilter)
+        XCTAssertEqual(config2.channels, ["channel1", "channel2", "channel3"])
+        XCTAssertEqual(config2.documentIDs, ["doc1", "doc2", "doc3"])
+        XCTAssert((config2.conflictResolver as! TestConflictResolver) === conflictResolver)
+
+        config.removeCollection(col1b)
+
+        XCTAssertEqual(config.collections.count, 1)
+        XCTAssert(config.collections.contains(where: { $0.name == "colA" && $0.scope.name == "scopeA" }))
+
+        XCTAssertNil(config.collectionConfig(col1b))
+
+        // remove a non-existing collection
+        config.removeCollection(col1b)
+        XCTAssertEqual(config.collections.count, 1)
+        XCTAssert(config.collections.contains(where: { $0.name == "colA" && $0.scope.name == "scopeA" }))
+    }
 }
