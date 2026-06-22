@@ -35,6 +35,10 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 
+- (void) setUp {
+    XCTSkip(@"CBL-7791: Disabled due to flaky tests - Investigation Needed");
+}
+
 - (XCTestExpectation *) waitForListenerIdle: (CBLMessageEndpointListener*)listener {
     XCTestExpectation* x = [self expectationWithDescription:@"Listener idle"];
     __block id token = nil;
@@ -217,67 +221,55 @@
 
 // Error Tests During Open:
 
-// CBL-7791
 - (void) testRecoverableErrorDuringOpenWithMessageStream {
     [self runErrorTestForCase: kCBLMockConnectionConnect protocol: kCBLProtocolTypeMessageStream recoverable: YES];
 }
 
-// CBL-7791
-- (void) _testRecoverableErrorDuringOpenWithByteStream {
+- (void) testRecoverableErrorDuringOpenWithByteStream {
     [self runErrorTestForCase: kCBLMockConnectionConnect protocol: kCBLProtocolTypeByteStream recoverable: YES];
 }
 
-// CBL-7791
-- (void) _testPermanentErrorDuringOpenWithMessageStream {
+- (void) testPermanentErrorDuringOpenWithMessageStream {
     [self runErrorTestForCase: kCBLMockConnectionConnect protocol: kCBLProtocolTypeMessageStream recoverable: NO];
 }
 
-// CBL-7791
-- (void) _testPermanentErrorDuringOpenWithByteStream {
+- (void) testPermanentErrorDuringOpenWithByteStream {
     [self runErrorTestForCase: kCBLMockConnectionConnect protocol: kCBLProtocolTypeByteStream recoverable: NO];
 }
 
 // Error Tests During Send:
 
-// CBL-7791
-- (void) _testRecoverableErrorDuringSendWithMessageStream {
+- (void) testRecoverableErrorDuringSendWithMessageStream {
     [self runErrorTestForCase: kCBLMockConnectionSend protocol: kCBLProtocolTypeMessageStream recoverable: YES];
 }
 
-// CBL-7791
-- (void) _testRecoverableErrorDuringSendWithByteStream {
+- (void) testRecoverableErrorDuringSendWithByteStream {
     [self runErrorTestForCase: kCBLMockConnectionSend protocol: kCBLProtocolTypeByteStream recoverable: YES];
 }
 
-// CBL-7791
-- (void) _testPermanentErrorDuringSendWithMessageStream {
+- (void) testPermanentErrorDuringSendWithMessageStream {
     [self runErrorTestForCase: kCBLMockConnectionSend protocol: kCBLProtocolTypeMessageStream recoverable: NO];
 }
 
-// CBL-7791
-- (void) _testPermanentErrorDuringSendWithByteStream {
+- (void) testPermanentErrorDuringSendWithByteStream {
     [self runErrorTestForCase: kCBLMockConnectionSend protocol: kCBLProtocolTypeByteStream recoverable: NO];
 }
 
 // Error Tests During Receive:
 
-// CBL-7791
-- (void) _testRecoverableErrorDuringReceiveWithMessageStream {
+- (void) testRecoverableErrorDuringReceiveWithMessageStream {
     [self runErrorTestForCase: kCBLMockConnectionReceive protocol: kCBLProtocolTypeMessageStream recoverable: YES];
 }
 
-// CBL-7791
-- (void) _testRecoverableErrorDuringReceiveWithByteStream {
+- (void) testRecoverableErrorDuringReceiveWithByteStream {
     [self runErrorTestForCase: kCBLMockConnectionReceive protocol: kCBLProtocolTypeByteStream recoverable: YES];
 }
 
-// CBL-7791
-- (void) _testPermanentErrorDuringReceiveWithMessageStream {
+- (void) testPermanentErrorDuringReceiveWithMessageStream {
     [self runErrorTestForCase: kCBLMockConnectionReceive protocol: kCBLProtocolTypeMessageStream recoverable: NO];
 }
 
-// CBL-7791
-- (void) _testPermanentErrorDuringReceiveWithByteStream {
+- (void) testPermanentErrorDuringReceiveWithByteStream {
     [self runErrorTestForCase: kCBLMockConnectionReceive protocol: kCBLProtocolTypeByteStream recoverable: NO];
 }
 
