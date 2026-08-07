@@ -2461,6 +2461,9 @@
 		40AA72972C28B1A3007FB1E0 /* VectorSearchTest+Lazy.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "VectorSearchTest+Lazy.m"; sourceTree = "<group>"; };
 		40AA72A12C28B1F2007FB1E0 /* VectorSearchTest.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = VectorSearchTest.h; sourceTree = "<group>"; };
 		40C5FD5A2B9946E6004BFD3B /* CBLVectorIndexTypes.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLVectorIndexTypes.h; sourceTree = "<group>"; };
+		40CC4B76302BE6D30002386D /* CouchbaseLiteSwift-EE.private.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "CouchbaseLiteSwift-EE.private.txt"; sourceTree = "<group>"; };
+		40CC4B77302BE6E40002386D /* CouchbaseLiteSwift.private.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = CouchbaseLiteSwift.private.txt; sourceTree = "<group>"; };
+		40CC4B78302BE6EF0002386D /* CouchbaseLiteSwift-EE.private.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "CouchbaseLiteSwift-EE.private.txt"; sourceTree = "<group>"; };
 		40D6BCBF2DDD183000F209D7 /* MultipeerReplicatorConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultipeerReplicatorConfiguration.swift; sourceTree = "<group>"; };
 		40D6BCC12DDD191C00F209D7 /* MultipeerCertificateAuthenticator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultipeerCertificateAuthenticator.swift; sourceTree = "<group>"; };
 		40D6BCC32DDD19D900F209D7 /* PeerID.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeerID.swift; sourceTree = "<group>"; };
@@ -2496,12 +2499,13 @@
 		40E46B122DD6A7B5007E495D /* CBLReplicatorStatus+Internal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "CBLReplicatorStatus+Internal.h"; sourceTree = "<group>"; };
 		40E46B172DD6A808007E495D /* CBLConflictResolverService.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLConflictResolverService.h; sourceTree = "<group>"; };
 		40E46B182DD6A808007E495D /* CBLConflictResolverService.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CBLConflictResolverService.m; sourceTree = "<group>"; };
-		40E905462B5B6D9D00EDF483 /* CouchbaseLiteSwift.private.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = CouchbaseLiteSwift.private.modulemap; sourceTree = "<group>"; };
 		40ECAE852E0E08CC00C109A6 /* Precondition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Precondition.swift; sourceTree = "<group>"; };
 		40ECAE882E0E0B0F00C109A6 /* CBLPrecondition.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLPrecondition.h; sourceTree = "<group>"; };
 		40ECAE892E0E0B0F00C109A6 /* CBLPrecondition.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CBLPrecondition.m; sourceTree = "<group>"; };
 		40EF68102B71891A00F0CB50 /* remove_private_module.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = remove_private_module.sh; sourceTree = "<group>"; };
 		40EF690A2B77564000F0CB50 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		40F52B1D3026ED0F009C5F9E /* CouchbaseLiteSwift.private.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = CouchbaseLiteSwift.private.modulemap; sourceTree = "<group>"; };
+		40F52B203026ED0F009C5F9E /* generate_private_modulemap.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = generate_private_modulemap.sh; sourceTree = "<group>"; };
 		40FC1AA32B9286E700394276 /* CBLEncryptionKey.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLEncryptionKey.m; sourceTree = "<group>"; };
 		40FC1AA42B9286E700394276 /* CBLDatabase+Encryption.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "CBLDatabase+Encryption.h"; sourceTree = "<group>"; };
 		40FC1AA52B9286E700394276 /* CBLDatabaseConfiguration+Encryption.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "CBLDatabaseConfiguration+Encryption.h"; sourceTree = "<group>"; };
@@ -2587,7 +2591,6 @@
 		40FC1C402B928C1600394276 /* ListenerCertificateAuthenticator.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ListenerCertificateAuthenticator.swift; sourceTree = "<group>"; };
 		40FC1C412B928C1600394276 /* ListenerPasswordAuthenticator.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ListenerPasswordAuthenticator.swift; sourceTree = "<group>"; };
 		40FC1C422B928C1600394276 /* ListenerAuthenticator.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ListenerAuthenticator.swift; sourceTree = "<group>"; };
-		40FC1C432B928C1600394276 /* CouchbaseLiteSwift.private.modulemap */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = "sourcecode.module-map"; path = CouchbaseLiteSwift.private.modulemap; sourceTree = "<group>"; };
 		40FC1C452B928C1600394276 /* MessageEndpointConnection.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MessageEndpointConnection.swift; sourceTree = "<group>"; };
 		40FC1C462B928C1600394276 /* ClientCertificateAuthenticator.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ClientCertificateAuthenticator.swift; sourceTree = "<group>"; };
 		40FC1C472B928C1600394276 /* Message.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Message.swift; sourceTree = "<group>"; };
@@ -3243,8 +3246,8 @@
 				409389E72D4AB7DE00691393 /* LogSink */,
 				40D6BCC62DDD2C2D00F209D7 /* Support */,
 				27BE3B491E4E45CB0012B74A /* Tests */,
+				40F52B213026ED0F009C5F9E /* ModuleMap */,
 				275F92761E4D30A4007FD5A2 /* CouchbaseLiteSwift.h */,
-				40E905462B5B6D9D00EDF483 /* CouchbaseLiteSwift.private.modulemap */,
 				275F92771E4D30A4007FD5A2 /* Info.plist */,
 			);
 			path = Swift;
@@ -3445,6 +3448,26 @@
 				40EF690A2B77564000F0CB50 /* PrivacyInfo.xcprivacy */,
 			);
 			path = Resources;
+			sourceTree = "<group>";
+		};
+		40F52B1E3026ED0F009C5F9E /* Generated */ = {
+			isa = PBXGroup;
+			children = (
+				40F52B1D3026ED0F009C5F9E /* CouchbaseLiteSwift.private.modulemap */,
+				40CC4B78302BE6EF0002386D /* CouchbaseLiteSwift-EE.private.txt */,
+			);
+			path = Generated;
+			sourceTree = "<group>";
+		};
+		40F52B213026ED0F009C5F9E /* ModuleMap */ = {
+			isa = PBXGroup;
+			children = (
+				40F52B1E3026ED0F009C5F9E /* Generated */,
+				40CC4B77302BE6E40002386D /* CouchbaseLiteSwift.private.txt */,
+				40CC4B76302BE6D30002386D /* CouchbaseLiteSwift-EE.private.txt */,
+				40F52B203026ED0F009C5F9E /* generate_private_modulemap.sh */,
+			);
+			path = ModuleMap;
 			sourceTree = "<group>";
 		};
 		40FC1AA02B9286E700394276 /* Objective-C */ = {
@@ -3677,7 +3700,6 @@
 				40D6BCBE2DDD17FF00F209D7 /* Multipeer */,
 				40FC1C4C2B928C1600394276 /* Query */,
 				40FC1C442B928C1600394276 /* Replicator */,
-				40FC1C432B928C1600394276 /* CouchbaseLiteSwift.private.modulemap */,
 			);
 			name = Swift;
 			path = "../couchbase-lite-ios-ee/Sources/Swift";

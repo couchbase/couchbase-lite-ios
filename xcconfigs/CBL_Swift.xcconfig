@@ -20,7 +20,7 @@
 #include "CBL_ObjC.xcconfig"
 
 CBL_EXPORTED_SYMBOLS_FILE    = // None
-MODULEMAP_PRIVATE_FILE       = Swift/CouchbaseLiteSwift.private.modulemap
+MODULEMAP_PRIVATE_FILE       = Swift/ModuleMap/Generated/CouchbaseLiteSwift.private.modulemap
 INFOPLIST_FILE               = Swift/Info.plist
 PRODUCT_BUNDLE_IDENTIFIER    = com.couchbase.CouchbaseLiteSwift
 PRODUCT_NAME                 = CouchbaseLiteSwift
