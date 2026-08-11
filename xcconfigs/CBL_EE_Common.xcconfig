@@ -20,3 +20,11 @@
 GCC_PREPROCESSOR_DEFINITIONS        = COUCHBASE_ENTERPRISE=1 $(inherited)
 OTHER_SWIFT_FLAGS                   = -DCOUCHBASE_ENTERPRISE
 SWIFT_ACTIVE_COMPILATION_CONDITIONS = $(inherited) COUCHBASE_ENTERPRISE
+
+// The Xcode index build ignores the scheme and builds every target with the plain
+// Debug/Release configuration, so the same-named CE and EE products collide in one
+// index build directory, intermittently breaking Obj-C class resolution in the editor.
+// Redirect EE targets to the _EE directory when built with a plain configuration
+// (in practice, only the index build does that).
+CONFIGURATION_BUILD_DIR[config=Debug]   = $(BUILD_DIR)/Debug_EE$(EFFECTIVE_PLATFORM_NAME)
+CONFIGURATION_BUILD_DIR[config=Release] = $(BUILD_DIR)/Release_EE$(EFFECTIVE_PLATFORM_NAME)
