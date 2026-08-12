@@ -83,7 +83,7 @@ fi
 
 # Verify that the generated private module maps are in sync with their header
 # list templates (see Swift/ModuleMap/generate_private_modulemap.sh).
-sh Swift/ModuleMap/generate_private_modulemap.sh --check
+./Swift/ModuleMap/generate_private_modulemap.sh --check
 
 # Minimum Matrix:
 # - Run swift tests on iOS platform

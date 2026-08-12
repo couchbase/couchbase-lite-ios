@@ -53,7 +53,7 @@ iOS app-hosted test schemes:
 - Do not hand-edit `CouchbaseLite.xcodeproj/project.pbxproj`.
 - If a task requires new files or project membership changes, ask the developer to make them in Xcode.
 - Do not edit generated export files in `Objective-C/Exports/Generated/` directly. Update the templates and run `Objective-C/Exports/generate_exports.sh` instead.
-- Do not edit the generated private module maps in `ModuleMap/Generated/` directly. Update the header list templates and run `Swift/ModuleMap/generate_private_modulemap.sh` instead (see Architecture Notes).
+- Do not edit the generated private module maps in `Swift/ModuleMap/Generated/` directly. Update the header list templates and run `Swift/ModuleMap/generate_private_modulemap.sh` instead (see Architecture Notes).
 
 ## Build and Test
 

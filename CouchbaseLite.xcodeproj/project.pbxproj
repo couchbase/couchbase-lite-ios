@@ -2463,7 +2463,7 @@
 		40C5FD5A2B9946E6004BFD3B /* CBLVectorIndexTypes.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLVectorIndexTypes.h; sourceTree = "<group>"; };
 		40CC4B76302BE6D30002386D /* CouchbaseLiteSwift-EE.private.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "CouchbaseLiteSwift-EE.private.txt"; sourceTree = "<group>"; };
 		40CC4B77302BE6E40002386D /* CouchbaseLiteSwift.private.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = CouchbaseLiteSwift.private.txt; sourceTree = "<group>"; };
-		40CC4B78302BE6EF0002386D /* CouchbaseLiteSwift-EE.private.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "CouchbaseLiteSwift-EE.private.txt"; sourceTree = "<group>"; };
+		40CC4B79302BF1620002386D /* CouchbaseLiteSwift-EE.private.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = "CouchbaseLiteSwift-EE.private.modulemap"; sourceTree = "<group>"; };
 		40D6BCBF2DDD183000F209D7 /* MultipeerReplicatorConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultipeerReplicatorConfiguration.swift; sourceTree = "<group>"; };
 		40D6BCC12DDD191C00F209D7 /* MultipeerCertificateAuthenticator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultipeerCertificateAuthenticator.swift; sourceTree = "<group>"; };
 		40D6BCC32DDD19D900F209D7 /* PeerID.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeerID.swift; sourceTree = "<group>"; };
@@ -3454,7 +3454,7 @@
 			isa = PBXGroup;
 			children = (
 				40F52B1D3026ED0F009C5F9E /* CouchbaseLiteSwift.private.modulemap */,
-				40CC4B78302BE6EF0002386D /* CouchbaseLiteSwift-EE.private.txt */,
+				40CC4B79302BF1620002386D /* CouchbaseLiteSwift-EE.private.modulemap */,
 			);
 			path = Generated;
 			sourceTree = "<group>";

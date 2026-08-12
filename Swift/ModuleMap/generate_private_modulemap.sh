@@ -79,7 +79,9 @@ generate_ee() {
 verify_or_write() {
   local generate_fn="$1" output="$2" name="$3"
   if [ -n "$CHECK" ]; then
-    if "$generate_fn" | diff -q "$output" - > /dev/null 2>&1; then
+    # Compare the module content only, skipping '//' comment lines, so that the
+    # year in the generated license header does not affect the verification.
+    if diff -q <(grep -v '^//' "$output" 2>/dev/null) <("$generate_fn" | grep -v '^//') > /dev/null 2>&1; then
       echo "OK: $name private module map is up to date."
     else
       echo "ERROR: $name private module map is out of date." >&2
