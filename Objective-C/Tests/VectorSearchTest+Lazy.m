@@ -69,9 +69,11 @@
     NSArray<NSNumber*>* vector;
     CBLQueryResult *result = [rs nextObject];
     if (result) {
-        id value = [result arrayAtIndex: 0];
+        CBLArray* value = [result arrayAtIndex: 0];
         if (value) {
-            vector = (NSArray<NSNumber*>*)value;
+            // Copy the values out of the fleece-backed CBLArray, which is only
+            // valid while the result set is alive:
+            vector = (NSArray<NSNumber*>*)[value toArray];
         }
     }
     return vector;
