@@ -1,0 +1,14 @@
+name: Check Module Map Files
+
+on:
+  pull_request:
+    branches:
+      - '**'
+
+jobs:
+  verify:
+    runs-on: macos-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Verify generated private module maps
+      run: ./Swift/ModuleMap/generate_private_modulemap.sh --check

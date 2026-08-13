@@ -44,8 +44,8 @@ iOS app-hosted test schemes:
 - Community Edition code must not depend on Enterprise Edition code.
 - Enterprise Edition code may extend Community Edition behavior through EE sources or `COUCHBASE_ENTERPRISE` guards.
 - Swift APIs mirror Obj-C APIs; public API changes usually require updates in both layers.
-- Swift-to-Obj-C bridging is controlled by `Swift/CouchbaseLiteSwift.private.modulemap` and `../couchbase-lite-ios-ee/Sources/Swift/CouchbaseLiteSwift.private.modulemap`.
-- If a new Obj-C header must be visible to Swift, update the appropriate private module map.
+- Swift-to-Obj-C bridging is controlled by the generated private module maps in `Swift/ModuleMap/Generated/` (both editions; generated from the header list templates in `Swift/ModuleMap/`).
+- To make a new Obj-C header visible to Swift: add a CE header to `Swift/ModuleMap/CouchbaseLiteSwift.private.txt`, or an EE header to `Swift/ModuleMap/CouchbaseLiteSwift-EE.private.txt`, then run `Swift/ModuleMap/generate_private_modulemap.sh` and commit the regenerated module maps.
 - Public Obj-C exported symbols are defined by `Objective-C/Exports/CBL.txt` and `Objective-C/Exports/CBL_EE.txt`.
 
 ## Guardrails
@@ -53,6 +53,7 @@ iOS app-hosted test schemes:
 - Do not hand-edit `CouchbaseLite.xcodeproj/project.pbxproj`.
 - If a task requires new files or project membership changes, ask the developer to make them in Xcode.
 - Do not edit generated export files in `Objective-C/Exports/Generated/` directly. Update the templates and run `Objective-C/Exports/generate_exports.sh` instead.
+- Do not edit the generated private module maps in `Swift/ModuleMap/Generated/` directly. Update the header list templates and run `Swift/ModuleMap/generate_private_modulemap.sh` instead (see Architecture Notes).
 
 ## Build and Test
 
