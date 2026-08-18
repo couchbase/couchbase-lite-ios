@@ -18,12 +18,14 @@
 //
 
 #import "ReplicatorTest.h"
-#import "CBLURLEndpointListenerConfiguration.h"
-#import "CBLURLEndpointListener+Internal.h"
 
 #define kWsPort 4084
 #define kWssPort 4085
 
+// The common name used by the anonymous identities that the listener creates when
+// started without an identity. Mirrors kCBLAnonymousIdentityCommonName defined in
+// Sources/Objective-C/Listener/CBLURLEndpointListener.mm (couchbase-lite-ios-ee).
+#define kCBLAnonymousIdentityCommonName @"CBLAnonymousCertificate"
 #define kServerCertLabel @"CBL-Server-Cert"
 #define kClientCertLabel @"CBL-Client-Cert"
 
@@ -49,8 +51,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 // TLS Identity management
 - (nullable CBLTLSIdentity*) tlsIdentity: (BOOL)isServer;
-- (void) cleanupTLSIdentity: (BOOL)isServer;
-- (void) deleteFromKeyChain: (CBLTLSIdentity*)identity;
+- (void) cleanUpTLSIdentityForServer: (BOOL)isServer;
+
+/** Deletes all anonymous identities and their certificates from the keychain. */
+- (void) cleanUpAnonymousIdentities;
 
 // replicator methods
 - (CBLReplicator*) replicator: (CBLDatabase*)db

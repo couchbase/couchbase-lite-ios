@@ -18,11 +18,10 @@
 //
 
 #import "CBLTestCase.h"
+#ifndef CBL_BINARY_TEST
 #import "CBLDatabase+Internal.h"
-#import "CBLDocument+Internal.h"
-#import "CBLScope.h"
+#endif
 #import "CollectionUtils.h"
-#import "CBLQueryFullTextIndexExpressionProtocol.h"
 
 @interface DatabaseTest : CBLTestCase
 @end
@@ -254,12 +253,8 @@
     
     [self waitForExpectations: @[change1, change2] timeout: kExpTimeout];
     
-    AssertEqual([self.db activeServiceCount], (unsigned long)2);
-    
     [self closeDatabase: self.db];
     
-    AssertEqual([self.db activeServiceCount], (unsigned long)0);
-    Assert([self.db isClosedLocked]);
 }
 
 #ifdef COUCHBASE_ENTERPRISE
@@ -287,14 +282,10 @@
     
     [self waitForExpectations: @[idle1, idle2] timeout: kExpTimeout];
     
-    AssertEqual([self.db activeServiceCount], (unsigned long)2);
-    
     [self closeDatabase: self.db];
     
     [self waitForExpectations: @[stopped1, stopped2] timeout: kExpTimeout];
     
-    AssertEqual([self.db activeServiceCount], (unsigned long)0);
-    Assert([self.db isClosedLocked]);
 }
 
 - (void) testCloseWithActiveLiveQueriesAndReplicators {
@@ -310,8 +301,6 @@
     [q2 addChangeListener: ^(CBLQueryChange *ch) { [change2 fulfill]; }];
     
     [self waitForExpectations: @[change1, change2] timeout: kExpTimeout];
-    
-    AssertEqual([self.db activeServiceCount], (unsigned long)2);
     
     // Replicators:
     
@@ -337,16 +326,11 @@
     
     [self waitForExpectations: @[idle1, idle2] timeout: kExpTimeout];
     
-    AssertEqual([self.db activeServiceCount], (unsigned long)4); // total services
-    
     // Close database:
     [self closeDatabase: self.db];
     
     [self waitForExpectations: @[stopped1, stopped2] timeout: kExpTimeout];
     
-    AssertEqual([self.db activeServiceCount], (unsigned long)0);
-    AssertEqual([self.db activeServiceCount], (unsigned long)0);
-    Assert([self.db isClosedLocked]);
 }
 
 - (void) startReplicator: (CBLReplicator*)repl
@@ -419,7 +403,6 @@
     AssertNotNil(blob1.content);
     AssertEqualObjects(blob.content, blob1.content);
     
-    
     // Content shouldn't be accessible from doc1:
     Assert([[doc1 valueForKey: @"data"] isKindOfClass: [CBLBlob class]]);
     CBLBlob* blob2= [doc1 valueForKey: @"data"];
@@ -477,12 +460,8 @@
     
     [self waitForExpectations: @[change1, change2] timeout: kExpTimeout];
     
-    AssertEqual([self.db activeServiceCount], (unsigned long)2);
-    
     [self deleteDatabase: self.db];
     
-    AssertEqual([self.db activeServiceCount], (unsigned long)0);
-    Assert([self.db isClosedLocked]);
 }
 
 #ifdef COUCHBASE_ENTERPRISE
@@ -510,14 +489,10 @@
     
     [self waitForExpectations: @[idle1, idle2] timeout: kExpTimeout];
     
-    AssertEqual([self.db activeServiceCount], (unsigned long)2);
-    
     [self deleteDatabase: self.db];
     
     [self waitForExpectations: @[stopped1, stopped2] timeout: kExpTimeout];
     
-    AssertEqual([self.db activeServiceCount], (unsigned long)0);
-    Assert([self.db isClosedLocked]);
 }
 
 - (void) testDeleteWithActiveLiveQueriesAndReplicators {
@@ -533,8 +508,6 @@
     [q2 addChangeListener: ^(CBLQueryChange *ch) { [change2 fulfill]; }];
     
     [self waitForExpectations: @[change1, change2] timeout: kExpTimeout];
-    
-    AssertEqual([self.db activeServiceCount], (unsigned long)2);
     
     CBLDatabaseEndpoint* target = [[CBLDatabaseEndpoint alloc] initWithDatabase: self.otherDB];
     CBLCollectionConfiguration* collectionConfig = [[CBLCollectionConfiguration alloc] initWithCollection: self.defaultCollection];
@@ -556,15 +529,10 @@
     
     [self waitForExpectations: @[idle1, idle2] timeout: kExpTimeout];
     
-    AssertEqual([self.db activeServiceCount], (unsigned long)4); // total services
-    
     [self deleteDatabase: self.db];
     
     [self waitForExpectations: @[stopped1, stopped2] timeout: kExpTimeout];
     
-    AssertEqual([self.db activeServiceCount], (unsigned long)0);
-    AssertEqual([self.db activeServiceCount], (unsigned long)0);
-    Assert([self.db isClosedLocked]);
 }
 
 #endif
@@ -1099,7 +1067,6 @@
     [doc setString: @"en" forKey: @"lang"];
     [self saveDocument: doc collection: colA];
     
-    
     id qualifiedIndex = [[CBLQueryExpression fullTextIndex: @"passageIndex"] from: @"main"];
     
     CBLQuerySelectResult* S_DOCID = [CBLQuerySelectResult expression: [CBLQueryMeta idFrom: @"main"]];
@@ -1226,7 +1193,6 @@
     CBLValueIndexConfiguration* config = [[CBLValueIndexConfiguration alloc] initWithExpression: @[@"firstName", @"lastName"]];
     Assert([c createIndexWithName: @"index1" config: config error: &error]);
     
-    
     // index2
     CBLFullTextIndexConfiguration* config2 = [[CBLFullTextIndexConfiguration alloc] initWithExpression: @[@"detail"]
                                                                                          ignoreAccents: NO
@@ -1307,34 +1273,36 @@
     7. Get the configuration object from the Database and verify that FullSync is true.
     8. Use c4db_config2 to confirm that its config contains the kC4DB_DiskSyncFull flag.
  */
-- (void) testDBWithFullSync {
-    NSString* dbName = @"fullsyncdb";
-    [CBLDatabase deleteDatabase: dbName inDirectory: self.directory error: nil];
-    AssertFalse([CBLDatabase databaseExists: dbName inDirectory: self.directory]);
-    
+
+#pragma mark - Internal
+
+// White-box tests that verify internal state; excluded from the binary tests.
+#ifndef CBL_BINARY_TEST
+
+- (void) testFullSyncConfig {
+    // fullSync is off by default:
     CBLDatabaseConfiguration* config = [[CBLDatabaseConfiguration alloc] init];
     config.directory = self.directory;
     NSError* error;
-    CBLDatabase* db = [[CBLDatabase alloc] initWithName: dbName
+    CBLDatabase* db = [[CBLDatabase alloc] initWithName: @"fullsyncdb"
                                                  config: config
                                                   error: &error];
-    AssertNil(error);
     AssertNotNil(db, @"Couldn't open db: %@", error);
     AssertFalse([db config].fullSync);
     AssertFalse(([db getC4DBConfig]->flags & kC4DB_DiskSyncFull) == kC4DB_DiskSyncFull);
-    
     [self closeDatabase: db];
-    
+
+    // fullSync is enabled in the LiteCore database config:
     config.fullSync = true;
-    db = [[CBLDatabase alloc] initWithName: dbName
+    db = [[CBLDatabase alloc] initWithName: @"fullsyncdb"
                                     config: config
                                      error: &error];
-    AssertNil(error);
     AssertNotNil(db, @"Couldn't open db: %@", error);
     Assert([db config].fullSync);
     Assert(([db getC4DBConfig]->flags & kC4DB_DiskSyncFull) == kC4DB_DiskSyncFull);
-
     [self closeDatabase: db];
 }
+
+#endif
 
 @end

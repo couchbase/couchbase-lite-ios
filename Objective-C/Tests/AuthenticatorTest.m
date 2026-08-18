@@ -18,9 +18,10 @@
 //
 
 #import <XCTest/XCTest.h>
-#import "CBLBasicAuthenticator.h"
 #import "CBLTestCase.h"
+#ifndef CBL_BINARY_TEST
 #import "CBLAuthenticator+Internal.h"
+#endif
 
 @interface AuthenticatorTest : CBLTestCase
 
@@ -36,22 +37,6 @@
                                                                          password: password];
     AssertEqualObjects([auth username], username);
     AssertEqualObjects([auth password], password);
-}
-
-- (void) testBasicAuthenticatorAuthenticate {
-    NSString* username = @"someUsername";
-    NSString* password = @"somePassword";
-    
-    CBLBasicAuthenticator* auth = [[CBLBasicAuthenticator alloc] initWithUsername: username
-                                                                         password: password];
-    
-    NSMutableDictionary* options = [NSMutableDictionary dictionary];
-    AssertEqualObjects(options, @{});
-    
-    [auth authenticate: options];
-    AssertEqualObjects(options[@"auth"][@"type"], @"Basic");
-    AssertEqualObjects(options[@"auth"][@"username"], username);
-    AssertEqualObjects(options[@"auth"][@"password"], password);
 }
 
 - (void) testSessionAuthenticatorWithSessionID {
@@ -81,6 +66,27 @@
     AssertEqualObjects([auth cookieName], @"SyncGatewaySession");
 }
 
+#pragma mark - Internal
+
+// White-box tests that verify internal state; excluded from the binary tests.
+#ifndef CBL_BINARY_TEST
+
+- (void) testBasicAuthenticatorAuthenticate {
+    NSString* username = @"someUsername";
+    NSString* password = @"somePassword";
+    
+    CBLBasicAuthenticator* auth = [[CBLBasicAuthenticator alloc] initWithUsername: username
+                                                                         password: password];
+    
+    NSMutableDictionary* options = [NSMutableDictionary dictionary];
+    AssertEqualObjects(options, @{});
+    
+    [auth authenticate: options];
+    AssertEqualObjects(options[@"auth"][@"type"], @"Basic");
+    AssertEqualObjects(options[@"auth"][@"username"], username);
+    AssertEqualObjects(options[@"auth"][@"password"], password);
+}
+
 - (void) testAuthenticateSession {
     NSString* sessionID = @"someSessionID";
     NSString* cookie = @"someCookie";
@@ -97,5 +103,6 @@
     AssertEqualObjects(options[@"cookies"], cookies);
 }
 
-@end
+#endif
 
+@end

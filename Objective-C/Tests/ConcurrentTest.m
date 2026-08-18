@@ -18,7 +18,6 @@
 //
 
 #import "CBLTestCase.h"
-#import "CollectionUtils.h"
 
 #define kDocumentTestBlob @"i'm blob"
 
@@ -156,9 +155,9 @@
     
     
     NSArray* docs = [self createAndSaveDocs: kNDocs error: nil];
-    NSArray* docIds = [docs my_map: ^id(CBLDocument* doc) {
-        return doc.id;
-    }];
+    NSMutableArray* docIds = [NSMutableArray arrayWithCapacity: docs.count];
+    for (CBLDocument* doc in docs)
+        [docIds addObject: doc.id];
     
     [self concurrentRuns: kNConcurrents waitUntilDone: YES withBlock: ^(NSUInteger rIndex) {
         for (NSUInteger r = 0; r < kNRounds; r++) {
@@ -180,9 +179,9 @@
     const NSUInteger kNConcurrents = 5;
     
     NSArray* docs = [self createAndSaveDocs: kNDocs error: nil];
-    NSArray* docIds = [docs my_map: ^id(CBLDocument* doc) {
-        return doc.id;
-    }];
+    NSMutableArray* docIds = [NSMutableArray arrayWithCapacity: docs.count];
+    for (CBLDocument* doc in docs)
+        [docIds addObject: doc.id];
     
     [self concurrentRuns: kNConcurrents waitUntilDone: YES withBlock: ^(NSUInteger rIndex) {
         for (NSUInteger r = 0; r < kNRounds; r++) {
@@ -202,9 +201,9 @@
     const NSUInteger kNConcurrents = 5;
     
     NSArray* docs = [self createAndSaveDocs: kNDocs error: nil];
-    NSArray* docIds = [docs my_map: ^id(CBLDocument* doc) {
-        return doc.id;
-    }];
+    NSMutableArray* docIds = [NSMutableArray arrayWithCapacity: docs.count];
+    for (CBLDocument* doc in docs)
+        [docIds addObject: doc.id];
     
     [self concurrentRuns: kNConcurrents waitUntilDone: YES withBlock: ^(NSUInteger rIndex) {
         NSString* tag = [NSString stringWithFormat:@"Update%ld", (long)rIndex];

@@ -17,13 +17,8 @@
 //
 
 #import "CBLMockConnection.h"
-#import "CBLProtocolType.h"
-#import "CBLMessageEndpointConnection.h"
 #import "CBLMockConnectionErrorLogic.h"
-#import "CBLMessage.h"
-#import "CBLMessageEndpoint.h"
 #import "CollectionUtils.h"
-#import "CBLMessageEndpointListener.h"
 
 @implementation CBLMockConnection
 

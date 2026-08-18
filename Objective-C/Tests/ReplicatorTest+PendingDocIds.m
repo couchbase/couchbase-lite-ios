@@ -18,7 +18,6 @@
 //
 
 #import "ReplicatorTest.h"
-#import "CBLReplicator+Internal.h"
 
 #define kDocIdFormat @"doc-%d"
 #define kActionKey @"action-key"

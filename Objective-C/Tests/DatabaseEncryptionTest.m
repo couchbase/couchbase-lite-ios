@@ -18,7 +18,6 @@
 //
 
 #import "CBLTestCase.h"
-#import "CBLDatabase+Internal.h"
 
 @interface DatabaseEncryptionTest : CBLTestCase
 

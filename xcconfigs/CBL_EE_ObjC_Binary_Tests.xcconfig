@@ -1,8 +1,8 @@
 //
-//  Foundation+CBL.h
+//  CBL_EE_ObjC_Binary_Tests.xcconfig
 //  CouchbaseLite
 //
-//  Copyright (c) 2020 Couchbase, Inc All rights reserved.
+//  Copyright (c) 2026 Couchbase, Inc All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -17,15 +17,5 @@
 //  limitations under the License.
 //
 
-#import <Foundation/Foundation.h>
-#import "c4Base.h"
-
-NS_ASSUME_NONNULL_BEGIN
-
-@interface NSString (CBL)
-
-// for unit testing purpose only
-- (id) toJSONObj;
-@end
-
-NS_ASSUME_NONNULL_END
+#include "CBL_EE_Common.xcconfig"
+#include "CBL_ObjC_Binary_Tests.xcconfig"

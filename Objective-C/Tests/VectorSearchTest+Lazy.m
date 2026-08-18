@@ -18,7 +18,7 @@
 //
 
 #import "VectorSearchTest.h"
-#import "CBLJSON.h"
+#import "CBLJSONUtil.h"
 
 /**
  * Test Spec: https://github.com/couchbaselabs/couchbase-lite-api/blob/master/spec/tests/T0002-Lazy-Vector-Index.md
@@ -644,7 +644,7 @@
     [self.defaultCollection saveDocument: mdoc error: &error];
     
     mdoc = [self createDocument: @"doc-5"];
-    [mdoc setValue: [CBLJSON dateWithJSONObject: @"2024-05-10T00:00:00.000Z"] forKey: @"value"];
+    [mdoc setValue: [CBLJSONUtil dateFromJSONDateString: @"2024-05-10T00:00:00.000Z"] forKey: @"value"];
     [self.defaultCollection saveDocument: mdoc error: &error];
     
     mdoc = [self createDocument: @"doc-6"];
@@ -748,7 +748,7 @@
     AssertEqual([updater dateAtIndex: 2], nil);
     AssertEqual([updater dateAtIndex: 3], nil);
     AssertEqual([updater dateAtIndex: 4], nil);
-    Assert([[updater dateAtIndex: 5] isEqual: [CBLJSON dateWithJSONObject: @"2024-05-10T00:00:00.000Z"]]);
+    Assert([[updater dateAtIndex: 5] isEqual: [CBLJSONUtil dateFromJSONDateString: @"2024-05-10T00:00:00.000Z"]]);
     AssertEqual([updater dateAtIndex: 6], nil);
     AssertEqual([updater dateAtIndex: 7], nil);
     AssertEqual([updater dateAtIndex: 8], nil);

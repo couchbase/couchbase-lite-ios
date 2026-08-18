@@ -18,8 +18,10 @@
 //
 
 #import "CBLTestCase.h"
+#ifndef CBL_BINARY_TEST
 #import "CBLTLSIdentity+Internal.h"
 #import "CBLTrustCheck.h"
+#endif
 
 @interface TLSIdentityTest : CBLTestCase
 
@@ -560,6 +562,13 @@
 #endif
 }
 
+#pragma mark - Internal
+
+// White-box tests that verify internal state; excluded from the binary tests.
+// Note: a public rewrite (import the issuer via importIdentityWithData and verify with
+// SecTrust) is blocked by CBL-7005 (importIdentityWithData broken on newer macOS).
+#ifndef CBL_BINARY_TEST
+
 - (void) testCreateIdentitySignedWithIssuer {
     XCTSkipUnless(self.keyChainAccessAllowed);
     
@@ -668,5 +677,7 @@
     AssertNil(identity);
     AssertNil(error);
 }
+
+#endif
 
 @end

@@ -39,7 +39,6 @@
 #import "CBLStatus.h"
 #import "CBLStringBytes.h"
 #import "CBLVersion.h"
-#import "Foundation+CBL.h"
 #import "c4BlobStore.h"
 #import "c4Observer.h"
 #import "fleece/Fleece.hh"
@@ -704,12 +703,6 @@ static const C4DatabaseConfig2 kDBConfig = {
     }
 }
 
-- (BOOL) isClosedLocked {
-    CBL_LOCK(_mutex) {
-        return [self isClosed];
-    }
-}
-
 - (C4SliceResult) getPublicUUID: (NSError**)outError {
     CBL_LOCK(_mutex) {
         if (![self mustBeOpen: outError])
@@ -911,12 +904,6 @@ static C4DatabaseConfig2 c4DatabaseConfig2 (CBLDatabaseConfiguration *config) {
         [_closeCondition lock];
         [_closeCondition broadcast];
         [_closeCondition unlock];
-    }
-}
-
-- (uint64_t) activeServiceCount {
-    CBL_LOCK(_mutex) {
-        return _activeServices.count;
     }
 }
 

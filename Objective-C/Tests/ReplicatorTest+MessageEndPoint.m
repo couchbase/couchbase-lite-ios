@@ -7,13 +7,9 @@
 //
 
 #import "ReplicatorTest.h"
-#import "CBLReplicator+Internal.h"
-#import "CBLMessageEndpoint.h"
 #import "CBLMockConnection.h"
 #import "CBLMockConnectionErrorLogic.h"
 #import "CBLMockConnectionLifecycleLocation.h"
-#import "CBLMessageEndpointListener.h"
-#import "CBLErrors.h"
 
 @interface MockConnectionFactory : NSObject <CBLMessageEndpointDelegate>
 

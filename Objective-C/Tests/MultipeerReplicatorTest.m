@@ -7,6 +7,13 @@
 //
 
 #import "MultipeerReplicatorTest.h"
+
+// This test file uses internal APIs and is for the internal test targets only;
+// it cannot be part of the binary test targets (CBL_*_Binary_Tests).
+#ifdef CBL_BINARY_TEST
+#error This test file uses internal APIs and cannot run against a binary framework.
+#endif
+
 #import "CBLDatabase+Internal.h"
 #import "CBLTLSIdentity+Internal.h"
 

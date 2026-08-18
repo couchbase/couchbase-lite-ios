@@ -18,10 +18,7 @@
 //
 
 #import "ReplicatorTest.h"
-#import "CBLTLSIdentity+Internal.h"
-#import "CBLURLEndpointListener+Internal.h"
-#import "CBLURLEndpointListenerConfiguration+Internal.h"
-#import "CBLMessageEndpointListenerConfiguration+Internal.h"
+#import <Security/Security.h>
 #import "CollectionUtils.h"
 #import "URLEndpointListenerTest.h"
 
@@ -33,7 +30,7 @@
     comps.scheme = self.config.disableTLS ? @"ws" : @"wss";
     comps.host = @"localhost";
     comps.port = @(self.port);
-    comps.path = $sprintf(@"/%@",self.config.database.name);
+    comps.path = $sprintf(@"/%@",((CBLCollection*)self.config.collections.firstObject).database.name);
     return comps.URL;
 }
 
@@ -48,12 +45,14 @@
 - (void) setUp {
     [super setUp];
 
-    [self cleanUpIdentities];
+    [self cleanUpAnonymousIdentities];
 }
 
 - (void) tearDown {
     [self stopListen];
-    [self cleanUpIdentities];
+    [self cleanUpAnonymousIdentities];
+    [self cleanUpTLSIdentityForServer: YES];
+    [self cleanUpTLSIdentityForServer: NO];
     
     [super tearDown];
 }
@@ -117,19 +116,7 @@
 }
 
 - (void) stopListener: (CBLURLEndpointListener*)listener {
-    CBLTLSIdentity* identity = listener.tlsIdentity;
     [listener stop];
-    if (identity && self.keyChainAccessAllowed) {
-        [self deleteFromKeyChain: identity];
-    }
-}
-
-- (void) deleteFromKeyChain: (CBLTLSIdentity*)identity {
-    [self ignoreException:^{
-        NSError* error;
-        Assert([identity deleteFromKeyChainWithError: &error],
-               @"Couldn't delete identity: %@", error);
-    }];
 }
 
 - (CBLReplicator*) replicator: (CBLDatabase*)db
@@ -173,7 +160,7 @@
     if (!self.keyChainAccessAllowed) return nil;
     
     // Cleanup:
-    [self cleanupTLSIdentity: isServer];
+    [self cleanUpTLSIdentityForServer: isServer];
     
     // Create server/client identity:
     NSError* err;
@@ -190,24 +177,76 @@
     return identity;
 }
 
-- (void) cleanupTLSIdentity: (BOOL)isServer {
+- (void) cleanUpTLSIdentityForServer: (BOOL)isServer {
     if (!self.keyChainAccessAllowed) return;
     
-    NSError* err;
+    // Delete directly from the keychain by label so that partial identities
+    // (e.g. a leftover certificate without its key) get cleaned up as well:
     NSString* label = isServer ? kServerCertLabel : kClientCertLabel;
-    Assert([CBLTLSIdentity deleteIdentityWithLabel: label error: &err]);
+    for (id itemClass in @[(id)kSecClassIdentity, (id)kSecClassCertificate]) {
+        NSDictionary* query = @{(id)kSecClass: itemClass,
+                                (id)kSecAttrLabel: label};
+        OSStatus status = SecItemDelete((CFDictionaryRef)query);
+        Assert(status == errSecSuccess || status == errSecItemNotFound || status == errSecInvalidItemRef ||
+               status == errSecWrPerm /* items in a keychain that tests cannot modify (e.g. Local Items) */,
+               @"Couldn't delete keychain items with label %@ (OSStatus = %d)", label, (int)status);
+    }
 }
 
 - (void) releaseCF: (CFTypeRef)ref {
     if (ref != NULL) CFRelease(ref);
 }
 
-- (void) cleanUpIdentities {
+- (void) cleanUpAnonymousIdentities {
     if (self.keyChainAccessAllowed) {
         [self ignoreException: ^{
-            NSError* error;
-            Assert([CBLURLEndpointListener deleteAnonymousIdentitiesWithError: &error],
-                   @"Cannot delete anonymous identity: %@", error);
+            NSDictionary* query = @{(id)kSecClass: (id)kSecClassIdentity,
+                                    (id)kSecMatchLimit: (id)kSecMatchLimitAll,
+                                    (id)kSecReturnRef: @YES};
+            CFTypeRef result = NULL;
+            OSStatus status = SecItemCopyMatching((CFDictionaryRef)query, &result);
+            if (status == errSecItemNotFound)
+                return;
+            Assert(status == errSecSuccess, @"Cannot query identities (OSStatus = %d)", (int)status);
+            NSArray* identities = CFBridgingRelease(result);
+            for (id identityObj in identities) {
+                SecIdentityRef identityRef = (__bridge SecIdentityRef)identityObj;
+                SecCertificateRef certRef = NULL;
+                if (SecIdentityCopyCertificate(identityRef, &certRef) != errSecSuccess || !certRef)
+                    continue;
+                NSString* name = CFBridgingRelease(SecCertificateCopySubjectSummary(certRef));
+                CFRelease(certRef);
+                if ([name isEqualToString: kCBLAnonymousIdentityCommonName]) {
+                    NSDictionary* del = @{(id)kSecClass: (id)kSecClassIdentity,
+                                          (id)kSecValueRef: identityObj};
+                    status = SecItemDelete((CFDictionaryRef)del);
+                    Assert(status == errSecSuccess || status == errSecItemNotFound || status == errSecInvalidItemRef,
+                           @"Cannot delete anonymous identity (OSStatus = %d)", (int)status);
+                }
+            }
+            
+            // Deleting an identity doesn't remove its certificate; sweep the anonymous
+            // certificates (including any orphaned by previously interrupted test runs):
+            query = @{(id)kSecClass: (id)kSecClassCertificate,
+                      (id)kSecMatchLimit: (id)kSecMatchLimitAll,
+                      (id)kSecReturnRef: @YES};
+            result = NULL;
+            status = SecItemCopyMatching((CFDictionaryRef)query, &result);
+            if (status == errSecItemNotFound)
+                return;
+            Assert(status == errSecSuccess, @"Cannot query certificates (OSStatus = %d)", (int)status);
+            NSArray* certs = CFBridgingRelease(result);
+            for (id certObj in certs) {
+                NSString* name = CFBridgingRelease(
+                    SecCertificateCopySubjectSummary((__bridge SecCertificateRef)certObj));
+                if ([name isEqualToString: kCBLAnonymousIdentityCommonName]) {
+                    NSDictionary* del = @{(id)kSecClass: (id)kSecClassCertificate,
+                                          (id)kSecValueRef: certObj};
+                    status = SecItemDelete((CFDictionaryRef)del);
+                    Assert(status == errSecSuccess || status == errSecItemNotFound || status == errSecInvalidItemRef,
+                           @"Cannot delete anonymous certificate (OSStatus = %d)", (int)status);
+                }
+            }
         }];
     }
 }
