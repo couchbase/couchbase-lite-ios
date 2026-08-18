@@ -18,7 +18,9 @@
 //
 
 #import "AppDelegate.h"
+#ifdef CBL_PERF_TESTS
 #import "TunesPerfTest.h"
+#endif
 
 @interface AppDelegate ()
 
@@ -32,7 +34,7 @@
     NSUserDefaults* defaults = [NSUserDefaults standardUserDefaults];
     [defaults setBool: YES forKey: @"hostApp"];
     [defaults synchronize];
-#ifndef DEBUG
+#if defined(CBL_PERF_TESTS) && !defined(DEBUG)
     // In an optimized build, run the performance tests:
     [TunesPerfTest runWithConfig: nil];
     exit(0);

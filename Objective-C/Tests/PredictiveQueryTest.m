@@ -17,7 +17,7 @@
 //
 
 #import "CBLTestCase.h"
-#import "CBLJSON.h"
+#import "CBLJSONUtil.h"
 
 @interface CBLTestPredictiveModel: NSObject <CBLPredictiveModel>
 
@@ -154,7 +154,7 @@
     
     // Create prediction function input:
     NSDate* date = [NSDate date];
-    NSString* dateStr = [CBLJSON JSONObjectWithDate: date];
+    NSString* dateStr = [CBLJSONUtil jsonDateString: date];
     NSDictionary* dict =
     @{
         // Literal:
@@ -212,7 +212,7 @@
         AssertEqual([pred booleanForKey: @"boolean_true"], YES);
         AssertEqual([pred booleanForKey: @"boolean_false"], NO);
         AssertEqualObjects([pred stringForKey: @"string"], @"hello");
-        AssertEqualObjects([CBLJSON JSONObjectWithDate: [pred dateForKey: @"date"]], dateStr);
+        AssertEqualObjects([CBLJSONUtil jsonDateString: [pred dateForKey: @"date"]], dateStr);
         AssertEqualObjects([pred valueForKey: @"null"], [NSNull null]);
         AssertEqualObjects([[pred dictionaryForKey: @"dict"] toDictionary], @{@"foo": @"bar"});
         AssertEqualObjects([[pred arrayForKey: @"array"] toArray], (@[@"1", @"2", @"3"]));
@@ -222,7 +222,7 @@
         AssertEqual([pred doubleForKey: @"expr_value_number2"], 20.1);
         AssertEqual([pred booleanForKey: @"expr_value_boolean"], YES);
         AssertEqualObjects([pred stringForKey: @"expr_value_string"], @"hi");
-        AssertEqualObjects([CBLJSON JSONObjectWithDate: [pred dateForKey: @"expr_value_date"]], dateStr);
+        AssertEqualObjects([CBLJSONUtil jsonDateString: [pred dateForKey: @"expr_value_date"]], dateStr);
         AssertEqualObjects([pred valueForKey: @"expr_value_null"], [NSNull null]);
         AssertEqualObjects([[pred dictionaryForKey: @"expr_value_dict"] toDictionary], @{@"ping": @"pong"});
         AssertEqualObjects([[pred arrayForKey: @"expr_value_array"] toArray], (@[@"4", @"5", @"6"]));

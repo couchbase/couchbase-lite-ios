@@ -55,7 +55,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (BOOL) mustBeOpen: (NSError**)outError;
 - (void) mustBeOpenLocked;
-- (BOOL) isClosedLocked;
 
 - (C4SliceResult) getPublicUUID: (NSError**)outError;
 
@@ -63,7 +62,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void) registerActiveService: (id<CBLDatabaseService>)service;
 - (void) unregisterActiveService: (id<CBLDatabaseService>)service;
-- (uint64_t) activeServiceCount; // For testing only
 
 // Initialize the CBLDatabase with a give C4Database object in the shell mode.
 // This is currently used for creating a CBLDictionary as an input of the predict()

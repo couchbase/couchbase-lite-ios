@@ -17,8 +17,7 @@
 //
 
 #import "CBLMockConnectionErrorLogic.h"
-#import "CBLMessagingError.h"
-#import "CBLErrors.h"
+#import "CBLTestCommon.h"
 
 @implementation CBLNoErrorLogic
 

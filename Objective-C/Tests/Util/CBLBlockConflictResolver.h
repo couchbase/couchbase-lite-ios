@@ -17,7 +17,7 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "CouchbaseLite.h"
+#import "CBLTestCommon.h"
 
 NS_ASSUME_NONNULL_BEGIN
 

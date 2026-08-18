@@ -20,7 +20,9 @@
 #import "CBLTestCase.h"
 
 #ifdef COUCHBASE_ENTERPRISE
+#ifndef CBL_BINARY_TEST
 #import "CBLReplicatorConfiguration+ServerCert.h"
+#endif
 #endif
 
 NS_ASSUME_NONNULL_BEGIN
@@ -42,21 +44,6 @@ NS_ASSUME_NONNULL_BEGIN
 
 #pragma mark - Endpoint
 
-/** Returns an endpoint for a Sync Gateway test database, or nil if SG tests are not enabled.
-    To enable these tests, set the hostname of the server in the environment variable
-    "CBL_TEST_HOST".
-    The port number defaults to 4984, or 4994 for SSL. To override these, set the environment
-    variables "CBL_TEST_PORT" and/or "CBL_TEST_PORT_SSL".
-    Note: On iOS, all endpoints will be SSL regardless of the `secure` flag.
- */
-- (nullable CBLURLEndpoint*) remoteEndpointWithName: (NSString*)dbName secure: (BOOL)secure;
-
-- (void) eraseRemoteEndpoint: (CBLURLEndpoint*)endpoint;
-
-- (nullable id) sendRequestToEndpoint: (CBLURLEndpoint*)endpoint
-                               method: (NSString*)method
-                                 path: (nullable NSString*)path
-                                 body: (nullable id)body;
 
 #pragma mark - Certifciate
 

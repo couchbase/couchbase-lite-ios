@@ -18,8 +18,6 @@
 //
 
 #import "ReplicatorTest.h"
-#import "CBLURLEndpointListenerConfiguration.h"
-#import "CBLURLEndpointListener+Internal.h"
 
 #define kWsPort 4084
 #define kWssPort 4085
@@ -49,8 +47,16 @@ NS_ASSUME_NONNULL_BEGIN
 
 // TLS Identity management
 - (nullable CBLTLSIdentity*) tlsIdentity: (BOOL)isServer;
-- (void) cleanupTLSIdentity: (BOOL)isServer;
-- (void) deleteFromKeyChain: (CBLTLSIdentity*)identity;
+- (void) cleanUpTLSIdentityForServer: (BOOL)isServer;
+
+/** The common name of the anonymous identities that the listener creates when started
+    without an identity. Discovered once per test process from a certificate the product
+    mints, rather than hardcoded, so the tests neither state the product's common name
+    nor drift from it. */
+- (nullable NSString*) anonymousIdentityCommonName;
+
+/** Deletes all anonymous identities and their certificates from the keychain. */
+- (void) cleanUpAnonymousIdentities;
 
 // replicator methods
 - (CBLReplicator*) replicator: (CBLDatabase*)db

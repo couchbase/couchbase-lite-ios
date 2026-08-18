@@ -18,21 +18,21 @@
 //
 
 #import "QueryTest.h"
+#import "CBLJSONUtil.h"
+#ifndef CBL_BINARY_TEST
 #import "CBLQuery+Internal.h"
 #import "CBLQuery+JSON.h"
-#import "CBLQueryBuilder.h"
-#import "CBLQuerySelectResult.h"
-#import "CBLQueryDataSource.h"
-#import "CBLQueryOrdering.h"
 #import "CBLQueryResultArray.h"
 #import "CBLValueExpression.h"
 #import "CBLQueryExpression+Internal.h"
 #import "CBLUnaryExpression.h"
-#import "Foundation+CBL.h"
+#endif
 #import "CollectionUtils.h"
 
 #ifdef DEBUG
+#ifndef CBL_BINARY_TEST
 #import "CBLQueryObserver.h"
+#endif
 #endif
 
 @interface QueryTest_Main : QueryTest
@@ -42,7 +42,7 @@
 @implementation QueryTest_Main
 
 - (void) tearDown {
-#ifdef DEBUG
+#if defined(DEBUG) && !defined(CBL_BINARY_TEST)
     [CBLQueryObserver setC4QueryObserverCallbackDelayInterval: 0.0];
 #endif
     [super tearDown];
@@ -313,7 +313,6 @@
     AssertEqual(numRows, 2u);
 }
 
-
 #pragma mark - Select
 
 - (void) testSelectDistinct {
@@ -477,7 +476,6 @@
     }];
     AssertEqual(numRows, 1u);
 }
-
 
 #pragma mark - OrderBy/GroupBy
 
@@ -1140,8 +1138,7 @@
                                                               satisfies: [LIKE equalTo: [CBLQueryExpression string: @"climbing"]]]];
     
     NSLog(@"%@", [q explain: nil]);
-    
-    
+
     NSArray* expected = @[@"doc-017", @"doc-021", @"doc-023", @"doc-045", @"doc-060"];
     uint64_t numRows = [self verifyQuery: q
                             randomAccess: YES
@@ -1220,36 +1217,6 @@
 }
 
 #pragma mark - Collation
-
-- (void) testGenerateJSONCollation {
-    NSArray* collations =
-    @[[CBLQueryCollation asciiWithIgnoreCase: NO],
-      [CBLQueryCollation asciiWithIgnoreCase: YES],
-      [CBLQueryCollation unicodeWithLocale: nil   ignoreCase: NO  ignoreAccents: NO],
-      [CBLQueryCollation unicodeWithLocale: nil   ignoreCase: YES ignoreAccents: NO],
-      [CBLQueryCollation unicodeWithLocale: nil   ignoreCase: YES ignoreAccents: YES],
-      [CBLQueryCollation unicodeWithLocale: @"en" ignoreCase: NO  ignoreAccents: NO],
-      [CBLQueryCollation unicodeWithLocale: @"en" ignoreCase: YES ignoreAccents: NO],
-      [CBLQueryCollation unicodeWithLocale: @"en" ignoreCase: YES ignoreAccents: YES]];
-    
-    NSString* deviceLocale = [NSLocale currentLocale].localeIdentifier;
-    NSArray* expected =
-    @[
-      @{@"UNICODE": @(NO),  @"LOCALE": [NSNull null] ,@"CASE": @(YES), @"DIAC": @(YES)},
-      @{@"UNICODE": @(NO),  @"LOCALE": [NSNull null] ,@"CASE": @(NO) , @"DIAC": @(YES)},
-      @{@"UNICODE": @(YES), @"LOCALE": deviceLocale  ,@"CASE": @(YES), @"DIAC": @(YES)},
-      @{@"UNICODE": @(YES), @"LOCALE": deviceLocale  ,@"CASE": @(NO),  @"DIAC": @(YES)},
-      @{@"UNICODE": @(YES), @"LOCALE": deviceLocale  ,@"CASE": @(NO),  @"DIAC": @(NO)},
-      @{@"UNICODE": @(YES), @"LOCALE": @"en"         ,@"CASE": @(YES), @"DIAC": @(YES)},
-      @{@"UNICODE": @(YES), @"LOCALE": @"en"         ,@"CASE": @(NO),  @"DIAC": @(YES)},
-      @{@"UNICODE": @(YES), @"LOCALE": @"en"         ,@"CASE": @(NO),  @"DIAC": @(NO)}
-      ];
-    
-    NSInteger i = 0;
-    for (CBLQueryCollation* c in collations) {
-        AssertEqualObjects([c asJSON], expected[i++]);
-    }
-}
 
 - (void) testUnicodeCollationWithLocale {
     NSArray* letters = @[@"B", @"A", @"Z", @"Å"];
@@ -1599,60 +1566,6 @@
     AssertEqualObjects([r toDictionary], (@{@"name": @"Scott", @"address": [NSNull null]}));
 }
 
-- (void) testJSONEncoding {
-    NSError* error;
-    CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] init];
-    [doc1 setValue: @"string" forKey: @"string"];
-    Assert([self.defaultCollection saveDocument: doc1 error: &error], @"Error when creating a document: %@", error);
-    
-    NSData* json;
-    {
-        CBLQueryExpression* expr = [[CBLQueryExpression property: @"string"] is:
-                                    [CBLQueryExpression string: @"string"]];
-        CBLQuery* q = [CBLQueryBuilder select: @[kDOCID]
-                                         from: kDATA_SRC_DB
-                                        where: expr];
-        json = q.json;
-        Assert(json);
-    }
-    
-    // Reconstitute query from JSON data:
-    CBLQuery* q = [[CBLQuery alloc] initWithDatabase: _db json: json];
-    Assert(q);
-    AssertEqualObjects(q.json, json);
-    
-    // Now test the reconstituted query:
-    uint64_t numRows = [self verifyQuery: q
-                            randomAccess: YES
-                                    test: ^(uint64_t n, CBLQueryResult* r) {
-        NSError* err;
-        CBLDocument* doc = [self.defaultCollection documentWithID: [r valueAtIndex: 0] error: &err];
-        AssertEqualObjects(doc.id, doc1.id);
-        AssertEqualObjects([doc valueForKey: @"string"], @"string");
-    }];
-    AssertEqual(numRows, 1u);
-}
-
-- (void) testQueryResultArray {
-    [self loadNumbers: 5];
-    CBLQuery* q = [CBLQueryBuilder select: @[kDOCID]
-                                     from: kDATA_SRC_DB
-                                    where: nil
-                                  orderBy: @[[CBLQueryOrdering property: @"number1"]]];
-    NSError* error;
-    CBLQueryResultSet* rs = [q execute: &error];
-    Assert(rs, @"Query failed: %@", error);
-    
-    NSArray* allObjects = rs.allObjects;
-    CBLQueryResultArray* array = [[CBLQueryResultArray alloc] initWithResultSet: rs
-                                                                          count: allObjects.count];
-    AssertEqual(array.count, allObjects.count);
-    Assert(![[array mutableCopy] isEqual: array]);
-    AssertEqual([[array objectAtIndex: 0] valueForKey: @"id"],
-                [[allObjects objectAtIndex: 0] valueForKey: @"id"]);
-    AssertEqual([[array objectAtIndex: 4] valueForKey: @"id"],
-                [[allObjects objectAtIndex: 4] valueForKey: @"id"]);
-}
 
 #pragma mark - toJSON
 
@@ -1682,89 +1595,14 @@
     Assert(rs, @"Query failed: %@", error);
     
     CBLQueryResult* r = rs.allResults.firstObject;
-    NSMutableDictionary* temp = [[json toJSONObj] mutableCopy];
+    NSMutableDictionary* temp = [[CBLJSONUtil jsonObjectFromString: json] mutableCopy];
     temp[@"id"] = @"doc";
-    AssertEqualObjects([[r toJSON] toJSONObj], temp);
+    AssertEqualObjects([CBLJSONUtil jsonObjectFromString: [r toJSON]], temp);
 }
 
 #pragma mark - Value Expression
 
-- (void) testValueExpressionUnsupportedValueType {
-    NSData* data = [[NSData alloc] init];
-    [self expectException: NSInternalInconsistencyException in:^{
-        CBLValueExpression* v = [[CBLValueExpression alloc] initWithValue: data];
-        AssertNil(v);
-    }];
-}
 
-- (void) testValueExpression {
-    CBLValueExpression* v = [[CBLValueExpression alloc] initWithValue: nil];
-    AssertEqualObjects([v asJSON], [NSNull null]);
-    
-    v = [[CBLValueExpression alloc] initWithValue: [NSDate dateWithTimeIntervalSince1970: 1]];
-    AssertEqualObjects([v asJSON], @"1970-01-01T00:00:01.000Z");
-    
-    v = [[CBLValueExpression alloc] initWithValue: [NSDictionary dictionaryWithObjectsAndKeys:
-                                                    @"value101", @"key101", nil]];
-    AssertEqualObjects([v asJSON], @{@"key101": @"value101"});
-    
-    NSArray* expectedResult= @[ @"[]", @"item1", @"item2" ];
-    v = [[CBLValueExpression alloc] initWithValue: [NSArray arrayWithObjects:
-                                                    @"item1", @"item2", nil]];
-    AssertEqualObjects([v asJSON], expectedResult);
-    
-    v = [[CBLValueExpression alloc] initWithValue: [CBLQueryExpression number: @21]];
-    AssertEqualObjects([v asJSON], @21);
-}
-
-- (void) testUnaryQueryExpression {
-    NSDate* nw = [NSDate date];
-    CBLMutableDocument* doc1 = [self createDocument];
-    [doc1 setDate: nw forKey: @"now"];
-    [self saveDocument: doc1 collection: self.defaultCollection];
-    
-    CBLMutableDocument* doc2 = [self createDocument];
-    [self saveDocument: doc2 collection: self.defaultCollection];
-    
-    CBLUnaryExpression* notNull;
-    CBLUnaryExpression* notMiss;
-    CBLQueryExpression* propNow = [CBLQueryExpression property: @"now"];
-    notNull = [[CBLUnaryExpression alloc] initWithExpression: propNow type: CBLUnaryTypeNotNull];
-    notMiss = [[CBLUnaryExpression alloc] initWithExpression: propNow type: CBLUnaryTypeNotMissing];
-    
-    CBLQuery* q = [CBLQueryBuilder select: @[[CBLQuerySelectResult all]]
-                                     from: kDATA_SRC_DB
-                                    where: [notNull orExpression: notMiss]];
-    uint64_t rows = [self verifyQuery: q randomAccess: YES
-                                 test: ^(uint64_t n, CBLQueryResult * _Nonnull result) {
-                                     NSDate* savedDate = [[result dictionaryAtIndex: 0]
-                                                          dateForKey: @"now"];
-                                     Assert([nw timeIntervalSinceDate: savedDate] < 0.001);
-                                 }];
-    AssertEqual(rows, 1u);
-    
-    // check same result is produced with isValued.
-    q = [CBLQueryBuilder select: @[[CBLQuerySelectResult all]]
-                           from: kDATA_SRC_DB
-                          where: [propNow isValued]];
-
-    rows = [self verifyQuery: q randomAccess: YES
-                        test: ^(uint64_t n, CBLQueryResult * _Nonnull result) {
-                            NSDate* savedDate = [[result dictionaryAtIndex: 0] dateForKey: @"now"];
-                            Assert([nw timeIntervalSinceDate: savedDate] < 0.001);
-                        }];
-    AssertEqual(rows, 1u);
-    
-    q = [CBLQueryBuilder select: @[[CBLQuerySelectResult all]]
-                           from: kDATA_SRC_DB
-                          where: [propNow isValued]];
-    rows = [self verifyQuery: q randomAccess: YES
-                        test: ^(uint64_t n, CBLQueryResult * _Nonnull result) {
-                            NSDate* savedDate = [[result dictionaryAtIndex: 0] dateForKey: @"now"];
-                            Assert([nw timeIntervalSinceDate: savedDate] < 0.001);
-                        }];
-    AssertEqual(rows, 1u);
-}
 
 #pragma mark - N1QL
 
@@ -1872,8 +1710,7 @@
     
     // This change will not affect the query results because 'number1 < 10' is not true.
     [self createDocNumbered: 111 of: 100];
-    
-    
+
     // Wait 2 seconds, then fulfil the expectation:
     XCTestExpectation *x = [self expectationWithDescription: @"Timeout"];
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2.0 * NSEC_PER_SEC)),
@@ -2162,6 +1999,145 @@
 
 #ifdef DEBUG
 
+#endif
+
+#pragma mark - Internal
+
+// White-box tests that verify internal state; excluded from the binary tests.
+#ifndef CBL_BINARY_TEST
+
+- (void) testJSONEncoding {
+    NSError* error;
+    CBLMutableDocument* doc1 = [[CBLMutableDocument alloc] init];
+    [doc1 setValue: @"string" forKey: @"string"];
+    Assert([self.defaultCollection saveDocument: doc1 error: &error], @"Error when creating a document: %@", error);
+    
+    NSData* json;
+    {
+        CBLQueryExpression* expr = [[CBLQueryExpression property: @"string"] is:
+                                    [CBLQueryExpression string: @"string"]];
+        CBLQuery* q = [CBLQueryBuilder select: @[kDOCID]
+                                         from: kDATA_SRC_DB
+                                        where: expr];
+        json = q.json;
+        Assert(json);
+    }
+    
+    // Reconstitute query from JSON data:
+    CBLQuery* q = [[CBLQuery alloc] initWithDatabase: _db json: json];
+    Assert(q);
+    AssertEqualObjects(q.json, json);
+    
+    // Now test the reconstituted query:
+    uint64_t numRows = [self verifyQuery: q
+                            randomAccess: YES
+                                    test: ^(uint64_t n, CBLQueryResult* r) {
+        NSError* err;
+        CBLDocument* doc = [self.defaultCollection documentWithID: [r valueAtIndex: 0] error: &err];
+        AssertEqualObjects(doc.id, doc1.id);
+        AssertEqualObjects([doc valueForKey: @"string"], @"string");
+    }];
+    AssertEqual(numRows, 1u);
+}
+
+- (void) testQueryResultArray {
+    [self loadNumbers: 5];
+    CBLQuery* q = [CBLQueryBuilder select: @[kDOCID]
+                                     from: kDATA_SRC_DB
+                                    where: nil
+                                  orderBy: @[[CBLQueryOrdering property: @"number1"]]];
+    NSError* error;
+    CBLQueryResultSet* rs = [q execute: &error];
+    Assert(rs, @"Query failed: %@", error);
+    
+    NSArray* allObjects = rs.allObjects;
+    CBLQueryResultArray* array = [[CBLQueryResultArray alloc] initWithResultSet: rs
+                                                                          count: allObjects.count];
+    AssertEqual(array.count, allObjects.count);
+    Assert(![[array mutableCopy] isEqual: array]);
+    AssertEqual([[array objectAtIndex: 0] valueForKey: @"id"],
+                [[allObjects objectAtIndex: 0] valueForKey: @"id"]);
+    AssertEqual([[array objectAtIndex: 4] valueForKey: @"id"],
+                [[allObjects objectAtIndex: 4] valueForKey: @"id"]);
+}
+
+- (void) testValueExpressionUnsupportedValueType {
+    NSData* data = [[NSData alloc] init];
+    [self expectException: NSInternalInconsistencyException in:^{
+        CBLValueExpression* v = [[CBLValueExpression alloc] initWithValue: data];
+        AssertNil(v);
+    }];
+}
+
+- (void) testValueExpression {
+    CBLValueExpression* v = [[CBLValueExpression alloc] initWithValue: nil];
+    AssertEqualObjects([v asJSON], [NSNull null]);
+    
+    v = [[CBLValueExpression alloc] initWithValue: [NSDate dateWithTimeIntervalSince1970: 1]];
+    AssertEqualObjects([v asJSON], @"1970-01-01T00:00:01.000Z");
+    
+    v = [[CBLValueExpression alloc] initWithValue: [NSDictionary dictionaryWithObjectsAndKeys:
+                                                    @"value101", @"key101", nil]];
+    AssertEqualObjects([v asJSON], @{@"key101": @"value101"});
+    
+    NSArray* expectedResult= @[ @"[]", @"item1", @"item2" ];
+    v = [[CBLValueExpression alloc] initWithValue: [NSArray arrayWithObjects:
+                                                    @"item1", @"item2", nil]];
+    AssertEqualObjects([v asJSON], expectedResult);
+    
+    v = [[CBLValueExpression alloc] initWithValue: [CBLQueryExpression number: @21]];
+    AssertEqualObjects([v asJSON], @21);
+}
+
+- (void) testUnaryQueryExpression {
+    NSDate* nw = [NSDate date];
+    CBLMutableDocument* doc1 = [self createDocument];
+    [doc1 setDate: nw forKey: @"now"];
+    [self saveDocument: doc1 collection: self.defaultCollection];
+    
+    CBLMutableDocument* doc2 = [self createDocument];
+    [self saveDocument: doc2 collection: self.defaultCollection];
+    
+    CBLUnaryExpression* notNull;
+    CBLUnaryExpression* notMiss;
+    CBLQueryExpression* propNow = [CBLQueryExpression property: @"now"];
+    notNull = [[CBLUnaryExpression alloc] initWithExpression: propNow type: CBLUnaryTypeNotNull];
+    notMiss = [[CBLUnaryExpression alloc] initWithExpression: propNow type: CBLUnaryTypeNotMissing];
+    
+    CBLQuery* q = [CBLQueryBuilder select: @[[CBLQuerySelectResult all]]
+                                     from: kDATA_SRC_DB
+                                    where: [notNull orExpression: notMiss]];
+    uint64_t rows = [self verifyQuery: q randomAccess: YES
+                                 test: ^(uint64_t n, CBLQueryResult * _Nonnull result) {
+                                     NSDate* savedDate = [[result dictionaryAtIndex: 0]
+                                                          dateForKey: @"now"];
+                                     Assert([nw timeIntervalSinceDate: savedDate] < 0.001);
+                                 }];
+    AssertEqual(rows, 1u);
+    
+    // check same result is produced with isValued.
+    q = [CBLQueryBuilder select: @[[CBLQuerySelectResult all]]
+                           from: kDATA_SRC_DB
+                          where: [propNow isValued]];
+
+    rows = [self verifyQuery: q randomAccess: YES
+                        test: ^(uint64_t n, CBLQueryResult * _Nonnull result) {
+                            NSDate* savedDate = [[result dictionaryAtIndex: 0] dateForKey: @"now"];
+                            Assert([nw timeIntervalSinceDate: savedDate] < 0.001);
+                        }];
+    AssertEqual(rows, 1u);
+    
+    q = [CBLQueryBuilder select: @[[CBLQuerySelectResult all]]
+                           from: kDATA_SRC_DB
+                          where: [propNow isValued]];
+    rows = [self verifyQuery: q randomAccess: YES
+                        test: ^(uint64_t n, CBLQueryResult * _Nonnull result) {
+                            NSDate* savedDate = [[result dictionaryAtIndex: 0] dateForKey: @"now"];
+                            Assert([nw timeIntervalSinceDate: savedDate] < 0.001);
+                        }];
+    AssertEqual(rows, 1u);
+}
+
 // CBL-5659 : Invalidated context may be used in query observer callback
 // This tests that the callback will not be called without a crash.
 - (void) testLiveQueryNoDelayedChangesNotifiedAfterRemoveListenerToken {
@@ -2207,6 +2183,36 @@
     
     // Wait for no changes notified:
     [self waitForExpectations: @[noChangedExp] timeout: kExpTimeout];
+}
+
+- (void) testGenerateJSONCollation {
+    NSArray* collations =
+    @[[CBLQueryCollation asciiWithIgnoreCase: NO],
+      [CBLQueryCollation asciiWithIgnoreCase: YES],
+      [CBLQueryCollation unicodeWithLocale: nil   ignoreCase: NO  ignoreAccents: NO],
+      [CBLQueryCollation unicodeWithLocale: nil   ignoreCase: YES ignoreAccents: NO],
+      [CBLQueryCollation unicodeWithLocale: nil   ignoreCase: YES ignoreAccents: YES],
+      [CBLQueryCollation unicodeWithLocale: @"en" ignoreCase: NO  ignoreAccents: NO],
+      [CBLQueryCollation unicodeWithLocale: @"en" ignoreCase: YES ignoreAccents: NO],
+      [CBLQueryCollation unicodeWithLocale: @"en" ignoreCase: YES ignoreAccents: YES]];
+    
+    NSString* deviceLocale = [NSLocale currentLocale].localeIdentifier;
+    NSArray* expected =
+    @[
+      @{@"UNICODE": @(NO),  @"LOCALE": [NSNull null] ,@"CASE": @(YES), @"DIAC": @(YES)},
+      @{@"UNICODE": @(NO),  @"LOCALE": [NSNull null] ,@"CASE": @(NO) , @"DIAC": @(YES)},
+      @{@"UNICODE": @(YES), @"LOCALE": deviceLocale  ,@"CASE": @(YES), @"DIAC": @(YES)},
+      @{@"UNICODE": @(YES), @"LOCALE": deviceLocale  ,@"CASE": @(NO),  @"DIAC": @(YES)},
+      @{@"UNICODE": @(YES), @"LOCALE": deviceLocale  ,@"CASE": @(NO),  @"DIAC": @(NO)},
+      @{@"UNICODE": @(YES), @"LOCALE": @"en"         ,@"CASE": @(YES), @"DIAC": @(YES)},
+      @{@"UNICODE": @(YES), @"LOCALE": @"en"         ,@"CASE": @(NO),  @"DIAC": @(YES)},
+      @{@"UNICODE": @(YES), @"LOCALE": @"en"         ,@"CASE": @(NO),  @"DIAC": @(NO)}
+      ];
+    
+    NSInteger i = 0;
+    for (CBLQueryCollation* c in collations) {
+        AssertEqualObjects([c asJSON], expected[i++]);
+    }
 }
 
 #endif

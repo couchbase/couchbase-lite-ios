@@ -1,8 +1,8 @@
 //
-//  Foundation+CBL.mm
+//  CBLTestCommon.h
 //  CouchbaseLite
 //
-//  Copyright (c) 2020 Couchbase, Inc All rights reserved.
+//  Copyright (c) 2026 Couchbase, Inc All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -17,17 +17,14 @@
 //  limitations under the License.
 //
 
-#import "Foundation+CBL.h"
+#pragma once
 
-@implementation NSString (CBL)
-- (id) toJSONObj {
-    NSData* d = [self dataUsingEncoding: NSUTF8StringEncoding];
-    
-    NSError* error;
-    id retrivedObj = [NSJSONSerialization JSONObjectWithData: d options: 0
-                                                       error: &error];
-    AssertNil(error);
-    return retrivedObj;
-}
-
-@end
+// The binary test targets define CBL_BINARY_TEST (see
+// xcconfigs/CBL_ObjC_Binary_Tests.xcconfig): they compile against a staged
+// binary framework, populated by Scripts/prepare_binary_test.sh, instead of
+// the source tree, and so have no access to internal headers or diagnostics.
+#ifdef CBL_BINARY_TEST
+#import <CouchbaseLite/CouchbaseLite.h>
+#else
+#import "CouchbaseLite.h"
+#endif

@@ -57,20 +57,6 @@
     return configs;
 }
 
-+ (NSArray<CBLCollectionConfiguration*>*) fromCollections:(NSArray<CBLCollection*>*)collections
-                                                   config:(void (^)(CBLCollectionConfiguration* config))config {
-    [CBLPrecondition assertArrayNotEmpty:collections name:@"collections"];
-    NSMutableArray* configs = [NSMutableArray arrayWithCapacity:collections.count];
-    for (CBLCollection* collection in collections) {
-        CBLCollectionConfiguration* colConfig = [[CBLCollectionConfiguration alloc] initWithCollection:collection];
-        if (config) {
-            config(colConfig);
-        }
-        [configs addObject:colConfig];
-    }
-    return configs;
-}
-
 - (NSDictionary*) effectiveOptions {
     NSMutableDictionary* options = [NSMutableDictionary dictionary];
     options[@kC4ReplicatorOptionChannels] = self.channels;

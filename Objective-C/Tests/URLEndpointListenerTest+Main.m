@@ -18,6 +18,9 @@
 //
 
 #import "URLEndpointListenerTest.h"
+#ifndef CBL_BINARY_TEST
+#import "CBLURLEndpointListener+Internal.h"
+#endif
 #import "CollectionUtils.h"
 
 @interface URLEndpointListenerTest_Main : URLEndpointListenerTest
@@ -49,8 +52,7 @@
     CBLDatabase* db2 = [self openDBNamed: @"db2" error: &error];
     CBLCollection* db2Col = [db2 defaultCollection: &error];
     AssertNil(error);
-    
-    
+
     
     NSData* content = [@"i am a blob" dataUsingEncoding: NSUTF8StringEncoding];
     
@@ -435,7 +437,7 @@
              serverCert: (__bridge SecCertificateRef)identity.certs[0]
               errorCode: CBLErrorTLSCertUnknownRoot
             errorDomain: CBLErrorDomain];
-    [self cleanupTLSIdentity: NO];
+    [self cleanUpTLSIdentityForServer: NO];
     
     // No pinned cert
     [self runWithTarget: listener.localEndpoint
@@ -484,7 +486,7 @@
              serverCert: (__bridge SecCertificateRef)identity.certs[0]
               errorCode: CBLErrorTLSCertUnknownRoot
             errorDomain: CBLErrorDomain];
-    [self cleanupTLSIdentity: NO];
+    [self cleanUpTLSIdentityForServer: NO];
     
     // No pinned cert
     [self runWithTarget: listener.localEndpoint
@@ -536,7 +538,7 @@
             errorDomain: nil];
     
     // cleanup client cert authenticator identity
-    [self cleanupTLSIdentity: NO];
+    [self cleanUpTLSIdentityForServer: NO];
     
     [self stopListener: listener];
 }
@@ -588,7 +590,7 @@
             errorDomain: CBLErrorDomain];
     
     // cleanup client cert authenticator identity
-    [self cleanupTLSIdentity: NO];
+    [self cleanUpTLSIdentityForServer: NO];
     
     // Replicator - Success:
     [self runWithTarget: listener.localEndpoint
@@ -653,7 +655,7 @@
             errorDomain: CBLErrorDomain];
     
     // cleanup client cert authenticator identity
-    [self cleanupTLSIdentity: NO];
+    [self cleanUpTLSIdentityForServer: NO];
     
     // Replicator - Success:
     [self runWithTarget: listener.localEndpoint
@@ -698,7 +700,7 @@
             errorDomain: nil];
     
     // Cleanup client cert authenticator identity
-    [self cleanupTLSIdentity: NO];
+    [self cleanUpTLSIdentityForServer: NO];
     
     [self stopListener: listener];
 }
@@ -727,7 +729,7 @@
             errorDomain: CBLErrorDomain];
     
     // Cleanup:
-    [self cleanupTLSIdentity: NO];
+    [self cleanUpTLSIdentityForServer: NO];
     
     [self stopListener: listener];
 }
@@ -808,7 +810,7 @@
     }];
 
     // Cleanup:
-    [self cleanupTLSIdentity: NO];
+    [self cleanUpTLSIdentityForServer: NO];
     
     [self stopListener: listener];
 }
@@ -883,22 +885,6 @@
     [self ignoreException:^{
         [self listen: config errorCode: CBLErrorUnknownHost errorDomain: CBLErrorDomain];
     }];
-}
-
-- (void) testNetworkInterfaceName {
-    if (!self.keyChainAccessAllowed) return;
-    
-    NSArray* interfaces = [Listener allInterfaceNames];
-    for (NSString* i in interfaces) {
-        Config* config = [[Config alloc] initWithCollections: @[self.otherDBDefaultCollection]];
-        config.networkInterface = i;
-        
-        [self listen: config];
-        
-        /// make sure, connection is successful and no error thrown!
-        
-        [self stopListen];
-    }
 }
 
 - (void) testMultipleListenersOnSameDatabase {
@@ -1007,10 +993,6 @@
     AssertEqual(_listener.port, 0);
     AssertEqual(_listener.urls.count, 0);
     
-    // Cleanup:
-    if (identity) {
-        [self deleteFromKeyChain: identity];
-    }
 }
 
 - (void) testReplicatorServerCertificate {
@@ -1477,5 +1459,100 @@
 - (void) testDeleteWithActiveReplicatorAndURLEndpointListeners {
     [self validateActiveReplicatorAndURLEndpointListeners: YES];
 }
+
+- (void) testCleanUpAnonymousIdentities {
+    if (!self.keyChainAccessAllowed) return;
+
+    // The cleanup helpers sweep by the common name discovered from a certificate
+    // that the product mints; the discovery must succeed for the cleanup to work:
+    NSString* commonName = [self anonymousIdentityCommonName];
+    AssertNotNil(commonName);
+
+    // Starting a TLS listener without an identity creates an anonymous identity:
+    Config* config = [[Config alloc] initWithCollections: @[self.otherDBDefaultCollection]];
+    [self listen: config];
+    AssertNotNil(_listener.tlsIdentity);
+
+    // The discovered name must match the certificate of an independently created
+    // anonymous identity:
+    NSArray* certs = _listener.tlsIdentity.certs;
+    NSString* certName = CFBridgingRelease(
+        SecCertificateCopySubjectSummary((__bridge SecCertificateRef)certs[0]));
+    AssertEqualObjects(certName, commonName);
+
+    [self stopListen];
+
+    // The identity created above must be found by the discovered name; this guards
+    // against the zero-count checks below passing vacuously with a wrong name:
+    Assert([self anonymousIdentityCount] > 0);
+
+    [self cleanUpAnonymousIdentities];
+
+    // No anonymous identities nor certificates should be left in the keychain:
+    AssertEqual([self anonymousIdentityCount], 0);
+    AssertEqual([self anonymousCertificateCount], 0);
+}
+
+- (NSUInteger) anonymousIdentityCount {
+    return [self keychainItemCount: (id)kSecClassIdentity];
+}
+
+- (NSUInteger) anonymousCertificateCount {
+    return [self keychainItemCount: (id)kSecClassCertificate];
+}
+
+- (NSUInteger) keychainItemCount: (id)itemClass {
+    NSString* commonName = [self anonymousIdentityCommonName];
+    AssertNotNil(commonName);
+
+    NSDictionary* query = @{(id)kSecClass: itemClass,
+                            (id)kSecMatchLimit: (id)kSecMatchLimitAll,
+                            (id)kSecReturnRef: @YES};
+    CFTypeRef result = NULL;
+    OSStatus status = SecItemCopyMatching((CFDictionaryRef)query, &result);
+    if (status == errSecItemNotFound)
+        return 0;
+    Assert(status == errSecSuccess, @"Cannot query keychain items (OSStatus = %d)", (int)status);
+    
+    NSUInteger count = 0;
+    NSArray* items = CFBridgingRelease(result);
+    for (id item in items) {
+        SecCertificateRef certRef = NULL;
+        if (itemClass == (id)kSecClassIdentity) {
+            if (SecIdentityCopyCertificate((__bridge SecIdentityRef)item, &certRef) != errSecSuccess || !certRef)
+                continue;
+        } else {
+            certRef = (SecCertificateRef)CFRetain((__bridge SecCertificateRef)item);
+        }
+        NSString* name = CFBridgingRelease(SecCertificateCopySubjectSummary(certRef));
+        CFRelease(certRef);
+        if ([name isEqualToString: commonName])
+            count++;
+    }
+    return count;
+}
+
+#pragma mark - Internal
+
+// White-box tests that verify internal state; excluded from the binary tests.
+#ifndef CBL_BINARY_TEST
+
+- (void) testNetworkInterfaceName {
+    if (!self.keyChainAccessAllowed) return;
+    
+    NSArray* interfaces = [Listener allInterfaceNames];
+    for (NSString* i in interfaces) {
+        Config* config = [[Config alloc] initWithCollections: @[self.otherDBDefaultCollection]];
+        config.networkInterface = i;
+        
+        [self listen: config];
+        
+        /// make sure, connection is successful and no error thrown!
+        
+        [self stopListen];
+    }
+}
+
+#endif
 
 @end

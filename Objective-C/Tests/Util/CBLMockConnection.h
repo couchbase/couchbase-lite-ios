@@ -16,8 +16,7 @@
 //  limitations under the License.
 //
 
-#import "CBLMessageEndpointConnection.h"
-#import "CBLProtocolType.h"
+#import "CBLTestCommon.h"
 @protocol CBLMockConnectionErrorLogic;
 @class CBLMessageEndpointListener;
 @class CBLMockServerConnection;

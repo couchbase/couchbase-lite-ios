@@ -18,12 +18,15 @@
 //
 
 #import <XCTest/XCTest.h>
-#import "CouchbaseLite.h"
 
+#import "CBLTestCommon.h"
+
+#ifndef CBL_BINARY_TEST
 #ifdef __cplusplus
 #import <atomic>
 #else
 #import <stdatomic.h>
+#endif
 #endif
 
 #define Assert                  XCTAssert
@@ -64,10 +67,12 @@
 
 #endif
 
+#ifndef CBL_BINARY_TEST
 #ifdef __cplusplus
     extern std::atomic_int gC4ExpectExceptions;
 #else
     extern atomic_int gC4ExpectExceptions;
+#endif
 #endif
 
 #define kDatabaseName @"testdb"
