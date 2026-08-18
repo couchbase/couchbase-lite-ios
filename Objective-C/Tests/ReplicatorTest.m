@@ -18,14 +18,9 @@
 //
 
 #import "ReplicatorTest.h"
-#import "CBLJSON.h"
-#import "CBLHTTPLogic.h"
 #import "CollectionUtils.h"
-#import "CBLURLEndpoint+Internal.h"
-#import "CBLReplicator+Internal.h"
 
 #ifdef COUCHBASE_ENTERPRISE
-#import "CBLReplicatorConfiguration+ServerCert.h"
 #endif
 
 @implementation ReplicatorTest {
@@ -38,45 +33,6 @@
 // TODO: Remove https://issues.couchbase.com/browse/CBL-3206
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
-
-+ (void) initialize {
-    if (self == [ReplicatorTest class]) {
-        // You can set environment variables to force use of a proxy:
-        // CBL_TEST_PROXY_TYPE      Proxy type: HTTP, SOCKS, PAC (defaults to HTTP)
-        // CBL_TEST_PROXY_HOST      Proxy hostname
-        // CBL_TEST_PROXY_PORT      Proxy port number
-        // CBL_TEST_PROXY_USER      Username for auth
-        // CBL_TEST_PROXY_PASS      Password for auth
-        // CBL_TEST_PROXY_PAC_URL   URL of PAC file
-
-        NSDictionary* env = NSProcessInfo.processInfo.environment;
-        NSString* proxyHost = env[@"CBL_TEST_PROXY_HOST"];
-        NSString* proxyType = env[@"CBL_TEST_PROXY_TYPE"];
-        int proxyPort = [env[@"CBL_TEST_PROXY_PORT"] intValue] ?: 80;
-        if (proxyHost || proxyType) {
-            proxyType = [(proxyType ?: @"http") uppercaseString];
-            if ([proxyType isEqualToString: @"HTTP"])
-                proxyType = (id)kCFProxyTypeHTTP;
-            else if ([proxyType isEqualToString: @"SOCKS"])
-                proxyType = (id)kCFProxyTypeSOCKS;
-            else if ([proxyType isEqualToString: @"PAC"])
-                proxyType = (id)kCFProxyTypeAutoConfigurationURL;
-            NSMutableDictionary* proxy = [@{(id)kCFProxyTypeKey: proxyType} mutableCopy];
-            proxy[(id)kCFProxyHostNameKey] = proxyHost;
-            proxy[(id)kCFProxyPortNumberKey] = @(proxyPort);
-            if (proxyType == (id)kCFProxyTypeAutoConfigurationURL) {
-                NSURL* pacURL = [NSURL URLWithString:  env[@"CBL_TEST_PROXY_PAC_URL"]];
-                proxy[(id)kCFProxyAutoConfigurationURLKey] = pacURL;
-                Log(@"Using PAC proxy URL %@", pacURL);
-            } else {
-                Log(@"Using %@ proxy server %@:%d", proxyType, proxyHost, proxyPort);
-            }
-            proxy[(id)kCFProxyUsernameKey] =  env[@"CBL_TEST_PROXY_USER"];
-            proxy[(id)kCFProxyPasswordKey] =  env[@"CBL_TEST_PROXY_PASS"];
-            [CBLHTTPLogic setOverrideProxySettings: proxy];
-        }
-    }
-}
 
 - (void) setUp {
     [super setUp];
@@ -92,94 +48,6 @@
 }
 
 #pragma mark - Endpoint
-
-- (CBLURLEndpoint*) remoteEndpointWithName: (NSString*)dbName secure: (BOOL)secure {
-    NSString* host = NSProcessInfo.processInfo.environment[@"CBL_TEST_HOST"];
-    if (!host) {
-        Log(@"NOTE: Skipping test: no CBL_TEST_HOST configured in environment");
-        return nil;
-    }
-    
-    NSString* portKey = secure ? @"CBL_TEST_PORT_SSL" : @"CBL_TEST_PORT";
-    NSInteger port = NSProcessInfo.processInfo.environment[portKey].integerValue;
-    if (!port)
-        port = secure ? 4994 : 4984;
-    
-    NSURLComponents *comp = [NSURLComponents new];
-    comp.scheme = secure ? kCBLURLEndpointTLSScheme : kCBLURLEndpointScheme;
-    comp.host = host;
-    comp.port = @(port);
-    comp.path = [NSString stringWithFormat:@"/%@", dbName];
-    NSURL* url = comp.URL;
-    Assert(url);
-    
-    return [[CBLURLEndpoint alloc] initWithURL: url];
-}
-
-- (void) eraseRemoteEndpoint: (CBLURLEndpoint*)endpoint {
-    Assert([endpoint.url.path isEqualToString: @"/scratch"], @"Only scratch db should be erased");
-    [self sendRequestToEndpoint: endpoint method: @"POST" path: @"_flush" body: nil];
-    Log(@"Erased remote database %@", endpoint.url);
-}
-
-- (id) sendRequestToEndpoint: (CBLURLEndpoint*)endpoint
-                      method: (NSString*)method
-                        path: (nullable NSString*)path
-                        body: (nullable id)body
-{
-    NSURL* endpointURL = endpoint.url;
-    NSURLComponents *comp = [NSURLComponents new];
-    comp.scheme = [endpointURL.scheme isEqualToString: kCBLURLEndpointTLSScheme] ? @"https" : @"http";
-    comp.host = endpointURL.host;
-    comp.port = @([endpointURL.port intValue] + 1);   // assuming admin port is at usual offse
-    path = path ? ([path hasPrefix: @"/"] ? path : [@"/" stringByAppendingString: path]) : @"";
-    comp.path = [NSString stringWithFormat: @"%@%@", endpointURL.path, path];
-    NSURL* url = comp.URL;
-    Assert(url);
-    
-    NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL: url];
-    request.HTTPMethod = method;
-    if (body) {
-        if ([body isKindOfClass: [NSData class]]) {
-            request.HTTPBody = body;
-        } else {
-            NSError* err = nil;
-            request.HTTPBody = [CBLJSON dataWithJSONObject: body options:0 error: &err];
-            AssertNil(err);
-        }
-    }
-    
-    __block NSError* error = nil;
-    __block NSInteger status = 0;
-    __block NSData* data = nil;
-    XCTestExpectation* x = [self expectationWithDescription: @"Complete Request"];
-    NSURLSessionDataTask* task = [[NSURLSession sharedSession] dataTaskWithRequest: request
-                                                                 completionHandler:
-                                  ^(NSData *d, NSURLResponse *r, NSError *e)
-                                  {
-                                      error = e;
-                                      data = d;
-                                      status = ((NSHTTPURLResponse*)r).statusCode;
-                                      [x fulfill];
-                                  }];
-    [task resume];
-    [self waitForExpectations: @[x] timeout: kExpTimeout];
-    
-    if (error != nil || status >= 300) {
-        XCTFail(@"Failed to send request; URL=<%@>, Method=<%@>, Status=%ld, Error=%@",
-                url, method, (long)status, error);
-        return nil;
-    } else {
-        Log(@"Send request succeeded; URL=<%@>, Method=<%@>, Status=%ld",
-            url, method, (long)status);
-        id result = nil;
-        if (data && data.length > 0) {
-            result = [CBLJSON JSONObjectWithData: data options: 0 error: &error];
-            Assert(result, @"Couldn't parse JSON response: %@", error);
-        }
-        return result;
-    }
-}
 
 #pragma mark - Certificate
 
@@ -255,9 +123,6 @@
         else if (!_disableDefaultServerCertPinning)
             c.pinnedServerCertificate = self.defaultServerCert;
     }
-    
-    if (continuous)
-        c.checkpointInterval = 1.0; // For testing only
     
     return c;
 }

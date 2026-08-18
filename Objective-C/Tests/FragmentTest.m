@@ -18,7 +18,7 @@
 //
 
 #import "CBLTestCase.h"
-#import "CBLJSON.h"
+#import "CBLJSONUtil.h"
 
 @interface FragmentTest : CBLTestCase
 @end
@@ -343,9 +343,9 @@
         AssertNil(fragment.array); 
         AssertNil(fragment.number);
         AssertNotNil(fragment.value);
-        AssertEqualObjects([CBLJSON JSONObjectWithDate: fragment.date], fragment.value);
-        AssertEqualObjects([CBLJSON JSONObjectWithDate: fragment.date],
-                           [CBLJSON JSONObjectWithDate: date]);
+        AssertEqualObjects([CBLJSONUtil jsonDateString: fragment.date], fragment.value);
+        AssertEqualObjects([CBLJSONUtil jsonDateString: fragment.date],
+                           [CBLJSONUtil jsonDateString: date]);
         XCTAssertEqualWithAccuracy([fragment.date timeIntervalSinceReferenceDate],
                                    [date timeIntervalSinceReferenceDate], 0.001);
         AssertEqual(fragment.integerValue, 0);
@@ -480,8 +480,8 @@
         AssertEqual(d[@"int"].integerValue, 7);
         AssertEqual(d[@"float"].floatValue, 2.2f);
         AssertEqual(d[@"double"].doubleValue, 3.3);
-        AssertEqualObjects([CBLJSON JSONObjectWithDate: d[@"date"].date],
-                           [CBLJSON JSONObjectWithDate: date]);
+        AssertEqualObjects([CBLJSONUtil jsonDateString: d[@"date"].date],
+                           [CBLJSONUtil jsonDateString: date]);
     }];
 }
 

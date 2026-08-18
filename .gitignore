@@ -17,6 +17,7 @@ frameworks/
 
 # CBL files:
 Tests/Extensions/CouchbaseLiteVectorSearch.xcframework
+Tests/Extensions/.downloaded-version
 Tests/Extensions/LICENSE.txt
 Tests/Extensions/Build
 vendor/couchbase-lite-core-EE
@@ -29,3 +30,4 @@ vendor/couchbase-lite-core-EE
 
 # Agents
 settings.local.json
+BinaryTests/

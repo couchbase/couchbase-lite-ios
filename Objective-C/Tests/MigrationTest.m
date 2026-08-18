@@ -37,9 +37,11 @@
     
     Assert([manager copyItemAtPath: path  toPath: copiedPath error: &error], @"Couldn't copy database: %@", error);
     
-    ++gC4ExpectExceptions;
-    CBLDatabase* database = [[CBLDatabase alloc] initWithName: @"iosdb" config: self.db.config error: &error];
-    --gC4ExpectExceptions;
+    __block CBLDatabase* database;
+    __block NSError* openError;
+    [self ignoreExceptionBreakPoint: ^{
+        database = [[CBLDatabase alloc] initWithName: @"iosdb" config: self.db.config error: &openError];
+    }];
     Assert(database);
     
     CBLDocument* doc1 = [[database defaultCollection: &error] documentWithID: @"doc1" error: &error];

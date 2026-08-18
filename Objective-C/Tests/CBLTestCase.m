@@ -18,8 +18,17 @@
 //
 
 #import "CBLTestCase.h"
+
+#ifndef CBL_BINARY_TEST
 #include "c4.h"
-#import "CollectionUtils.h"
+// Marks a scope that intentionally provokes exceptions, so that LiteCore's
+// exception diagnostics don't flag them. No-op when testing a binary framework.
+#define CBLExpectExceptionsBegin() ((void)++gC4ExpectExceptions)
+#define CBLExpectExceptionsEnd()   ((void)--gC4ExpectExceptions)
+#else
+#define CBLExpectExceptionsBegin()
+#define CBLExpectExceptionsEnd()
+#endif
 
 #ifdef COUCHBASE_ENTERPRISE
 #define kDatabaseDirName @"CouchbaseLite_EE"
@@ -48,7 +57,9 @@ const NSTimeInterval kExpTimeout = 20.0;
     [self deleteDBNamed: kDatabaseName error: nil];
     [self deleteDBNamed: kOtherDatabaseName error: nil];
     
+#ifndef CBL_BINARY_TEST
     _c4ObjectCount = c4_getObjectCount();
+#endif
     NSString* dir = self.directory;
     if ([[NSFileManager defaultManager] fileExistsAtPath: dir]) {
         NSError* error;
@@ -69,6 +80,7 @@ const NSTimeInterval kExpTimeout = 20.0;
         _otherDB = nil;
     }
 
+#ifndef CBL_BINARY_TEST
     if (!_disableObjectLeakCheck) {
         // Wait a little while for objects to be cleaned up:
         __block int leaks = 0;
@@ -82,7 +94,8 @@ const NSTimeInterval kExpTimeout = 20.0;
             XCTFail("%d LiteCore objects have not been freed (see above)", leaks);
         }
     }
-    
+
+#endif
     [super tearDown];
 }
 
@@ -306,7 +319,8 @@ const NSTimeInterval kExpTimeout = 20.0;
         __block uint64_t n = 0;
         [contents enumerateLinesUsingBlock: ^(NSString *line, BOOL *stop) {
             NSError* err;
-            CBLMutableDocument* doc = [[CBLMutableDocument alloc] initWithID: $sprintf(@"doc-%03llu", ++n)
+            NSString* docID = [NSString stringWithFormat: @"doc-%03llu", ++n];
+            CBLMutableDocument* doc = [[CBLMutableDocument alloc] initWithID: docID
                                                                         json: line error: &err];
             Assert([collection saveDocument: doc error: &err], @"Couldn't save document: %@", err);
         }];
@@ -363,10 +377,10 @@ const NSTimeInterval kExpTimeout = 20.0;
     if ([self isProfiling])
         return;
     
-    ++gC4ExpectExceptions;
+    CBLExpectExceptionsBegin();
     NSError* error;
     BOOL succeeded = block(&error);
-    --gC4ExpectExceptions;
+    CBLExpectExceptionsEnd();
 
     if (succeeded) {
         XCTFail("Block expected to fail but didn't");
@@ -381,9 +395,9 @@ const NSTimeInterval kExpTimeout = 20.0;
     if ([self isProfiling])
         return;
     
-    ++gC4ExpectExceptions;
+    CBLExpectExceptionsBegin();
     XCTAssertThrowsSpecificNamed(block(), NSException, name);
-    --gC4ExpectExceptions;
+    CBLExpectExceptionsEnd();
 }
 
 - (void) mayHaveException: (NSString*)name in: (void (^) (void))block {
@@ -391,14 +405,14 @@ const NSTimeInterval kExpTimeout = 20.0;
         return;
     
     @try {
-        ++gC4ExpectExceptions;
+        CBLExpectExceptionsBegin();
         block();
     }
     @catch (NSException* e) {
         AssertEqualObjects(e.name, name);
     }
     @finally {
-        --gC4ExpectExceptions;
+        CBLExpectExceptionsEnd();
     }
 }
 
@@ -407,19 +421,19 @@ const NSTimeInterval kExpTimeout = 20.0;
         return;
     
     @try {
-        ++gC4ExpectExceptions;
+        CBLExpectExceptionsBegin();
         block();
     }
     @catch (NSException* e) { }
     @finally {
-        --gC4ExpectExceptions;
+        CBLExpectExceptionsEnd();
     }
 }
 
 - (void) ignoreExceptionBreakPoint: (void (^) (void))block {
-    ++gC4ExpectExceptions;
+    CBLExpectExceptionsBegin();
     block();
-    --gC4ExpectExceptions;
+    CBLExpectExceptionsEnd();
 }
 
 - (uint64_t) verifyQuery: (CBLQuery*)q

@@ -17,8 +17,9 @@
 //
 
 #import "CBLTestCase.h"
-#import "CBLArrayIndexConfiguration.h"
+#ifndef CBL_BINARY_TEST
 #import "CBLCollection+Internal.h"
+#endif
 
 @interface UnnestArrayIndexTest : CBLTestCase
 
@@ -44,11 +45,11 @@
 
 - (void) testArrayIndexConfigInvalidExpressions {
     [self expectException: NSInvalidArgumentException in:^{
-        (void) [[CBLArrayIndexConfiguration alloc] initWithPath:@"contacts" expressions: @[]];
+        (void) [[CBLArrayIndexConfiguration alloc] initWithPath: @"contacts" expressions: @[]];
     }];
     
     [self expectException: NSInvalidArgumentException in:^{
-        (void) [[CBLArrayIndexConfiguration alloc] initWithPath:@"contacts" expressions: @[@""]];
+        (void) [[CBLArrayIndexConfiguration alloc] initWithPath: @"contacts" expressions: @[@""]];
     }];
 }
 
@@ -73,9 +74,16 @@
     
     CBLArrayIndexConfiguration* config = [[CBLArrayIndexConfiguration alloc] initWithPath: @"contacts" expressions: nil];
     [profiles createIndexWithName: @"contacts" config: config error: &err];
+    
+    // Step 4: Check that the index named "contacts" exists:
+    AssertEqualObjects([profiles indexes: &err], @[@"contacts"]);
+    
+    // Step 5: Check the index's configured expressions using the internal API:
+#ifndef CBL_BINARY_TEST
     NSArray* indexes = [profiles indexesInfo: nil];
     AssertEqual(indexes.count, 1u);
     AssertEqualObjects(indexes[0][@"expr"], @"");
+#endif
 }
 
 /**
@@ -96,12 +104,20 @@
     CBLCollection* profiles = [self.db createCollectionWithName: @"profiles" scope: nil error: &err];
     [self loadJSONResource: @"profiles_100" toCollection: profiles];
     
-    CBLArrayIndexConfiguration* config = [[CBLArrayIndexConfiguration alloc] initWithPath: @"contacts" expressions: @[@"address.city", @"address.state"]];
+    CBLArrayIndexConfiguration* config = 
+        [[CBLArrayIndexConfiguration alloc] initWithPath: @"contacts"
+                                             expressions: @[@"address.city", @"address.state"]];
     [profiles createIndexWithName: @"contacts" config: config error: &err];
     
+    // Check that the index named "contacts" exists:
+    AssertEqualObjects([profiles indexes: &err], @[@"contacts"]);
+    
+    // Check the index's configured expressions using the internal API:
+#ifndef CBL_BINARY_TEST
     NSArray* indexes = [profiles indexesInfo: nil];
     AssertEqual(indexes.count, 1u);
     AssertEqualObjects(indexes[0][@"expr"], @"address.city,address.state");
+#endif
 }
 
 @end

@@ -236,12 +236,6 @@
 		1AC7546F2897ADA0006CF48F /* ReplicatorTest+Collection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1AC754622897A9C9006CF48F /* ReplicatorTest+Collection.swift */; };
 		1AC754702897ADA2006CF48F /* ReplicatorTest+Collection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1AC754622897A9C9006CF48F /* ReplicatorTest+Collection.swift */; };
 		1AC754712897ADA3006CF48F /* ReplicatorTest+Collection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1AC754622897A9C9006CF48F /* ReplicatorTest+Collection.swift */; };
-		1AC7EC29249DA24E00978C2E /* Foundation+CBL.h in Headers */ = {isa = PBXBuildFile; fileRef = 1AC7EC27249DA24E00978C2E /* Foundation+CBL.h */; };
-		1AC7EC2A249DA24E00978C2E /* Foundation+CBL.h in Headers */ = {isa = PBXBuildFile; fileRef = 1AC7EC27249DA24E00978C2E /* Foundation+CBL.h */; };
-		1AC7EC2B249DA24E00978C2E /* Foundation+CBL.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1AC7EC28249DA24E00978C2E /* Foundation+CBL.mm */; };
-		1AC7EC2D249DA24E00978C2E /* Foundation+CBL.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1AC7EC28249DA24E00978C2E /* Foundation+CBL.mm */; };
-		1AC7EC3A249DA70E00978C2E /* Foundation+CBL.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1AC7EC28249DA24E00978C2E /* Foundation+CBL.mm */; };
-		1AC7EC3B249DA70F00978C2E /* Foundation+CBL.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1AC7EC28249DA24E00978C2E /* Foundation+CBL.mm */; };
 		1AC83BC821C026D100792098 /* DateTimeQueryFunctionTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AC83BC721C026D100792098 /* DateTimeQueryFunctionTest.m */; };
 		1ACAB8C7266723AE00B4F8E5 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 1ACAB8C6266723AE00B4F8E5 /* main.m */; };
 		1ACAB8C8266723AE00B4F8E5 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 1ACAB8C6266723AE00B4F8E5 /* main.m */; };
@@ -423,6 +417,104 @@
 		40AA729E2C28B1A3007FB1E0 /* VectorSearchTest+Lazy.m in Sources */ = {isa = PBXBuildFile; fileRef = 40AA72972C28B1A3007FB1E0 /* VectorSearchTest+Lazy.m */; };
 		40C5FD5B2B9947B3004BFD3B /* CBLVectorIndexTypes.h in Headers */ = {isa = PBXBuildFile; fileRef = 40C5FD5A2B9946E6004BFD3B /* CBLVectorIndexTypes.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		40C5FD5C2B9947B9004BFD3B /* CBLVectorIndexTypes.h in Headers */ = {isa = PBXBuildFile; fileRef = 40C5FD5A2B9946E6004BFD3B /* CBLVectorIndexTypes.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		40CC4B9F302C449D0002386D /* CBLJSONUtil.m in Sources */ = {isa = PBXBuildFile; fileRef = 40CC4B9E302C449D0002386D /* CBLJSONUtil.m */; };
+		40CC4BA0302C449D0002386D /* CBLJSONUtil.m in Sources */ = {isa = PBXBuildFile; fileRef = 40CC4B9E302C449D0002386D /* CBLJSONUtil.m */; };
+		40CC4BA1302C44CB0002386D /* CBLJSONUtil.m in Sources */ = {isa = PBXBuildFile; fileRef = 40CC4B9E302C449D0002386D /* CBLJSONUtil.m */; };
+		40CC4BA2302C44CB0002386D /* CBLJSONUtil.m in Sources */ = {isa = PBXBuildFile; fileRef = 40CC4B9E302C449D0002386D /* CBLJSONUtil.m */; };
+		40CC4BA3302C44CB0002386D /* CBLJSONUtil.m in Sources */ = {isa = PBXBuildFile; fileRef = 40CC4B9E302C449D0002386D /* CBLJSONUtil.m */; };
+		40CC4BA4302C48240002386D /* CBLTestCase.m in Sources */ = {isa = PBXBuildFile; fileRef = 9378C5961E25B473001BB196 /* CBLTestCase.m */; };
+		40CC4BA5302C48480002386D /* ArrayTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 93DD9BA71EB419BB00E502A2 /* ArrayTest.m */; };
+		40CC4BA6302C48530002386D /* DictionaryTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 9352945E1E51708E005CE4E8 /* DictionaryTest.m */; };
+		40CC4BA7302C48530002386D /* FragmentTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 931C14691EAAF08C0094F9B2 /* FragmentTest.m */; };
+		40CC4BA8302C49900002386D /* Support in Resources */ = {isa = PBXBuildFile; fileRef = 93DECF3E200DBE5800F44953 /* Support */; };
+		40CC4BA9302C4BE10002386D /* DocumentTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 9378C59D1E269F14001BB196 /* DocumentTest.m */; };
+		40CC4BAA302CF2630002386D /* QueryTest+Meta.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AAF6371226A8B060016754C /* QueryTest+Meta.m */; };
+		40CC4BAB302CF2630002386D /* CollectionTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AC16CE6287D4D820041728F /* CollectionTest.m */; };
+		40CC4BAC302CF2630002386D /* QueryTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 9332082B1E774419000D9993 /* QueryTest.m */; };
+		40CC4BAD302CF2630002386D /* QueryTest+Join.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AAF6382226A8DBF0016754C /* QueryTest+Join.m */; };
+		40CC4BAE302CF2630002386D /* QueryTest+Collection.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A621D6C2887DCE70017F905 /* QueryTest+Collection.m */; };
+		40CC4BAF302CF2630002386D /* NotificationTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 72A87A0E1E32E858008466FF /* NotificationTest.m */; };
+		40CC4BB0302CF2630002386D /* DateTimeQueryFunctionTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AC83BC721C026D100792098 /* DateTimeQueryFunctionTest.m */; };
+		40CC4BB1302CF2630002386D /* PredictiveQueryTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 93EB25CB21CDD12A0006FB88 /* PredictiveQueryTest.m */; };
+		40CC4BB3302CF2900002386D /* MigrationTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 938B3701200D7D1D004485D8 /* MigrationTest.m */; };
+		40CC4BB4302CF2CD0002386D /* PartialIndexTest.m in Sources */ = {isa = PBXBuildFile; fileRef = AEFEED742D4A8D6F008AF4C2 /* PartialIndexTest.m */; };
+		40CC4BB5302CF6250002386D /* CollectionUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 934F4BD11E1EF19000F90659 /* CollectionUtils.m */; };
+		40CC4BB6302CF68F0002386D /* ConcurrentTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 9385F3021FC645AE00032037 /* ConcurrentTest.m */; };
+		40CC4BB7302CF68F0002386D /* DatabaseEncryptionTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 9369A6AC207DD0ED009B5B83 /* DatabaseEncryptionTest.m */; };
+		40CC4BB8302CF77C0002386D /* DatabaseTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 9378C5901E25B3F0001BB196 /* DatabaseTest.m */; };
+		40CC4BC2302D40A00002386D /* ReplicatorTest+Backgrounding.m in Sources */ = {isa = PBXBuildFile; fileRef = 40CC4BBF302D40A00002386D /* ReplicatorTest+Backgrounding.m */; };
+		40CC4BC3302D40A00002386D /* ReplicatorTest+Backgrounding.m in Sources */ = {isa = PBXBuildFile; fileRef = 40CC4BBF302D40A00002386D /* ReplicatorTest+Backgrounding.m */; };
+		40CC4BC4302D41A50002386D /* ReplicatorTest+Collection.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A908400288027EE006B1885 /* ReplicatorTest+Collection.m */; };
+		40CC4BC5302D41A50002386D /* ReplicatorTest+PendingDocIds.m in Sources */ = {isa = PBXBuildFile; fileRef = 1ACDD8C223FF5BB200AF5D56 /* ReplicatorTest+PendingDocIds.m */; };
+		40CC4BC6302D41A50002386D /* ReplicatorTest+MessageEndPoint.m in Sources */ = {isa = PBXBuildFile; fileRef = 93F714202490971600624296 /* ReplicatorTest+MessageEndPoint.m */; };
+		40CC4BC7302D41A50002386D /* ReplicatorTest+Main.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A4160D922836C7F0061A567 /* ReplicatorTest+Main.m */; };
+		40CC4BC8302D41A50002386D /* ReplicatorTest+CustomConflict.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A4160C52283673E0061A567 /* ReplicatorTest+CustomConflict.m */; };
+		40CC4BC9302D41A50002386D /* ReplicatorTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 27E35A811E8B3B3A00E103F9 /* ReplicatorTest.m */; };
+		40CC4BCA302D41C80002386D /* CBLBlockConflictResolver.m in Sources */ = {isa = PBXBuildFile; fileRef = 40086B522B803B2B00DA6770 /* CBLBlockConflictResolver.m */; };
+		40CC4BCB302D41C80002386D /* CBLTestCustomLogSink.m in Sources */ = {isa = PBXBuildFile; fileRef = 40938A502D4B464500691393 /* CBLTestCustomLogSink.m */; };
+		40CC4BCC302D41C80002386D /* CBLMockConnection.m in Sources */ = {isa = PBXBuildFile; fileRef = 930C7F7F20FE4F7400C74A12 /* CBLMockConnection.m */; };
+		40CC4BCD302D41C80002386D /* CBLMockConnectionErrorLogic.m in Sources */ = {isa = PBXBuildFile; fileRef = 930C7F7E20FE4F7400C74A12 /* CBLMockConnectionErrorLogic.m */; };
+		40CC4BCE302D4D7C0002386D /* URLEndpointListenerTest+Collection.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A9617F2289BF3C10037E78E /* URLEndpointListenerTest+Collection.m */; };
+		40CC4BCF302D4D7C0002386D /* URLEndpointListenerTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A6F0941246C78FC0097D8B5 /* URLEndpointListenerTest.m */; };
+		40CC4BD0302D4D7C0002386D /* URLEndpointListenerTest+Main.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A13DD3F28B881BF00BC1084 /* URLEndpointListenerTest+Main.m */; };
+		40CC4BD1302D4DC50002386D /* AuthenticatorTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1ADA05382240218F0068F745 /* AuthenticatorTest.m */; };
+		40CC4BD2302D4DC50002386D /* TLSIdentityTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 934EF80B2453770E0053A47C /* TLSIdentityTest.m */; };
+		40CC4BD3302D632C0002386D /* AuthenticatorTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1ADA05382240218F0068F745 /* AuthenticatorTest.m */; };
+		40CC4BD4302D632C0002386D /* DateTimeQueryFunctionTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AC83BC721C026D100792098 /* DateTimeQueryFunctionTest.m */; };
+		40CC4BD5302D632C0002386D /* MigrationTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 938B3701200D7D1D004485D8 /* MigrationTest.m */; };
+		40CC4BD6302D632C0002386D /* MiscCppTest.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1A4FE769225ED344009D5F43 /* MiscCppTest.mm */; };
+		40CC4BD7302D634D0002386D /* DateTimeQueryFunctionTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AC83BC721C026D100792098 /* DateTimeQueryFunctionTest.m */; };
+		40CC4BD8302D634D0002386D /* MigrationTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 938B3701200D7D1D004485D8 /* MigrationTest.m */; };
+		40CC4BD9302D634D0002386D /* AuthenticatorTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1ADA05382240218F0068F745 /* AuthenticatorTest.m */; };
+		40CC4BDA302D634D0002386D /* MiscCppTest.mm in Sources */ = {isa = PBXBuildFile; fileRef = 1A4FE769225ED344009D5F43 /* MiscCppTest.mm */; };
+		40CC4BDB302D77CA0002386D /* DocumentExpirationTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 9388CBAA21BD916F005CA66D /* DocumentExpirationTest.m */; };
+		40CC4BDC302D7AC00002386D /* UnnestArrayIndexTest.m in Sources */ = {isa = PBXBuildFile; fileRef = AE5F25492CAC30DC00AAB7F4 /* UnnestArrayIndexTest.m */; };
+		40CC4BDD302D860D0002386D /* Test_Assertions.m in Sources */ = {isa = PBXBuildFile; fileRef = 934F4C6F1E1EFAF600F90659 /* Test_Assertions.m */; };
+		40CC4BDE302D86290002386D /* VectorSearchTest.m in Sources */ = {isa = PBXBuildFile; fileRef = AE006DE62B7BB98B00884E2B /* VectorSearchTest.m */; };
+		40CC4BDF302D86290002386D /* VectorSearchTest+Lazy.m in Sources */ = {isa = PBXBuildFile; fileRef = 40AA72972C28B1A3007FB1E0 /* VectorSearchTest+Lazy.m */; };
+		40CC4BE0302D86400002386D /* CBLWordEmbeddingModel.m in Sources */ = {isa = PBXBuildFile; fileRef = AE006DD32B7B9FEF00884E2B /* CBLWordEmbeddingModel.m */; };
+		40CC4C12302D87810002386D /* CouchbaseLite.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 40CC4BE1302D86A30002386D /* CouchbaseLite.xcframework */; };
+		40CC4C13302D87810002386D /* CouchbaseLite.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 40CC4BE1302D86A30002386D /* CouchbaseLite.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		40CC4C15302D87A50002386D /* CouchbaseLiteVectorSearch.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 40CC4BE3302D86A70002386D /* CouchbaseLiteVectorSearch.xcframework */; };
+		40CC4C16302D87A50002386D /* CouchbaseLiteVectorSearch.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 40CC4BE3302D86A70002386D /* CouchbaseLiteVectorSearch.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		40CC4C373033BF4D0002386D /* PredictiveQueryTest+CoreML.m in Sources */ = {isa = PBXBuildFile; fileRef = 933F840C220BA4080093EC88 /* PredictiveQueryTest+CoreML.m */; };
+		40CC4C493033BF560002386D /* QueryTest+Main.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AF555C322946ED90077DF6D /* QueryTest+Main.m */; };
+		40CC4C6A3033CF280002386D /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 936483AC1E4431C6008D08B3 /* AppDelegate.m */; };
+		40CC4C6B3033CF300002386D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 936483AD1E4431C6008D08B3 /* Assets.xcassets */; };
+		40CC4C6C3033CF3F0002386D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 936483B01E4431C6008D08B3 /* Main.storyboard */; };
+		40CC4C6D3033CF3F0002386D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 936483AE1E4431C6008D08B3 /* LaunchScreen.storyboard */; };
+		40CC4C6E3033CF510002386D /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 936483B61E4431C6008D08B3 /* ViewController.m */; };
+		40CC4C6F3033CF510002386D /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 936483B41E4431C6008D08B3 /* main.m */; };
+		40CC4D00303403F30002386D /* QueryTest+Main.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AF555C322946ED90077DF6D /* QueryTest+Main.m */; };
+		40CC4D01303403F30002386D /* CBLTestCase.m in Sources */ = {isa = PBXBuildFile; fileRef = 9378C5961E25B473001BB196 /* CBLTestCase.m */; };
+		40CC4D05303403F30002386D /* QueryTest+Meta.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AAF6371226A8B060016754C /* QueryTest+Meta.m */; };
+		40CC4D07303403F30002386D /* CollectionTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AC16CE6287D4D820041728F /* CollectionTest.m */; };
+		40CC4D08303403F30002386D /* DatabaseTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 9378C5901E25B3F0001BB196 /* DatabaseTest.m */; };
+		40CC4D0A303403F30002386D /* ReplicatorTest+PendingDocIds.m in Sources */ = {isa = PBXBuildFile; fileRef = 1ACDD8C223FF5BB200AF5D56 /* ReplicatorTest+PendingDocIds.m */; };
+		40CC4D10303403F30002386D /* ReplicatorTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 27E35A811E8B3B3A00E103F9 /* ReplicatorTest.m */; };
+		40CC4D11303403F30002386D /* UnnestArrayIndexTest.m in Sources */ = {isa = PBXBuildFile; fileRef = AE5F25492CAC30DC00AAB7F4 /* UnnestArrayIndexTest.m */; };
+		40CC4D12303403F30002386D /* QueryTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 9332082B1E774419000D9993 /* QueryTest.m */; };
+		40CC4D13303403F30002386D /* QueryTest+Join.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AAF6382226A8DBF0016754C /* QueryTest+Join.m */; };
+		40CC4D14303403F30002386D /* DocumentExpirationTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 9388CBAA21BD916F005CA66D /* DocumentExpirationTest.m */; };
+		40CC4D15303403F30002386D /* QueryTest+Collection.m in Sources */ = {isa = PBXBuildFile; fileRef = 1A621D6C2887DCE70017F905 /* QueryTest+Collection.m */; };
+		40CC4D16303403F30002386D /* NotificationTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 72A87A0E1E32E858008466FF /* NotificationTest.m */; };
+		40CC4D17303403F30002386D /* DateTimeQueryFunctionTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1AC83BC721C026D100792098 /* DateTimeQueryFunctionTest.m */; };
+		40CC4D19303403F30002386D /* PartialIndexTest.m in Sources */ = {isa = PBXBuildFile; fileRef = AEFEED742D4A8D6F008AF4C2 /* PartialIndexTest.m */; };
+		40CC4D1A303403F30002386D /* ArrayTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 93DD9BA71EB419BB00E502A2 /* ArrayTest.m */; };
+		40CC4D1B303403F30002386D /* DocumentTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 9378C59D1E269F14001BB196 /* DocumentTest.m */; };
+		40CC4D1C303403F30002386D /* CollectionUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 934F4BD11E1EF19000F90659 /* CollectionUtils.m */; };
+		40CC4D1D303403F30002386D /* CBLBlockConflictResolver.m in Sources */ = {isa = PBXBuildFile; fileRef = 40086B522B803B2B00DA6770 /* CBLBlockConflictResolver.m */; };
+		40CC4D1E303403F30002386D /* AuthenticatorTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 1ADA05382240218F0068F745 /* AuthenticatorTest.m */; };
+		40CC4D1F303403F30002386D /* Test_Assertions.m in Sources */ = {isa = PBXBuildFile; fileRef = 934F4C6F1E1EFAF600F90659 /* Test_Assertions.m */; };
+		40CC4D21303403F30002386D /* CBLTestCustomLogSink.m in Sources */ = {isa = PBXBuildFile; fileRef = 40938A502D4B464500691393 /* CBLTestCustomLogSink.m */; };
+		40CC4D24303403F30002386D /* DictionaryTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 9352945E1E51708E005CE4E8 /* DictionaryTest.m */; };
+		40CC4D25303403F30002386D /* FragmentTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 931C14691EAAF08C0094F9B2 /* FragmentTest.m */; };
+		40CC4D27303403F30002386D /* ConcurrentTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 9385F3021FC645AE00032037 /* ConcurrentTest.m */; };
+		40CC4D29303403F30002386D /* MigrationTest.m in Sources */ = {isa = PBXBuildFile; fileRef = 938B3701200D7D1D004485D8 /* MigrationTest.m */; };
+		40CC4D2A303403F30002386D /* CBLJSONUtil.m in Sources */ = {isa = PBXBuildFile; fileRef = 40CC4B9E302C449D0002386D /* CBLJSONUtil.m */; };
+		40CC4D2D303403F30002386D /* CouchbaseLite.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 40CC4BE1302D86A30002386D /* CouchbaseLite.xcframework */; };
+		40CC4D2F303403F30002386D /* Support in Resources */ = {isa = PBXBuildFile; fileRef = 93DECF3E200DBE5800F44953 /* Support */; };
+		40CC4D32303403F30002386D /* CouchbaseLite.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 40CC4BE1302D86A30002386D /* CouchbaseLite.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		40D6BCB02DDD175200F209D7 /* CBLMultipeerCertificateAuthenticator.h in Headers */ = {isa = PBXBuildFile; fileRef = 40E46AD92DD6A4E7007E495D /* CBLMultipeerCertificateAuthenticator.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		40D6BCB12DDD175E00F209D7 /* CBLMultipeerCertificateAuthenticator.m in Sources */ = {isa = PBXBuildFile; fileRef = 40E46ADA2DD6A4E7007E495D /* CBLMultipeerCertificateAuthenticator.m */; };
 		40D6BCB22DDD176700F209D7 /* CBLPeerInfo.mm in Sources */ = {isa = PBXBuildFile; fileRef = 40E46AE62DD6A4E7007E495D /* CBLPeerInfo.mm */; };
@@ -2218,6 +2310,29 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		40CC4C14302D87810002386D /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				40CC4C16302D87A50002386D /* CouchbaseLiteVectorSearch.xcframework in Embed Frameworks */,
+				40CC4C13302D87810002386D /* CouchbaseLite.xcframework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		40CC4D30303403F30002386D /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				40CC4D32303403F30002386D /* CouchbaseLite.xcframework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		93095B0A246BC325005633B4 /* Embed Frameworks */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -2357,8 +2472,6 @@
 		1ABA63B22881A93C005835E7 /* CBLCollectionConfiguration+Internal.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "CBLCollectionConfiguration+Internal.h"; sourceTree = "<group>"; };
 		1AC16CE6287D4D820041728F /* CollectionTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CollectionTest.m; sourceTree = "<group>"; };
 		1AC754622897A9C9006CF48F /* ReplicatorTest+Collection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "ReplicatorTest+Collection.swift"; sourceTree = "<group>"; };
-		1AC7EC27249DA24E00978C2E /* Foundation+CBL.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Foundation+CBL.h"; sourceTree = "<group>"; };
-		1AC7EC28249DA24E00978C2E /* Foundation+CBL.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = "Foundation+CBL.mm"; sourceTree = "<group>"; };
 		1AC83BC721C026D100792098 /* DateTimeQueryFunctionTest.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DateTimeQueryFunctionTest.m; sourceTree = "<group>"; };
 		1ACAB8C6266723AE00B4F8E5 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		1ACDD8C223FF5BB200AF5D56 /* ReplicatorTest+PendingDocIds.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "ReplicatorTest+PendingDocIds.m"; sourceTree = "<group>"; };
@@ -2464,6 +2577,18 @@
 		40CC4B76302BE6D30002386D /* CouchbaseLiteSwift-EE.private.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "CouchbaseLiteSwift-EE.private.txt"; sourceTree = "<group>"; };
 		40CC4B77302BE6E40002386D /* CouchbaseLiteSwift.private.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = CouchbaseLiteSwift.private.txt; sourceTree = "<group>"; };
 		40CC4B79302BF1620002386D /* CouchbaseLiteSwift-EE.private.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = "CouchbaseLiteSwift-EE.private.modulemap"; sourceTree = "<group>"; };
+		40CC4B80302C2FF90002386D /* CouchbaseLiteBinaryTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CouchbaseLiteBinaryTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		40CC4B9A302C31BD0002386D /* CBL_EE_ObjC_Binary_Tests.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = CBL_EE_ObjC_Binary_Tests.xcconfig; sourceTree = "<group>"; };
+		40CC4B9B302C31D00002386D /* CBL_ObjC_Binary_Tests.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = CBL_ObjC_Binary_Tests.xcconfig; sourceTree = "<group>"; };
+		40CC4B9D302C449D0002386D /* CBLJSONUtil.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLJSONUtil.h; sourceTree = "<group>"; };
+		40CC4B9E302C449D0002386D /* CBLJSONUtil.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CBLJSONUtil.m; sourceTree = "<group>"; };
+		40CC4BBE302D392D0002386D /* CBLTestCommon.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CBLTestCommon.h; sourceTree = "<group>"; };
+		40CC4BBF302D40A00002386D /* ReplicatorTest+Backgrounding.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "ReplicatorTest+Backgrounding.m"; sourceTree = "<group>"; };
+		40CC4BE1302D86A30002386D /* CouchbaseLite.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = CouchbaseLite.xcframework; path = BinaryTests/Frameworks/CouchbaseLite.xcframework; sourceTree = "<group>"; };
+		40CC4BE3302D86A70002386D /* CouchbaseLiteVectorSearch.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = CouchbaseLiteVectorSearch.xcframework; path = BinaryTests/Frameworks/CouchbaseLiteVectorSearch.xcframework; sourceTree = "<group>"; };
+		40CC4C4E3033CE540002386D /* CBL_Binary_Tests.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CBL_Binary_Tests.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		40CC4CAD3033EEF90002386D /* CBL_ObjC_Binary_Tests_iOS_App.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = CBL_ObjC_Binary_Tests_iOS_App.xcconfig; sourceTree = "<group>"; };
+		40CC4D38303403F30002386D /* CouchbaseLiteBinaryTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CouchbaseLiteBinaryTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		40D6BCBF2DDD183000F209D7 /* MultipeerReplicatorConfiguration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultipeerReplicatorConfiguration.swift; sourceTree = "<group>"; };
 		40D6BCC12DDD191C00F209D7 /* MultipeerCertificateAuthenticator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MultipeerCertificateAuthenticator.swift; sourceTree = "<group>"; };
 		40D6BCC32DDD19D900F209D7 /* PeerID.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeerID.swift; sourceTree = "<group>"; };
@@ -3045,6 +3170,30 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		40CC4B7D302C2FF90002386D /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				40CC4C15302D87A50002386D /* CouchbaseLiteVectorSearch.xcframework in Frameworks */,
+				40CC4C12302D87810002386D /* CouchbaseLite.xcframework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		40CC4C4B3033CE540002386D /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		40CC4D2B303403F30002386D /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				40CC4D2D303403F30002386D /* CouchbaseLite.xcframework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		930B63CD246B9CD1006D94FF /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -3327,6 +3476,8 @@
 		27EF6AF01E32D12C004748DF /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				40CC4BE3302D86A70002386D /* CouchbaseLiteVectorSearch.xcframework */,
+				40CC4BE1302D86A30002386D /* CouchbaseLite.xcframework */,
 				40815FB32F1058C3004D8590 /* CoreBluetooth.framework */,
 				93A4F2352221058500257423 /* CoreImage.framework */,
 				9399E4B21E932F4700B57600 /* libz.tbd */,
@@ -3818,6 +3969,8 @@
 				40086B522B803B2B00DA6770 /* CBLBlockConflictResolver.m */,
 				40938A4F2D4B464500691393 /* CBLTestCustomLogSink.h */,
 				40938A502D4B464500691393 /* CBLTestCustomLogSink.m */,
+				40CC4B9D302C449D0002386D /* CBLJSONUtil.h */,
+				40CC4B9E302C449D0002386D /* CBLJSONUtil.m */,
 			);
 			path = Util;
 			sourceTree = "<group>";
@@ -4025,6 +4178,7 @@
 				9378C5D21E26CC46001BB196 /* CBL_ObjC_Tests.xcconfig */,
 				9344A3621E44517B0091F581 /* CBL_ObjC_Tests_iOS.xcconfig */,
 				9344A3611E44517B0091F581 /* CBL_ObjC_Tests_iOS_App.xcconfig */,
+				40CC4B9B302C31D00002386D /* CBL_ObjC_Binary_Tests.xcconfig */,
 				930B63FF246BA5F8006D94FF /* CBL_Swift_Tests.xcconfig */,
 				93BB1C7A246BAFBB004FFA00 /* CBL_Swift_Tests_iOS.xcconfig */,
 				93BB1C7B246BB145004FFA00 /* CBL_Swift_Tests_iOS_App.xcconfig */,
@@ -4034,6 +4188,8 @@
 				4006AB4A2B9048300036E66D /* CBL_EE_ObjC_Tests.xcconfig */,
 				932C69DD2453636100C382FB /* CBL_EE_ObjC_Tests_iOS.xcconfig */,
 				932C69DC2453636100C382FB /* CBL_EE_ObjC_Tests_iOS_App.xcconfig */,
+				40CC4B9A302C31BD0002386D /* CBL_EE_ObjC_Binary_Tests.xcconfig */,
+				40CC4CAD3033EEF90002386D /* CBL_ObjC_Binary_Tests_iOS_App.xcconfig */,
 				4006AB4C2B9048930036E66D /* CBL_EE_Swift_Tests.xcconfig */,
 				93BB1C79246BAF89004FFA00 /* CBL_EE_Swift_Tests_iOS.xcconfig */,
 				93BB1C7C246BB151004FFA00 /* CBL_EE_Swift_Tests_iOS_App.xcconfig */,
@@ -4072,8 +4228,6 @@
 				9385F2C81FC5FF4D00032037 /* CBLLock.h */,
 				932EA5692061FF7D00EDB667 /* CBLVersion.h */,
 				932EA5582061FF7D00EDB667 /* CBLVersion.m */,
-				1AC7EC27249DA24E00978C2E /* Foundation+CBL.h */,
-				1AC7EC28249DA24E00978C2E /* Foundation+CBL.mm */,
 				1A3BA951272A3D3C002EAB2E /* CBLLockable.h */,
 				1ACAB8C6266723AE00B4F8E5 /* main.m */,
 			);
@@ -4322,6 +4476,9 @@
 				93BB1C89246BB1DB004FFA00 /* CBL_Swift_Tests_iOS.xctest */,
 				93BB1C98246BB1F1004FFA00 /* CBL_Swift_Tests.app */,
 				1A0BFA3627B51FD700BA84E5 /* CBL_ObjC_SG_Tests.xctest */,
+				40CC4B80302C2FF90002386D /* CouchbaseLiteBinaryTests.xctest */,
+				40CC4C4E3033CE540002386D /* CBL_Binary_Tests.app */,
+				40CC4D38303403F30002386D /* CouchbaseLiteBinaryTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -4407,6 +4564,7 @@
 				1ADA05382240218F0068F745 /* AuthenticatorTest.m */,
 				9378C5951E25B473001BB196 /* CBLTestCase.h */,
 				9378C5961E25B473001BB196 /* CBLTestCase.m */,
+				40CC4BBE302D392D0002386D /* CBLTestCommon.h */,
 				1AC16CE6287D4D820041728F /* CollectionTest.m */,
 				9385F3021FC645AE00032037 /* ConcurrentTest.m */,
 				9378C5901E25B3F0001BB196 /* DatabaseTest.m */,
@@ -4423,6 +4581,7 @@
 				40600A3F2DD6B6A500E696B7 /* MultipeerReplicatorTest.h */,
 				40600A402DD6B6A500E696B7 /* MultipeerReplicatorTest.m */,
 				72A87A0E1E32E858008466FF /* NotificationTest.m */,
+				AEFEED742D4A8D6F008AF4C2 /* PartialIndexTest.m */,
 				27EF6A931E298E26004748DF /* PredicateQueryTest.m */,
 				93EB25CB21CDD12A0006FB88 /* PredictiveQueryTest.m */,
 				933F840C220BA4080093EC88 /* PredictiveQueryTest+CoreML.m */,
@@ -4435,22 +4594,22 @@
 				1A4160D6228367520061A567 /* ReplicatorTest.h */,
 				27E35A811E8B3B3A00E103F9 /* ReplicatorTest.m */,
 				1A4160D922836C7F0061A567 /* ReplicatorTest+Main.m */,
+				40CC4BBF302D40A00002386D /* ReplicatorTest+Backgrounding.m */,
 				1A908400288027EE006B1885 /* ReplicatorTest+Collection.m */,
-				1A0BFA4427B5273B00BA84E5 /* ReplicatorTest+SG.m */,
 				1A4160C52283673E0061A567 /* ReplicatorTest+CustomConflict.m */,
 				93F714202490971600624296 /* ReplicatorTest+MessageEndPoint.m */,
 				1ACDD8C223FF5BB200AF5D56 /* ReplicatorTest+PendingDocIds.m */,
+				1A0BFA4427B5273B00BA84E5 /* ReplicatorTest+SG.m */,
 				934EF80B2453770E0053A47C /* TLSIdentityTest.m */,
 				1ACEB9662256B74A00DED54C /* TrustCheckTest.m */,
 				1A9617FF289BF6940037E78E /* URLEndpointListenerTest.h */,
 				1A6F0941246C78FC0097D8B5 /* URLEndpointListenerTest.m */,
 				1A13DD3F28B881BF00BC1084 /* URLEndpointListenerTest+Main.m */,
 				1A9617F2289BF3C10037E78E /* URLEndpointListenerTest+Collection.m */,
+				AE5F25492CAC30DC00AAB7F4 /* UnnestArrayIndexTest.m */,
 				40AA72A12C28B1F2007FB1E0 /* VectorSearchTest.h */,
 				AE006DE62B7BB98B00884E2B /* VectorSearchTest.m */,
 				40AA72972C28B1A3007FB1E0 /* VectorSearchTest+Lazy.m */,
-				AE5F25492CAC30DC00AAB7F4 /* UnnestArrayIndexTest.m */,
-				AEFEED742D4A8D6F008AF4C2 /* PartialIndexTest.m */,
 				93DECF3E200DBE5800F44953 /* Support */,
 				936483AA1E4431C6008D08B3 /* iOS */,
 				275FF5FA1E3FBD3B005F90DD /* Performance */,
@@ -4965,7 +5124,6 @@
 				AE5CA6AD2E5E2584003A9E89 /* CBLMessageEndpointListenerConfiguration+Internal.h in Headers */,
 				40FC1BFF2B928AB100394276 /* CBLCert.h in Headers */,
 				40FC1C1F2B928B5000394276 /* CBLNoneVectorEncoding.h in Headers */,
-				1AC7EC2A249DA24E00978C2E /* Foundation+CBL.h in Headers */,
 				9343EFC3207D611600F19A89 /* CBLMisc.h in Headers */,
 				93E18738211122EB001D52B9 /* MYURLUtils.h in Headers */,
 				9343EFC4207D611600F19A89 /* CBLBlob+Swift.h in Headers */,
@@ -5372,7 +5530,6 @@
 				937F01E61EFB280000060D64 /* CBLAuthenticator+Internal.h in Headers */,
 				9385F2661FC38F8900032037 /* CBLListenerToken.h in Headers */,
 				AEA74F492CFE0BC3005F4810 /* CBLCustomLogSink.h in Headers */,
-				1AC7EC29249DA24E00978C2E /* Foundation+CBL.h in Headers */,
 				93CD02721EA0004500AFB3FA /* CBLDocument.h in Headers */,
 				930B368E24AAFACB000DF2B3 /* CBLDocBranchIterator.h in Headers */,
 				934A27A51F30E62F003946A7 /* CBLUnaryExpression.h in Headers */,
@@ -5576,6 +5733,67 @@
 			productName = PerfTest;
 			productReference = 275FF6131E3FE9DB005F90DD /* CBLPerfTests */;
 			productType = "com.apple.product-type.tool";
+		};
+		40CC4B7F302C2FF90002386D /* CBL_EE_ObjC_Binary_Tests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 40CC4B99302C2FF90002386D /* Build configuration list for PBXNativeTarget "CBL_EE_ObjC_Binary_Tests" */;
+			buildPhases = (
+				40CC4C17302D88950002386D /* Check Binary Frameworks */,
+				40CC4B7C302C2FF90002386D /* Sources */,
+				40CC4B7D302C2FF90002386D /* Frameworks */,
+				40CC4B7E302C2FF90002386D /* Resources */,
+				40CC4C14302D87810002386D /* Embed Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = CBL_EE_ObjC_Binary_Tests;
+			packageProductDependencies = (
+			);
+			productName = CBL_EE_ObjC_Binary_Tests;
+			productReference = 40CC4B80302C2FF90002386D /* CouchbaseLiteBinaryTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		40CC4C4D3033CE540002386D /* CBL_ObjC_Binary_Tests_iOS_App */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 40CC4C653033CE550002386D /* Build configuration list for PBXNativeTarget "CBL_ObjC_Binary_Tests_iOS_App" */;
+			buildPhases = (
+				40CC4C4A3033CE540002386D /* Sources */,
+				40CC4C4B3033CE540002386D /* Frameworks */,
+				40CC4C4C3033CE540002386D /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = CBL_ObjC_Binary_Tests_iOS_App;
+			packageProductDependencies = (
+			);
+			productName = CBL_ObjC_Binary_Tests_iOS_App;
+			productReference = 40CC4C4E3033CE540002386D /* CBL_Binary_Tests.app */;
+			productType = "com.apple.product-type.application";
+		};
+		40CC4CFD303403F30002386D /* CBL_ObjC_Binary_Tests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 40CC4D33303403F30002386D /* Build configuration list for PBXNativeTarget "CBL_ObjC_Binary_Tests" */;
+			buildPhases = (
+				40CC4CFE303403F30002386D /* Check Binary Frameworks */,
+				40CC4CFF303403F30002386D /* Sources */,
+				40CC4D2B303403F30002386D /* Frameworks */,
+				40CC4D2E303403F30002386D /* Resources */,
+				40CC4D30303403F30002386D /* Embed Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = CBL_ObjC_Binary_Tests;
+			packageProductDependencies = (
+			);
+			productName = CBL_EE_ObjC_Binary_Tests;
+			productReference = 40CC4D38303403F30002386D /* CouchbaseLiteBinaryTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
 		};
 		930B63CF246B9CD1006D94FF /* CBL_EE_Swift_Tests_iOS_App */ = {
 			isa = PBXNativeTarget;
@@ -5898,6 +6116,16 @@
 					27BF031C1FB6290C003D5BB8 = {
 						CreatedOnToolsVersion = 9.1;
 					};
+					40CC4B7F302C2FF90002386D = {
+						CreatedOnToolsVersion = 26.4;
+						TestTargetID = 40CC4C4D3033CE540002386D;
+					};
+					40CC4C4D3033CE540002386D = {
+						CreatedOnToolsVersion = 26.4;
+					};
+					40CC4CFD303403F30002386D = {
+						TestTargetID = 40CC4C4D3033CE540002386D;
+					};
 					930B63CF246B9CD1006D94FF = {
 						CreatedOnToolsVersion = 10.1;
 						DevelopmentTeam = N2Q372V7W2;
@@ -5998,6 +6226,9 @@
 				9343F135207D61EC00F19A89 /* CBL_EE_ObjC_Tests */,
 				9343F16F207D633300F19A89 /* CBL_EE_Objc_Tests_iOS */,
 				9343F153207D62C900F19A89 /* CBL_EE_Objc_Tests_iOS_App */,
+				40CC4CFD303403F30002386D /* CBL_ObjC_Binary_Tests */,
+				40CC4B7F302C2FF90002386D /* CBL_EE_ObjC_Binary_Tests */,
+				40CC4C4D3033CE540002386D /* CBL_ObjC_Binary_Tests_iOS_App */,
 				9343F18A207D636300F19A89 /* CBL_EE_Swift_Tests */,
 				930B63E2246B9CD2006D94FF /* CBL_EE_Swift_Tests_iOS */,
 				930B63CF246B9CD1006D94FF /* CBL_EE_Swift_Tests_iOS_App */,
@@ -6147,6 +6378,32 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		40CC4B7E302C2FF90002386D /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				40CC4BA8302C49900002386D /* Support in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		40CC4C4C3033CE540002386D /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				40CC4C6C3033CF3F0002386D /* Main.storyboard in Resources */,
+				40CC4C6D3033CF3F0002386D /* LaunchScreen.storyboard in Resources */,
+				40CC4C6B3033CF300002386D /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		40CC4D2E303403F30002386D /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				40CC4D2F303403F30002386D /* Support in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		40EF690B2B7757A200F0CB50 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -6283,6 +6540,42 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
+		40CC4C17302D88950002386D /* Check Binary Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Check Binary Frameworks";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# Verify that binary frameworks are staged, and log what is being tested:\nINFO_FILE=\"${SRCROOT}/BinaryTests/Frameworks/info.txt\"\nif [ -f \"${INFO_FILE}\" ]; then\n    cat \"${INFO_FILE}\"\nelse\n    echo \"error: No binary frameworks staged in BinaryTests/Frameworks. Run 'Scripts/prepare_binary_test.sh <objc|swift> <ce|ee> <version>[-<build>]' first.\"\n    exit 1\nfi\n";
+		};
+		40CC4CFE303403F30002386D /* Check Binary Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Check Binary Frameworks";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# Verify that binary frameworks are staged, and log what is being tested:\nINFO_FILE=\"${SRCROOT}/BinaryTests/Frameworks/info.txt\"\nif [ -f \"${INFO_FILE}\" ]; then\n    cat \"${INFO_FILE}\"\nelse\n    echo \"error: No binary frameworks staged in BinaryTests/Frameworks. Run 'Scripts/prepare_binary_test.sh <objc|swift> <ce|ee> <version>[-<build>]' first.\"\n    exit 1\nfi\n";
+		};
 		40EF68002B71889F00F0CB50 /* Remove Private Module */ = {
 			isa = PBXShellScriptBuildPhase;
 			alwaysOutOfDate = 1;
@@ -6607,7 +6900,6 @@
 				934A279C1F30E5FA003946A7 /* CBLCompoundExpression.m in Sources */,
 				937A69411F10754D0058277F /* Meta.swift in Sources */,
 				934A27A21F30E61B003946A7 /* CBLPropertyExpression.m in Sources */,
-				1AC7EC3A249DA70E00978C2E /* Foundation+CBL.mm in Sources */,
 				9308F4031E64B21F00F53EE4 /* CollectionUtils.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -6652,6 +6944,100 @@
 				275FF6291E3FECD2005F90DD /* TunesPerfTest.mm in Sources */,
 				275FF6391E3FFBC0005F90DD /* PerfTest.mm in Sources */,
 				275FF6591E412C66005F90DD /* DocPerfTest.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		40CC4B7C302C2FF90002386D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				40CC4C493033BF560002386D /* QueryTest+Main.m in Sources */,
+				40CC4BA4302C48240002386D /* CBLTestCase.m in Sources */,
+				40CC4BCE302D4D7C0002386D /* URLEndpointListenerTest+Collection.m in Sources */,
+				40CC4BCF302D4D7C0002386D /* URLEndpointListenerTest.m in Sources */,
+				40CC4BD0302D4D7C0002386D /* URLEndpointListenerTest+Main.m in Sources */,
+				40CC4BAA302CF2630002386D /* QueryTest+Meta.m in Sources */,
+				40CC4C373033BF4D0002386D /* PredictiveQueryTest+CoreML.m in Sources */,
+				40CC4BAB302CF2630002386D /* CollectionTest.m in Sources */,
+				40CC4BB8302CF77C0002386D /* DatabaseTest.m in Sources */,
+				40CC4BC4302D41A50002386D /* ReplicatorTest+Collection.m in Sources */,
+				40CC4BC5302D41A50002386D /* ReplicatorTest+PendingDocIds.m in Sources */,
+				40CC4BC6302D41A50002386D /* ReplicatorTest+MessageEndPoint.m in Sources */,
+				40CC4BC7302D41A50002386D /* ReplicatorTest+Main.m in Sources */,
+				40CC4BC8302D41A50002386D /* ReplicatorTest+CustomConflict.m in Sources */,
+				40CC4BDE302D86290002386D /* VectorSearchTest.m in Sources */,
+				40CC4BDF302D86290002386D /* VectorSearchTest+Lazy.m in Sources */,
+				40CC4BC9302D41A50002386D /* ReplicatorTest.m in Sources */,
+				40CC4BDC302D7AC00002386D /* UnnestArrayIndexTest.m in Sources */,
+				40CC4BAC302CF2630002386D /* QueryTest.m in Sources */,
+				40CC4BAD302CF2630002386D /* QueryTest+Join.m in Sources */,
+				40CC4BDB302D77CA0002386D /* DocumentExpirationTest.m in Sources */,
+				40CC4BAE302CF2630002386D /* QueryTest+Collection.m in Sources */,
+				40CC4BAF302CF2630002386D /* NotificationTest.m in Sources */,
+				40CC4BB0302CF2630002386D /* DateTimeQueryFunctionTest.m in Sources */,
+				40CC4BB1302CF2630002386D /* PredictiveQueryTest.m in Sources */,
+				40CC4BB4302CF2CD0002386D /* PartialIndexTest.m in Sources */,
+				40CC4BA5302C48480002386D /* ArrayTest.m in Sources */,
+				40CC4BA9302C4BE10002386D /* DocumentTest.m in Sources */,
+				40CC4BB5302CF6250002386D /* CollectionUtils.m in Sources */,
+				40CC4BCA302D41C80002386D /* CBLBlockConflictResolver.m in Sources */,
+				40CC4BD1302D4DC50002386D /* AuthenticatorTest.m in Sources */,
+				40CC4BDD302D860D0002386D /* Test_Assertions.m in Sources */,
+				40CC4BD2302D4DC50002386D /* TLSIdentityTest.m in Sources */,
+				40CC4BCB302D41C80002386D /* CBLTestCustomLogSink.m in Sources */,
+				40CC4BCC302D41C80002386D /* CBLMockConnection.m in Sources */,
+				40CC4BCD302D41C80002386D /* CBLMockConnectionErrorLogic.m in Sources */,
+				40CC4BA6302C48530002386D /* DictionaryTest.m in Sources */,
+				40CC4BA7302C48530002386D /* FragmentTest.m in Sources */,
+				40CC4BE0302D86400002386D /* CBLWordEmbeddingModel.m in Sources */,
+				40CC4BB6302CF68F0002386D /* ConcurrentTest.m in Sources */,
+				40CC4BB7302CF68F0002386D /* DatabaseEncryptionTest.m in Sources */,
+				40CC4BB3302CF2900002386D /* MigrationTest.m in Sources */,
+				40CC4BA3302C44CB0002386D /* CBLJSONUtil.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		40CC4C4A3033CE540002386D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				40CC4C6E3033CF510002386D /* ViewController.m in Sources */,
+				40CC4C6F3033CF510002386D /* main.m in Sources */,
+				40CC4C6A3033CF280002386D /* AppDelegate.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		40CC4CFF303403F30002386D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				40CC4D00303403F30002386D /* QueryTest+Main.m in Sources */,
+				40CC4D01303403F30002386D /* CBLTestCase.m in Sources */,
+				40CC4D05303403F30002386D /* QueryTest+Meta.m in Sources */,
+				40CC4D07303403F30002386D /* CollectionTest.m in Sources */,
+				40CC4D08303403F30002386D /* DatabaseTest.m in Sources */,
+				40CC4D0A303403F30002386D /* ReplicatorTest+PendingDocIds.m in Sources */,
+				40CC4D10303403F30002386D /* ReplicatorTest.m in Sources */,
+				40CC4D11303403F30002386D /* UnnestArrayIndexTest.m in Sources */,
+				40CC4D12303403F30002386D /* QueryTest.m in Sources */,
+				40CC4D13303403F30002386D /* QueryTest+Join.m in Sources */,
+				40CC4D14303403F30002386D /* DocumentExpirationTest.m in Sources */,
+				40CC4D15303403F30002386D /* QueryTest+Collection.m in Sources */,
+				40CC4D16303403F30002386D /* NotificationTest.m in Sources */,
+				40CC4D17303403F30002386D /* DateTimeQueryFunctionTest.m in Sources */,
+				40CC4D19303403F30002386D /* PartialIndexTest.m in Sources */,
+				40CC4D1A303403F30002386D /* ArrayTest.m in Sources */,
+				40CC4D1B303403F30002386D /* DocumentTest.m in Sources */,
+				40CC4D1C303403F30002386D /* CollectionUtils.m in Sources */,
+				40CC4D1D303403F30002386D /* CBLBlockConflictResolver.m in Sources */,
+				40CC4D1E303403F30002386D /* AuthenticatorTest.m in Sources */,
+				40CC4D1F303403F30002386D /* Test_Assertions.m in Sources */,
+				40CC4D21303403F30002386D /* CBLTestCustomLogSink.m in Sources */,
+				40CC4D24303403F30002386D /* DictionaryTest.m in Sources */,
+				40CC4D25303403F30002386D /* FragmentTest.m in Sources */,
+				40CC4D27303403F30002386D /* ConcurrentTest.m in Sources */,
+				40CC4D29303403F30002386D /* MigrationTest.m in Sources */,
+				40CC4D2A303403F30002386D /* CBLJSONUtil.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -6709,7 +7095,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				EADC3CFF2D92E79000875416 /* CBLEncoder.mm in Sources */,
-				1AC7EC2D249DA24E00978C2E /* Foundation+CBL.mm in Sources */,
 				9343EF2F207D611600F19A89 /* CBLDatabase.mm in Sources */,
 				1A1612B5283E29E600AA4987 /* CBLCollectionConfiguration.m in Sources */,
 				40FC1BDF2B928A4F00394276 /* CBLIndexBuilder+Prediction.m in Sources */,
@@ -6970,7 +7355,6 @@
 				40FC1C5E2B928C1600394276 /* MessageEndpointConnection.swift in Sources */,
 				40FC1B612B9287BD00394276 /* CBLURLEndpointListenerConfiguration.mm in Sources */,
 				9343F045207D61AB00F19A89 /* CBLQueryChange.m in Sources */,
-				1AC7EC3B249DA70F00978C2E /* Foundation+CBL.mm in Sources */,
 				9343F048207D61AB00F19A89 /* CBLDatabaseConfiguration.m in Sources */,
 				9343F049207D61AB00F19A89 /* CBLFragment.m in Sources */,
 				9343F04A207D61AB00F19A89 /* CBLQueryArrayExpression.m in Sources */,
@@ -7170,6 +7554,7 @@
 				1A621D7A2887DCFD0017F905 /* QueryTest+Collection.m in Sources */,
 				93EB25CC21CDD12A0006FB88 /* PredictiveQueryTest.m in Sources */,
 				AE5CA6512E590BFC003A9E89 /* MiscCppTest.mm in Sources */,
+				40CC4B9F302C449D0002386D /* CBLJSONUtil.m in Sources */,
 				1AF555D422948BD90077DF6D /* QueryTest+Main.m in Sources */,
 				40AA729D2C28B1A3007FB1E0 /* VectorSearchTest+Lazy.m in Sources */,
 				9343F13D207D61EC00F19A89 /* MigrationTest.m in Sources */,
@@ -7186,6 +7571,7 @@
 				1A0BFA4827B5274D00BA84E5 /* ReplicatorTest+SG.m in Sources */,
 				9388CC4021C1E2B9005CA66D /* LogTest.m in Sources */,
 				9343F144207D61EC00F19A89 /* ArrayTest.m in Sources */,
+				40CC4BC3302D40A00002386D /* ReplicatorTest+Backgrounding.m in Sources */,
 				1ACDD8D423FF5C4400AF5D56 /* ReplicatorTest+PendingDocIds.m in Sources */,
 				1A13DD4128B882A700BC1084 /* URLEndpointListenerTest+Main.m in Sources */,
 				9343F145207D61EC00F19A89 /* FragmentTest.m in Sources */,
@@ -7218,6 +7604,10 @@
 			files = (
 				40AA72952C28938D007FB1E0 /* VectorSearchTest.m in Sources */,
 				9343F173207D633300F19A89 /* ReplicatorTest.m in Sources */,
+				40CC4BD3302D632C0002386D /* AuthenticatorTest.m in Sources */,
+				40CC4BD4302D632C0002386D /* DateTimeQueryFunctionTest.m in Sources */,
+				40CC4BD5302D632C0002386D /* MigrationTest.m in Sources */,
+				40CC4BD6302D632C0002386D /* MiscCppTest.mm in Sources */,
 				1AF555D622948BE00077DF6D /* QueryTest+Main.m in Sources */,
 				1ABA63B128813A8D005835E7 /* ReplicatorTest+Collection.m in Sources */,
 				93F714222490971600624296 /* ReplicatorTest+MessageEndPoint.m in Sources */,
@@ -7239,6 +7629,7 @@
 				9343F179207D633300F19A89 /* QueryTest.m in Sources */,
 				1A621D7B2887DCFE0017F905 /* QueryTest+Collection.m in Sources */,
 				AE5F255B2CAC311100AAB7F4 /* UnnestArrayIndexTest.m in Sources */,
+				40CC4BC2302D40A00002386D /* ReplicatorTest+Backgrounding.m in Sources */,
 				933F841E220BA4100093EC88 /* PredictiveQueryTest+CoreML.m in Sources */,
 				1A2F2C3627FD5B2200084B3C /* TrustCheckTest.m in Sources */,
 				1A961801289BF7F90037E78E /* URLEndpointListenerTest+Collection.m in Sources */,
@@ -7248,6 +7639,7 @@
 				40938A522D4B464500691393 /* CBLTestCustomLogSink.m in Sources */,
 				40600A442DD6B6A500E696B7 /* MultipeerReplicatorTest.m in Sources */,
 				1A6F0951246C792A0097D8B5 /* URLEndpointListenerTest.m in Sources */,
+				40CC4BA0302C449D0002386D /* CBLJSONUtil.m in Sources */,
 				9388CC4121C1E2BA005CA66D /* LogTest.m in Sources */,
 				9343F17C207D633300F19A89 /* FragmentTest.m in Sources */,
 				1AC16CF5287D4D9C0041728F /* CollectionTest.m in Sources */,
@@ -7337,6 +7729,11 @@
 				1AF555D522948BDF0077DF6D /* QueryTest+Main.m in Sources */,
 				1AA6743A227924110018CC6D /* QueryTest+Join.m in Sources */,
 				93CD018C1E95546200AFB3FA /* NotificationTest.m in Sources */,
+				40CC4BD7302D634D0002386D /* DateTimeQueryFunctionTest.m in Sources */,
+				40CC4BD8302D634D0002386D /* MigrationTest.m in Sources */,
+				40CC4BD9302D634D0002386D /* AuthenticatorTest.m in Sources */,
+				40CC4BDA302D634D0002386D /* MiscCppTest.mm in Sources */,
+				40CC4BA2302C44CB0002386D /* CBLJSONUtil.m in Sources */,
 				9388CC3F21C1E2B8005CA66D /* LogTest.m in Sources */,
 				40938A542D4B464500691393 /* CBLTestCustomLogSink.m in Sources */,
 				938CFA2F1E442B5700291631 /* DatabaseTest.m in Sources */,
@@ -7415,7 +7812,6 @@
 				AEA74F322CFE0581005F4810 /* CBLFileLogSink.mm in Sources */,
 				72A87A061E2E0E70008466FF /* CBLBlobStream.mm in Sources */,
 				93E18735211122D9001D52B9 /* MYURLUtils.m in Sources */,
-				1AC7EC2B249DA24E00978C2E /* Foundation+CBL.mm in Sources */,
 				93EB25C321CDCEC20006FB88 /* CBLQueryParameters.mm in Sources */,
 				937A69051F0731230058277F /* CBLQueryFunction.m in Sources */,
 				93DBD0132004BCE00017CA83 /* CBLURLEndpoint.m in Sources */,
@@ -7492,6 +7888,7 @@
 				1AF555C422946ED90077DF6D /* QueryTest+Main.m in Sources */,
 				9378C5971E25B473001BB196 /* CBLTestCase.m in Sources */,
 				9378C5911E25B3F0001BB196 /* DatabaseTest.m in Sources */,
+				40CC4BA1302C44CB0002386D /* CBLJSONUtil.m in Sources */,
 				1A4FE76A225ED344009D5F43 /* MiscCppTest.mm in Sources */,
 				AE5F25582CAC310700AAB7F4 /* UnnestArrayIndexTest.m in Sources */,
 				1AC83BC821C026D100792098 /* DateTimeQueryFunctionTest.m in Sources */,
@@ -8389,6 +8786,340 @@
 				PRODUCT_NAME = All;
 			};
 			name = Release;
+		};
+		40CC4B84302C2FF90002386D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 40CC4B9A302C31BD0002386D /* CBL_EE_ObjC_Binary_Tests.xcconfig */;
+			buildSettings = {
+			};
+			name = Debug;
+		};
+		40CC4B85302C2FF90002386D /* Debug_EE */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 40CC4B9A302C31BD0002386D /* CBL_EE_ObjC_Binary_Tests.xcconfig */;
+			buildSettings = {
+			};
+			name = Debug_EE;
+		};
+		40CC4B86302C2FF90002386D /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 40CC4B9A302C31BD0002386D /* CBL_EE_ObjC_Binary_Tests.xcconfig */;
+			buildSettings = {
+			};
+			name = Release;
+		};
+		40CC4B87302C2FF90002386D /* Release_EE */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 40CC4B9A302C31BD0002386D /* CBL_EE_ObjC_Binary_Tests.xcconfig */;
+			buildSettings = {
+			};
+			name = Release_EE;
+		};
+		40CC4C663033CE550002386D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 40CC4CAD3033EEF90002386D /* CBL_ObjC_Binary_Tests_iOS_App.xcconfig */;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UIMainStoryboardFile = Main;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MARKETING_VERSION = 1.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+			};
+			name = Debug;
+		};
+		40CC4C673033CE550002386D /* Debug_EE */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 40CC4CAD3033EEF90002386D /* CBL_ObjC_Binary_Tests_iOS_App.xcconfig */;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UIMainStoryboardFile = Main;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MARKETING_VERSION = 1.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+			};
+			name = Debug_EE;
+		};
+		40CC4C683033CE550002386D /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 40CC4CAD3033EEF90002386D /* CBL_ObjC_Binary_Tests_iOS_App.xcconfig */;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UIMainStoryboardFile = Main;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MARKETING_VERSION = 1.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		40CC4C693033CE550002386D /* Release_EE */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 40CC4CAD3033EEF90002386D /* CBL_ObjC_Binary_Tests_iOS_App.xcconfig */;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UIMainStoryboardFile = Main;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MARKETING_VERSION = 1.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release_EE;
+		};
+		40CC4D34303403F30002386D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 40CC4B9B302C31D00002386D /* CBL_ObjC_Binary_Tests.xcconfig */;
+			buildSettings = {
+			};
+			name = Debug;
+		};
+		40CC4D35303403F30002386D /* Debug_EE */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 40CC4B9B302C31D00002386D /* CBL_ObjC_Binary_Tests.xcconfig */;
+			buildSettings = {
+			};
+			name = Debug_EE;
+		};
+		40CC4D36303403F30002386D /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 40CC4B9B302C31D00002386D /* CBL_ObjC_Binary_Tests.xcconfig */;
+			buildSettings = {
+			};
+			name = Release;
+		};
+		40CC4D37303403F30002386D /* Release_EE */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 40CC4B9B302C31D00002386D /* CBL_ObjC_Binary_Tests.xcconfig */;
+			buildSettings = {
+			};
+			name = Release_EE;
 		};
 		930B63EA246B9CD2006D94FF /* Debug */ = {
 			isa = XCBuildConfiguration;
@@ -10308,6 +11039,39 @@
 				2791EA4B20327D4E00BD813C /* Debug_EE */,
 				27BF031E1FB6290C003D5BB8 /* Release */,
 				2791EA6520327D5600BD813C /* Release_EE */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		40CC4B99302C2FF90002386D /* Build configuration list for PBXNativeTarget "CBL_EE_ObjC_Binary_Tests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				40CC4B84302C2FF90002386D /* Debug */,
+				40CC4B85302C2FF90002386D /* Debug_EE */,
+				40CC4B86302C2FF90002386D /* Release */,
+				40CC4B87302C2FF90002386D /* Release_EE */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		40CC4C653033CE550002386D /* Build configuration list for PBXNativeTarget "CBL_ObjC_Binary_Tests_iOS_App" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				40CC4C663033CE550002386D /* Debug */,
+				40CC4C673033CE550002386D /* Debug_EE */,
+				40CC4C683033CE550002386D /* Release */,
+				40CC4C693033CE550002386D /* Release_EE */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		40CC4D33303403F30002386D /* Build configuration list for PBXNativeTarget "CBL_ObjC_Binary_Tests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				40CC4D34303403F30002386D /* Debug */,
+				40CC4D35303403F30002386D /* Debug_EE */,
+				40CC4D36303403F30002386D /* Release */,
+				40CC4D37303403F30002386D /* Release_EE */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

@@ -18,10 +18,7 @@
 //
 
 #import "CBLTestCase.h"
-
-#import "CBLBlob.h"
-#import "CBLJSON.h"
-#import "Foundation+CBL.h"
+#import "CBLJSONUtil.h"
 
 #define kDocumentTestDate @"2017-01-01T00:00:00.000Z"
 #define kDocumentTestBlob @"i'm blob"
@@ -44,7 +41,7 @@
     [doc setValue: @(1) forKey: @"one"];
     [doc setValue: @(-1) forKey: @"minus_one"];
     [doc setValue: @(1.1) forKey: @"one_dot_one"];
-    [doc setValue: [CBLJSON dateWithJSONObject: kDocumentTestDate] forKey: @"date"];
+    [doc setValue: [CBLJSONUtil dateFromJSONDateString: kDocumentTestDate] forKey: @"date"];
     [doc setValue: [NSNull null] forKey: @"null"];
     
     // Dictionary:
@@ -599,7 +596,7 @@
 - (void) testSetDate {
     CBLMutableDocument* doc = [self createDocument: @"doc1"];
     NSDate* date = [NSDate date];
-    NSString* dateStr = [CBLJSON JSONObjectWithDate: date];
+    NSString* dateStr = [CBLJSONUtil jsonDateString: date];
     Assert(dateStr.length > 0);
     [doc setValue: date forKey: @"date"];
     [doc setDate: date forKey: @"date1"];
@@ -607,76 +604,76 @@
     [self saveDocument: doc eval: ^(CBLDocument* d) {
         AssertEqualObjects([d valueForKey: @"date"], dateStr);
         AssertEqualObjects([d stringForKey: @"date"], dateStr);
-        AssertEqualObjects([CBLJSON JSONObjectWithDate: [d dateForKey: @"date"]], dateStr);
+        AssertEqualObjects([CBLJSONUtil jsonDateString: [d dateForKey: @"date"]], dateStr);
         
         AssertEqualObjects([d valueForKey: @"date1"], dateStr);
         AssertEqualObjects([d stringForKey: @"date1"], dateStr);
-        AssertEqualObjects([CBLJSON JSONObjectWithDate: [d dateForKey: @"date1"]], dateStr);
+        AssertEqualObjects([CBLJSONUtil jsonDateString: [d dateForKey: @"date1"]], dateStr);
     }];
     
     // Update:
     NSDate* nuDate = [NSDate dateWithTimeInterval: 60.0 sinceDate: date];
-    NSString* nuDateStr = [CBLJSON JSONObjectWithDate: nuDate];
+    NSString* nuDateStr = [CBLJSONUtil jsonDateString: nuDate];
     [doc setValue: nuDate forKey: @"date"];
     [doc setDate: nuDate forKey: @"date1"];
     
     [self saveDocument: doc eval: ^(CBLDocument* d) {
         AssertEqualObjects([d valueForKey: @"date"], nuDateStr);
         AssertEqualObjects([d stringForKey: @"date"], nuDateStr);
-        AssertEqualObjects([CBLJSON JSONObjectWithDate: [d dateForKey: @"date"]], nuDateStr);
+        AssertEqualObjects([CBLJSONUtil jsonDateString: [d dateForKey: @"date"]], nuDateStr);
         
         AssertEqualObjects([d valueForKey: @"date1"], nuDateStr);
         AssertEqualObjects([d stringForKey: @"date1"], nuDateStr);
-        AssertEqualObjects([CBLJSON JSONObjectWithDate: [d dateForKey: @"date1"]], nuDateStr);
+        AssertEqualObjects([CBLJSONUtil jsonDateString: [d dateForKey: @"date1"]], nuDateStr);
     }];
     
     // Get and update:
     doc = [[self.defaultCollection documentWithID: doc.id error: nil] toMutable];
     nuDate = [NSDate dateWithTimeInterval: 120.0 sinceDate: date];
-    nuDateStr = [CBLJSON JSONObjectWithDate: nuDate];
+    nuDateStr = [CBLJSONUtil jsonDateString: nuDate];
     [doc setValue: nuDate forKey: @"date"];
     [doc setDate: nuDate forKey: @"date1"];
     
     [self saveDocument: doc eval: ^(CBLDocument* d) {
         AssertEqualObjects([d valueForKey: @"date"], nuDateStr);
         AssertEqualObjects([d stringForKey: @"date"], nuDateStr);
-        AssertEqualObjects([CBLJSON JSONObjectWithDate: [d dateForKey: @"date"]], nuDateStr);
+        AssertEqualObjects([CBLJSONUtil jsonDateString: [d dateForKey: @"date"]], nuDateStr);
         
         AssertEqualObjects([d valueForKey: @"date1"], nuDateStr);
         AssertEqualObjects([d stringForKey: @"date1"], nuDateStr);
-        AssertEqualObjects([CBLJSON JSONObjectWithDate: [d dateForKey: @"date1"]], nuDateStr);
+        AssertEqualObjects([CBLJSONUtil jsonDateString: [d dateForKey: @"date1"]], nuDateStr);
     }];
 }
 
 - (void) testSetDateInsideData {
     CBLMutableDocument* doc = [self createDocument: @"doc"];
     NSDate* date = [NSDate date];
-    NSString* dateStr = [CBLJSON JSONObjectWithDate: date];
+    NSString* dateStr = [CBLJSONUtil jsonDateString: date];
     Assert(dateStr.length > 0);
     
     [doc setData: @{@"time": date}];
     [self saveDocument: doc eval: ^(CBLDocument* d) {
-        AssertEqualObjects([CBLJSON JSONObjectWithDate: [d dateForKey: @"time"]], dateStr);
+        AssertEqualObjects([CBLJSONUtil jsonDateString: [d dateForKey: @"time"]], dateStr);
     }];
     
     // Update:
     NSDate* nuDate = [NSDate dateWithTimeInterval: 60.0 sinceDate: date];
-    NSString* nuDateStr = [CBLJSON JSONObjectWithDate: nuDate];
+    NSString* nuDateStr = [CBLJSONUtil jsonDateString: nuDate];
     
     
     [doc setData: @{@"time": nuDate}];
     [self saveDocument: doc eval: ^(CBLDocument* d) {
-        AssertEqualObjects([CBLJSON JSONObjectWithDate: [d dateForKey: @"time"]], nuDateStr);
+        AssertEqualObjects([CBLJSONUtil jsonDateString: [d dateForKey: @"time"]], nuDateStr);
     }];
     
     // Get and update:
     doc = [[self.defaultCollection documentWithID: doc.id error: nil] toMutable];
     nuDate = [NSDate dateWithTimeInterval: 120.0 sinceDate: date];
-    nuDateStr = [CBLJSON JSONObjectWithDate: nuDate];
+    nuDateStr = [CBLJSONUtil jsonDateString: nuDate];
     
     [doc setData: @{@"time": nuDate}];
     [self saveDocument: doc eval: ^(CBLDocument* d) {
-        AssertEqualObjects([CBLJSON JSONObjectWithDate: [d dateForKey: @"time"]], nuDateStr);
+        AssertEqualObjects([CBLJSONUtil jsonDateString: [d dateForKey: @"time"]], nuDateStr);
     }];
 }
 
@@ -693,7 +690,7 @@
         AssertNil([d dateForKey: @"minus_one"]);
         AssertNil([d dateForKey: @"one_dot_one"]);
         AssertNotNil([d dateForKey: @"date"]);
-        AssertEqualObjects([CBLJSON JSONObjectWithDate: [d dateForKey: @"date"]], kDocumentTestDate);
+        AssertEqualObjects([CBLJSONUtil jsonDateString: [d dateForKey: @"date"]], kDocumentTestDate);
         AssertNil([d dateForKey: @"dict"]);
         AssertNil([d dateForKey: @"array"]);
         AssertNil([d dateForKey: @"blob"]);
@@ -2042,8 +2039,8 @@
     [self.defaultCollection saveDocument: mDoc error: &err];
     
     CBLDocument* doc = [self.defaultCollection documentWithID: @"doc" error: nil];
-    NSDictionary* jsonDict = [[doc toJSON] toJSONObj];
-    AssertEqualObjects(jsonDict, [json toJSONObj]);
+    NSDictionary* jsonDict = [CBLJSONUtil jsonObjectFromString: [doc toJSON]];
+    AssertEqualObjects(jsonDict, [CBLJSONUtil jsonObjectFromString: json]);
     AssertEqualObjects(jsonDict[@"name"], @"Rick Sanchez");
     AssertEqualObjects(jsonDict[@"id"], @1);
     AssertEqualObjects(jsonDict[@"isAlive"], @YES);
@@ -2062,8 +2059,8 @@
     [self saveDocument: mDoc collection: self.defaultCollection];
     
     doc = [self.defaultCollection documentWithID: @"doc" error: nil];
-    jsonDict = [[doc toJSON] toJSONObj];
-    NSMutableDictionary* mDict = [NSMutableDictionary dictionaryWithDictionary: [json toJSONObj]];
+    jsonDict = [CBLJSONUtil jsonObjectFromString: [doc toJSON]];
+    NSMutableDictionary* mDict = [NSMutableDictionary dictionaryWithDictionary: [CBLJSONUtil jsonObjectFromString: json]];
     mDict[@"newKeyAppended"] = @"newValueAppended";
     AssertEqualObjects(jsonDict, mDict);
 }
@@ -2126,11 +2123,11 @@
     
     
     [self.db saveBlob: data error: &error];
-    AssertEqualObjects([[data toJSON] toJSONObj], (@{kCBLTypeProperty: kCBLBlobType,
+    AssertEqualObjects([CBLJSONUtil jsonObjectFromString: [data toJSON]], (@{kCBLTypeProperty: kCBLBlobType,
                                                      kCBLBlobContentTypeProperty: @"text/plain",
                                                      kCBLBlobLengthProperty: @(data.length),
                                                      kCBLBlobDigestProperty: data.digest}));
-    NSDictionary* dict = [[data toJSON] toJSONObj];
+    NSDictionary* dict = [CBLJSONUtil jsonObjectFromString: [data toJSON]];
     AssertEqualObjects(dict[kCBLTypeProperty], kCBLBlobType);
     AssertEqualObjects(dict[kCBLBlobContentTypeProperty], @"text/plain");
     AssertEqualObjects(dict[kCBLBlobLengthProperty], @(data.length));

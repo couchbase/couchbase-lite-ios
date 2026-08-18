@@ -17,7 +17,9 @@
 //
 
 #import "CBLTestCase.h"
+#ifndef CBL_BINARY_TEST
 #import "CBLCoreMLPredictiveModel+Internal.h"
+#endif
 
 @interface PredictiveQueryWithCoreMLTest : CBLTestCase
 
@@ -242,6 +244,57 @@
     [CBLDatabase.prediction unregisterModelWithName: @"OpenFace"];
 }
 
+// Note: Download MobileNet.mlmodel from https://developer.apple.com/documentation/vision/classifying_images_with_vision_and_core_ml
+// and put it at Objective-C/Tests/Support/mlmodels/MobileNet
+- (void) testInputOutputTransformer {
+    CBLCoreMLPredictiveModel* model = [self model: @"MobileNet/MobileNet" mustExist: NO];
+    if (!model)
+        return;
+    
+    model.inputTransformer = ^CBLDictionary*(CBLDictionary *input) {
+        CBLMutableDictionary* transformed = [[CBLMutableDictionary alloc] init];
+        [transformed setValue: [input valueForKey: @"photo"] forKey: @"image"];
+        return transformed;
+    };
+    
+    model.outputTransformer = ^CBLDictionary*(CBLDictionary *output) {
+        if (output) {
+            CBLMutableDictionary* transformed = [[CBLMutableDictionary alloc] init];
+            NSString* label = [output valueForKey: @"classLabel"];
+            [transformed setValue: label forKey: @"label"];
+            
+            CBLDictionary* probs = [output valueForKey: @"classLabelProbs"];
+            [transformed setValue: [probs valueForKey: label] forKey: @"prob"];
+            return transformed;
+        }
+        return output;
+    };
+    [CBLDatabase.prediction registerModel: model withName: @"MobileNet"];
+    
+    [self createDocumentWithImageAtPath: @"mlmodels/MobileNet/cat.jpg"];
+    
+    NSDictionary* input = @{ @"photo": EXPR_PROP(@"image") };
+    CBLQuery *q = [CBLQueryBuilder select: @[SEL_EXPR(PREDICTION(@"MobileNet", EXPR_VAL(input)))]
+                                     from: kDATA_SRC_DB];
+    uint64_t numRows = [self verifyQuery: q randomAccess: NO
+                                    test: ^(uint64_t n, CBLQueryResult *r)
+    {
+        CBLDictionary* pred = [r dictionaryAtIndex: 0];
+        NSString* label = [[pred stringForKey: @"label"] lowercaseString];
+        Assert([label rangeOfString: @"cat"].location != NSNotFound);
+        Assert([pred doubleForKey: @"prob"] > 0.0);
+    }];
+    AssertEqual(numRows, 1);
+    
+    [CBLDatabase.prediction unregisterModelWithName: @"MobileNet"];
+}
+
+#pragma mark - Internal
+
+// White-box tests of the internal CoreML conversion helpers; excluded from
+// the binary tests.
+#ifndef CBL_BINARY_TEST
+
 - (void) testBasicDataConversion {
     NSDictionary* dictData = @{@"name": @"Daniel", @"number": @(1)};
     CBLMutableDictionary* dict = [[CBLMutableDictionary alloc] initWithData: dictData];
@@ -355,50 +408,7 @@
     AssertEqualObjects(blob2.contentType, @"image/png");
 }
 
-// Note: Download MobileNet.mlmodel from https://developer.apple.com/documentation/vision/classifying_images_with_vision_and_core_ml
-// and put it at Objective-C/Tests/Support/mlmodels/MobileNet
-- (void) testInputOutputTransformer {
-    CBLCoreMLPredictiveModel* model = [self model: @"MobileNet/MobileNet" mustExist: NO];
-    if (!model)
-        return;
-    
-    model.inputTransformer = ^CBLDictionary*(CBLDictionary *input) {
-        CBLMutableDictionary* transformed = [[CBLMutableDictionary alloc] init];
-        [transformed setValue: [input valueForKey: @"photo"] forKey: @"image"];
-        return transformed;
-    };
-    
-    model.outputTransformer = ^CBLDictionary*(CBLDictionary *output) {
-        if (output) {
-            CBLMutableDictionary* transformed = [[CBLMutableDictionary alloc] init];
-            NSString* label = [output valueForKey: @"classLabel"];
-            [transformed setValue: label forKey: @"label"];
-            
-            CBLDictionary* probs = [output valueForKey: @"classLabelProbs"];
-            [transformed setValue: [probs valueForKey: label] forKey: @"prob"];
-            return transformed;
-        }
-        return output;
-    };
-    [CBLDatabase.prediction registerModel: model withName: @"MobileNet"];
-    
-    [self createDocumentWithImageAtPath: @"mlmodels/MobileNet/cat.jpg"];
-    
-    NSDictionary* input = @{ @"photo": EXPR_PROP(@"image") };
-    CBLQuery *q = [CBLQueryBuilder select: @[SEL_EXPR(PREDICTION(@"MobileNet", EXPR_VAL(input)))]
-                                     from: kDATA_SRC_DB];
-    uint64_t numRows = [self verifyQuery: q randomAccess: NO
-                                    test: ^(uint64_t n, CBLQueryResult *r)
-    {
-        CBLDictionary* pred = [r dictionaryAtIndex: 0];
-        NSString* label = [[pred stringForKey: @"label"] lowercaseString];
-        Assert([label rangeOfString: @"cat"].location != NSNotFound);
-        Assert([pred doubleForKey: @"prob"] > 0.0);
-    }];
-    AssertEqual(numRows, 1);
-    
-    [CBLDatabase.prediction unregisterModelWithName: @"MobileNet"];
-}
+#endif
 
 #pragma clang diagnostic pop
 

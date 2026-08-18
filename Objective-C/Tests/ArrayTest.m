@@ -18,8 +18,7 @@
 //
 
 #import "CBLTestCase.h"
-#import "CBLJSON.h"
-#import "Foundation+CBL.h"
+#import "CBLJSONUtil.h"
 
 #define kArrayTestDate @"2017-01-01T00:00:00.000Z"
 #define kArrayTestBlob @"i'm blob"
@@ -43,7 +42,7 @@
     [array addObject: @(1)];
     [array addObject: @(-1)];
     [array addObject: @(1.1)];
-    [array addObject: [CBLJSON dateWithJSONObject: kArrayTestDate]];
+    [array addObject: [CBLJSONUtil dateFromJSONDateString: kArrayTestDate]];
     [array addObject: [NSNull null]];
     
     CBLMutableDictionary* dict = [[CBLMutableDictionary alloc] init];
@@ -840,7 +839,7 @@
         AssertNil([a dateAtIndex: 4]);
         AssertNil([a dateAtIndex: 5]);
         AssertNil([a dateAtIndex: 6]);
-        AssertEqualObjects([CBLJSON JSONObjectWithDate: [a dateAtIndex: 7]], kArrayTestDate);
+        AssertEqualObjects([CBLJSONUtil jsonDateString: [a dateAtIndex: 7]], kArrayTestDate);
         AssertNil([a dateAtIndex: 8]);
         AssertNil([a dateAtIndex: 9]);
         AssertNil([a dateAtIndex: 10]);
@@ -1085,7 +1084,7 @@
     CBLDocument* retrivedDoc = [self.defaultCollection documentWithID: @"doc" error: nil];
     CBLArray* a = [retrivedDoc arrayForKey: @"array"];
     AssertEqual(a.count, 2);
-    AssertEqualObjects([[a toJSON] toJSONObj], [json toJSONObj]);
+    AssertEqualObjects([CBLJSONUtil jsonObjectFromString: [a toJSON]], [CBLJSONUtil jsonObjectFromString: json]);
 }
 
 - (void) testGetBlobContentFromMutableObject {

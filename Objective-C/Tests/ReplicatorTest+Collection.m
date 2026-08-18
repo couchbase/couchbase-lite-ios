@@ -18,8 +18,6 @@
 //
 
 #import "ReplicatorTest.h"
-#import "CBLReplicator+Internal.h"
-#import "CBLCollectionConfiguration+Internal.h"
 
 @interface ReplicatorTest_Collection : ReplicatorTest
 
@@ -99,13 +97,14 @@
     id filter1 = ^BOOL(CBLDocument* d, CBLDocumentFlags f) { return YES; };
     id filter2 = ^BOOL(CBLDocument* d, CBLDocumentFlags f) { return YES; };
     
-    NSArray<CBLCollectionConfiguration*>* colConfigs = [CBLCollectionConfiguration fromCollections: @[col1a, col1b] config:^(CBLCollectionConfiguration* config) {
-        config.conflictResolver = resolver;
-        config.pushFilter = filter1;
-        config.pullFilter = filter2;
-        config.channels = @[@"channel1", @"channel2", @"channel3"];
-        config.documentIDs = @[@"docID1", @"docID2"];
-    }];
+    NSArray<CBLCollectionConfiguration*>* colConfigs = [CBLCollectionConfiguration fromCollections: @[col1a, col1b]];
+    for (CBLCollectionConfiguration* colConfig in colConfigs) {
+        colConfig.conflictResolver = resolver;
+        colConfig.pushFilter = filter1;
+        colConfig.pullFilter = filter2;
+        colConfig.channels = @[@"channel1", @"channel2", @"channel3"];
+        colConfig.documentIDs = @[@"docID1", @"docID2"];
+    }
     
     CBLReplicatorConfiguration* config = [[CBLReplicatorConfiguration alloc] initWithCollections: colConfigs
                                                                                           target: endpoint];

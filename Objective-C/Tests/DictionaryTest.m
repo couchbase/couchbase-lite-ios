@@ -18,8 +18,7 @@
 //
 
 #import "CBLTestCase.h"
-#import "CBLJSON.h"
-#import "Foundation+CBL.h"
+#import "CBLJSONUtil.h"
 
 @interface DictionaryTest : CBLTestCase
 
@@ -364,8 +363,8 @@
     [self saveDocument: mDoc collection: self.defaultCollection];
     CBLDocument* doc = [self.defaultCollection documentWithID: @"doc" error: &error];
     CBLDictionary* dict = [doc dictionaryForKey: @"dict"];
-    NSDictionary* jsonDict = [[dict toJSON] toJSONObj];
-    AssertEqualObjects(jsonDict, [json toJSONObj]);
+    NSDictionary* jsonDict = [CBLJSONUtil jsonObjectFromString: [dict toJSON]];
+    AssertEqualObjects(jsonDict, [CBLJSONUtil jsonObjectFromString: json]);
     AssertEqualObjects(jsonDict[@"name"], @"Rick Sanchez");
     AssertEqualObjects(jsonDict[@"id"], @1);
     AssertEqualObjects(jsonDict[@"isAlive"], @YES);
@@ -386,9 +385,9 @@
     
     doc = [self.defaultCollection documentWithID: @"doc" error: &error];
     dict = [doc dictionaryForKey: @"dict"];
-    NSMutableDictionary* appendedDict = [NSMutableDictionary dictionaryWithDictionary: [json toJSONObj]];
+    NSMutableDictionary* appendedDict = [NSMutableDictionary dictionaryWithDictionary: [CBLJSONUtil jsonObjectFromString: json]];
     appendedDict[@"newKeyAppended"] = @"newValueAppended";
-    AssertEqualObjects([[dict toJSON] toJSONObj], appendedDict);
+    AssertEqualObjects([CBLJSONUtil jsonObjectFromString: [dict toJSON]], appendedDict);
 }
 
 - (void) testUnsavedMutableDictionaryToJSON {
