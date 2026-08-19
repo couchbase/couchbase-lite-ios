@@ -22,15 +22,8 @@ jobs:
         uses: actions/checkout@v2
         with: 
           submodules: recursive
-      - name: "Select-iOS-Simulator"
-        run: |
-          sudo xcode-select -s "/Applications/Xcode_16.4.app"
-          device=`xcrun xctrace list devices 2>&1 | grep -oE 'iPhone.*?[^\(]+' | head -1 | sed 's/Simulator//g' | awk '{$1=$1;print}'`
-          echo $device | cat >device
-          echo "Selected the device : ${device}"
       - name: "Build-for-testing"
         env:
           SCHEME: ${{ matrix.scheme }}
         run: |
-          DEVICE=$(cat device)
-          xcodebuild build-for-testing -scheme "${SCHEME}" -project CouchbaseLite.xcodeproj  -destination "platform=iOS Simulator,name=${DEVICE}"
+          xcodebuild build-for-testing -scheme "${SCHEME}" -project CouchbaseLite.xcodeproj  -destination "generic/platform=iOS Simulator"
