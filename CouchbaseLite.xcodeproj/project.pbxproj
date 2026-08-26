@@ -391,8 +391,6 @@
 		406F8E002C27F0AB000223FC /* VectorSearchTest+Lazy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 406F8DFC2C27F097000223FC /* VectorSearchTest+Lazy.swift */; };
 		40815F9A2F0F2279004D8590 /* CBLMultipeerTransportTypes.h in Headers */ = {isa = PBXBuildFile; fileRef = 40815F992F0F2279004D8590 /* CBLMultipeerTransportTypes.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		40815F9B2F0F2279004D8590 /* CBLMultipeerTransportTypes.h in Headers */ = {isa = PBXBuildFile; fileRef = 40815F992F0F2279004D8590 /* CBLMultipeerTransportTypes.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		40815FB42F1058C3004D8590 /* CoreBluetooth.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 40815FB32F1058C3004D8590 /* CoreBluetooth.framework */; };
-		40815FB52F1058CB004D8590 /* CoreBluetooth.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 40815FB32F1058C3004D8590 /* CoreBluetooth.framework */; };
 		409389E92D4AB81700691393 /* LogSinks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 409389E82D4AB81700691393 /* LogSinks.swift */; };
 		409389EA2D4AB81700691393 /* LogSinks.swift in Sources */ = {isa = PBXBuildFile; fileRef = 409389E82D4AB81700691393 /* LogSinks.swift */; };
 		409389EC2D4AB8B500691393 /* ConsoleLogSink.swift in Sources */ = {isa = PBXBuildFile; fileRef = 409389EB2D4AB8B500691393 /* ConsoleLogSink.swift */; };
@@ -3066,7 +3064,6 @@
 				9343EF8E207D611600F19A89 /* libz.tbd in Frameworks */,
 				9343EF8F207D611600F19A89 /* libLiteCore-static.a in Frameworks */,
 				939C5E68244FC7DE007CEBAC /* libLiteCoreWebSocket.a in Frameworks */,
-				40815FB42F1058C3004D8590 /* CoreBluetooth.framework in Frameworks */,
 				93A4F2452221058500257423 /* CoreImage.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -3079,7 +3076,6 @@
 				9343F0B3207D61AB00F19A89 /* libLiteCore-static.a in Frameworks */,
 				93249D7B246B6EB0000A8A6E /* libLiteCoreWebSocket.a in Frameworks */,
 				9343F0B2207D61AB00F19A89 /* libz.tbd in Frameworks */,
-				40815FB52F1058CB004D8590 /* CoreBluetooth.framework in Frameworks */,
 				93A4F2462221059500257423 /* CoreImage.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
