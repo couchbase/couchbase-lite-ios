@@ -18,7 +18,7 @@
 //
 
 import XCTest
-@testable import CouchbaseLiteSwift
+import CouchbaseLiteSwift
 
 class QueryTest_Collection: QueryTest {
     override func setUpWithError() throws {

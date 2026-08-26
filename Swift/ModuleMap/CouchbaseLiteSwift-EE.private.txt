@@ -39,7 +39,6 @@
     header "CBLTLSIdentity.h"
     header "CBLTLSIdentity+Swift.h"
     header "CBLURLEndpointListener.h"
-    header "CBLURLEndpointListener+Swift.h"
     header "CBLURLEndpointListenerConfiguration.h"
     header "CBLVectorEncoding.h"
     header "CBLVectorIndexConfiguration.h"

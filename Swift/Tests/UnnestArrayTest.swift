@@ -17,7 +17,13 @@
 //
 
 import XCTest
+// The internal-API assertions below (spec-marked internal steps) need @testable access;
+// the binary tests compile against a shipped framework, which does not support testability.
+#if CBL_BINARY_TEST
+import CouchbaseLiteSwift
+#else
 @testable import CouchbaseLiteSwift
+#endif
 
 /// Test Spec v1.0.1:
 /// https://github.com/couchbaselabs/couchbase-lite-api/blob/master/spec/tests/T0004-Unnest-Array-Index.md
@@ -57,9 +63,14 @@ class UnnestArrayTest: CBLTestCase {
         try loadJSONResource("profiles_100", collection: profiles)
         let config = ArrayIndexConfiguration(path: "contacts")
         try profiles.createIndex(withName: "contacts", config: config)
+        XCTAssertEqual(try profiles.indexes(), ["contacts"])
+
+        // Step 5 uses an internal API to verify the index info:
+        #if !CBL_BINARY_TEST
         let indexes = try profiles.indexesInfo()
         XCTAssertEqual(indexes!.count, 1)
         XCTAssertEqual(indexes![0]["expr"] as! String, "")
+        #endif
     }
     
     /// 3. TestCreateArrayIndexWithPathAndExpressions
@@ -78,8 +89,13 @@ class UnnestArrayTest: CBLTestCase {
         try loadJSONResource("profiles_100", collection: profiles)
         let config = ArrayIndexConfiguration(path: "contacts",expressions: ["address.city", "address.state"])
         try profiles.createIndex(withName: "contacts", config: config)
+        XCTAssertEqual(try profiles.indexes(), ["contacts"])
+
+        // Step 5 uses an internal API to verify the index info:
+        #if !CBL_BINARY_TEST
         let indexes = try profiles.indexesInfo()
         XCTAssertEqual(indexes!.count, 1)
         XCTAssertEqual(indexes![0]["expr"] as! String, "address.city,address.state")
+        #endif
     }
 }

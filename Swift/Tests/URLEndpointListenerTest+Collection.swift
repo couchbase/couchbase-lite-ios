@@ -18,7 +18,7 @@
 //
 
 import XCTest
-@testable import CouchbaseLiteSwift
+import CouchbaseLiteSwift
 
 class URLEndpointListenerTest_Collection: URLEndpointListenerTest {
     override func setUpWithError() throws {
@@ -30,7 +30,7 @@ class URLEndpointListenerTest_Collection: URLEndpointListenerTest {
     }
     
     func testCollectionsSingleShotPushPullReplication() throws {
-        if !self.keyChainAccessAllowed { return }
+        try XCTSkipUnless(self.keyChainAccessAllowed)
         
         let col1a = try self.db.createCollection(name: "colA", scope: "scopeA")
         let col1b = try self.db.createCollection(name: "colB", scope: "scopeA")
@@ -62,7 +62,7 @@ class URLEndpointListenerTest_Collection: URLEndpointListenerTest {
     }
     
     func testCollectionsContinuousPushPullReplication() throws {
-        if !self.keyChainAccessAllowed { return }
+        try XCTSkipUnless(self.keyChainAccessAllowed)
         
         let col1a = try self.db.createCollection(name: "colA", scope: "scopeA")
         let col1b = try self.db.createCollection(name: "colB", scope: "scopeA")
@@ -95,7 +95,7 @@ class URLEndpointListenerTest_Collection: URLEndpointListenerTest {
     }
     
     func testMismatchedCollectionReplication() throws {
-        if !self.keyChainAccessAllowed { return }
+        try XCTSkipUnless(self.keyChainAccessAllowed)
         
         let col1a = try self.db.createCollection(name: "colA", scope: "scopeA")
         let col2b = try otherDB!.createCollection(name: "colB", scope: "scopeA")

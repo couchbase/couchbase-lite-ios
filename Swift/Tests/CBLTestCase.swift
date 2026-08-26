@@ -19,7 +19,7 @@
 
 import XCTest
 import Foundation
-@testable import CouchbaseLiteSwift
+import CouchbaseLiteSwift
 
 extension String {
     func toJSONObj() -> Any {

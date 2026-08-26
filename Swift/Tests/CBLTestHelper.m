@@ -19,25 +19,45 @@
 
 #import "CBLTestHelper.h"
 
+#ifndef CBL_BINARY_TEST
+#import <stdatomic.h>
+extern atomic_int gC4ExpectExceptions;
+// Marks a scope that intentionally provokes exceptions, so that LiteCore's
+// exception diagnostics don't flag them. No-op when testing a binary framework.
+#define CBLExpectExceptionsBegin() ((void)++gC4ExpectExceptions)
+#define CBLExpectExceptionsEnd()   ((void)--gC4ExpectExceptions)
+#else
+#define CBLExpectExceptionsBegin()
+#define CBLExpectExceptionsEnd()
+#endif
+
 @implementation CBLTestHelper
 
 + (void) allowExceptionIn: (void (^)(void))block {
-    ++gC4ExpectExceptions;
-    block();
-    --gC4ExpectExceptions;
+    CBLExpectExceptionsBegin();
+    @try {
+        block();
+    }
+    @finally {
+        CBLExpectExceptionsEnd();
+    }
 }
 
 + (BOOL) catchException: (void(^)(void))tryBlock error: (NSError **)error {
+    CBLExpectExceptionsBegin();
     @try {
-        ++gC4ExpectExceptions;
         tryBlock();
-        --gC4ExpectExceptions;
         return YES;
     }
     @catch (NSException *exception) {
-        *error = [[NSError alloc] initWithDomain: exception.name code: 0
-                                        userInfo: exception.userInfo];
+        if (error) {
+            *error = [[NSError alloc] initWithDomain: exception.name code: 0
+                                            userInfo: exception.userInfo];
+        }
         return NO;
+    }
+    @finally {
+        CBLExpectExceptionsEnd();
     }
 }
 

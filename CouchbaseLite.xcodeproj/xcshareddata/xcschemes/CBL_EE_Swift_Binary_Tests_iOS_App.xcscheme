@@ -29,9 +29,9 @@
             buildForAnalyzing = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "40CC4B7F302C2FF90002386D"
-               BuildableName = "CouchbaseLiteBinaryTests.xctest"
-               BlueprintName = "CBL_EE_ObjC_Binary_Tests"
+               BlueprintIdentifier = "40E92C11303E4282005C088C"
+               BuildableName = "CouchbaseLiteSwiftBinaryTests.xctest"
+               BlueprintName = "CBL_EE_Swift_Binary_Tests"
                ReferencedContainer = "container:CouchbaseLite.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -48,9 +48,9 @@
             skipped = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "40CC4B7F302C2FF90002386D"
-               BuildableName = "CouchbaseLiteBinaryTests.xctest"
-               BlueprintName = "CBL_EE_ObjC_Binary_Tests"
+               BlueprintIdentifier = "40E92C11303E4282005C088C"
+               BuildableName = "CouchbaseLiteSwiftBinaryTests.xctest"
+               BlueprintName = "CBL_EE_Swift_Binary_Tests"
                ReferencedContainer = "container:CouchbaseLite.xcodeproj">
             </BuildableReference>
          </TestableReference>

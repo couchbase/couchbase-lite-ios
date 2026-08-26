@@ -17,7 +17,7 @@
 //
 
 import XCTest
-@testable import CouchbaseLiteSwift
+import CouchbaseLiteSwift
 
 ///
 /// Test Spec :

@@ -17,7 +17,7 @@
 //
 
 import XCTest
-@testable import CouchbaseLiteSwift
+import CouchbaseLiteSwift
 
 class URLEndpointListenerTest: ReplicatorTest {
     let wsPort: UInt16 = 4084
@@ -59,16 +59,103 @@ class URLEndpointListenerTest: ReplicatorTest {
     
     func stopListener(listener: URLEndpointListener? = nil) throws {
         let l = listener ?? self.listener
-        
         l?.stop()
-        if let id = l?.tlsIdentity {
-            try id.deleteFromKeyChain()
+    }
+
+    // MARK: Keychain cleanup helpers
+
+    /// The common name of the anonymous identities that the listener creates when started
+    /// without an identity. Discovered once per test process from a certificate the product
+    /// mints, rather than hardcoded, so the tests neither state the product's common name
+    /// nor drift from it.
+    private static var discoveredAnonymousIdentityCommonName: String?
+
+    func anonymousIdentityCommonName() -> String? {
+        if let name = Self.discoveredAnonymousIdentityCommonName { return name }
+        if !self.keyChainAccessAllowed { return nil }
+
+        // Start a TLS listener without an identity on an ephemeral port; the product
+        // mints an anonymous identity whose certificate carries the common name:
+        let config = URLEndpointListenerConfiguration(collections: [self.otherDB_defaultCollection!])
+        let listener = URLEndpointListener(config: config)
+        guard (try? listener.start()) != nil else { return nil }
+        defer { listener.stop() }
+
+        guard let cert = listener.tlsIdentity?.certs.first else { return nil }
+        let name = SecCertificateCopySubjectSummary(cert) as String?
+        Self.discoveredAnonymousIdentityCommonName = name
+        return name
+    }
+
+    func cleanUpTLSIdentity(isServer: Bool) {
+        if !self.keyChainAccessAllowed { return }
+
+        // Delete directly from the keychain by label so that partial identities
+        // (e.g. a leftover certificate without its key) get cleaned up as well:
+        let label = isServer ? serverCertLabel : clientCertLabel
+        for itemClass in [kSecClassIdentity, kSecClassCertificate] {
+            let query: [CFString: Any] = [kSecClass: itemClass,
+                                          kSecAttrLabel: label]
+            let status = SecItemDelete(query as CFDictionary)
+            XCTAssert(status == errSecSuccess || status == errSecItemNotFound || status == errSecInvalidItemRef ||
+                      status == errSecWrPerm /* items in a keychain that tests cannot modify (e.g. Local Items) */,
+                      "Couldn't delete keychain items with label \(label) (OSStatus = \(status))")
         }
     }
-    
-    func cleanUpIdentities() throws {
-        self.ignoreException {
-            try URLEndpointListener.deleteAnonymousIdentities()
+
+    func cleanUpAnonymousIdentities() {
+        if !self.keyChainAccessAllowed { return }
+        guard let anonymousIdentityCommonName = anonymousIdentityCommonName() else { return }
+
+        var query: [CFString: Any] = [kSecClass: kSecClassIdentity,
+                                      kSecMatchLimit: kSecMatchLimitAll,
+                                      kSecReturnRef: true]
+        var result: CFTypeRef?
+        var status = SecItemCopyMatching(query as CFDictionary, &result)
+        if status != errSecItemNotFound {
+            guard status == errSecSuccess, let identities = result as? [SecIdentity] else {
+                XCTFail("Cannot query identities (OSStatus = \(status))")
+                return
+            }
+            for identity in identities {
+                var certRef: SecCertificate?
+                guard SecIdentityCopyCertificate(identity, &certRef) == errSecSuccess, let cert = certRef else {
+                    continue
+                }
+                let name = SecCertificateCopySubjectSummary(cert) as String?
+                if name == anonymousIdentityCommonName {
+                    let del: [CFString: Any] = [kSecClass: kSecClassIdentity,
+                                                kSecValueRef: identity]
+                    status = SecItemDelete(del as CFDictionary)
+                    XCTAssert(status == errSecSuccess || status == errSecItemNotFound || status == errSecInvalidItemRef,
+                              "Cannot delete anonymous identity (OSStatus = \(status))")
+                }
+            }
+        }
+
+        // Deleting an identity doesn't remove its certificate; sweep the anonymous
+        // certificates (including any orphaned by previously interrupted test runs):
+        query = [kSecClass: kSecClassCertificate,
+                 kSecMatchLimit: kSecMatchLimitAll,
+                 kSecReturnRef: true]
+        result = nil
+        status = SecItemCopyMatching(query as CFDictionary, &result)
+        if status == errSecItemNotFound {
+            return
+        }
+        guard status == errSecSuccess, let certs = result as? [SecCertificate] else {
+            XCTFail("Cannot query certificates (OSStatus = \(status))")
+            return
+        }
+        for cert in certs {
+            let name = SecCertificateCopySubjectSummary(cert) as String?
+            if name == anonymousIdentityCommonName {
+                let del: [CFString: Any] = [kSecClass: kSecClassCertificate,
+                                            kSecValueRef: cert]
+                status = SecItemDelete(del as CFDictionary)
+                XCTAssert(status == errSecSuccess || status == errSecItemNotFound || status == errSecInvalidItemRef,
+                          "Cannot delete anonymous certificate (OSStatus = \(status))")
+            }
         }
     }
     
@@ -78,9 +165,9 @@ class URLEndpointListenerTest: ReplicatorTest {
         if !self.keyChainAccessAllowed { return nil }
         
         let label = isServer ? serverCertLabel : clientCertLabel
-        
-        // cleanup client cert authenticator identity
-        try TLSIdentity.deleteIdentity(withLabel: label)
+
+        // Cleanup:
+        cleanUpTLSIdentity(isServer: isServer)
         
         // Create client identity:
         let attrs = [certAttrCommonName: isServer ? "CBL-Server" : "daniel"]
@@ -118,12 +205,14 @@ class URLEndpointListenerTest: ReplicatorTest {
     
     override func setUp() {
         super.setUp()
-        try! cleanUpIdentities()
+        cleanUpAnonymousIdentities()
     }
-    
+
     override func tearDown() {
         try! stopListener()
-        try! cleanUpIdentities()
+        cleanUpAnonymousIdentities()
+        cleanUpTLSIdentity(isServer: true)
+        cleanUpTLSIdentity(isServer: false)
         super.tearDown()
     }
 }
@@ -215,7 +304,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
     }
     
     func validateActiveReplicationsAndURLEndpointListener(isDeleteDBs: Bool) throws {
-        if !self.keyChainAccessAllowed { return }
+        try XCTSkipUnless(self.keyChainAccessAllowed)
         
         let idleExp1 = allowOverfillExpectation(description: "replicator#1 idle")
         let idleExp2 = allowOverfillExpectation(description: "replicator#2 idle")
@@ -276,7 +365,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
     }
     
     func validateActiveReplicatorAndURLEndpointListeners(isDeleteDB: Bool) throws {
-        if !self.keyChainAccessAllowed { return }
+        try XCTSkipUnless(self.keyChainAccessAllowed)
         
         let idleExp = allowOverfillExpectation(description: "replicator idle")
         let stopExp = expectation(description: "replicator stop")
@@ -326,7 +415,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
     // MARK: -- Tests
     
     func testPort() throws {
-        if !self.keyChainAccessAllowed { return }
+        try XCTSkipUnless(self.keyChainAccessAllowed)
         
         var config = URLEndpointListenerConfiguration(collections: [self.otherDB_defaultCollection!])
         config.port = wsPort
@@ -342,7 +431,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
     }
     
     func testEmptyPort() throws {
-        if !self.keyChainAccessAllowed { return }
+        try XCTSkipUnless(self.keyChainAccessAllowed)
         
         let config = URLEndpointListenerConfiguration(collections: [self.otherDB_defaultCollection!])
         self.listener = URLEndpointListener(config: config)
@@ -357,7 +446,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
     }
     
     func testBusyPort() throws {
-        if !self.keyChainAccessAllowed { return }
+        try XCTSkipUnless(self.keyChainAccessAllowed)
         
         try startListener()
         
@@ -371,7 +460,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
     }
     
     func testURLs() throws {
-        if !self.keyChainAccessAllowed { return }
+        try XCTSkipUnless(self.keyChainAccessAllowed)
         
         var config = URLEndpointListenerConfiguration(collections: [self.otherDB_defaultCollection!])
         config.port = wsPort
@@ -387,7 +476,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
     }
     
     func testTLSListenerAnonymousIdentity() throws {
-        if !self.keyChainAccessAllowed { return }
+        try XCTSkipUnless(self.keyChainAccessAllowed)
         
         let doc = createDocument("doc-1")
         try self.otherDB_defaultCollection!.save(document: doc)
@@ -430,9 +519,67 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
         XCTAssertNil(listener.tlsIdentity)
         try TLSIdentity.deleteIdentity(withLabel: serverCertLabel)
     }
-    
+
+    func testCleanUpAnonymousIdentities() throws {
+        try XCTSkipUnless(self.keyChainAccessAllowed)
+
+        // The cleanup helpers sweep by the common name discovered from a certificate
+        // that the product mints; the discovery must succeed for the cleanup to work:
+        let commonName = try XCTUnwrap(anonymousIdentityCommonName())
+
+        // Starting a TLS listener without an identity creates an anonymous identity:
+        let config = URLEndpointListenerConfiguration(collections: [self.otherDB_defaultCollection!])
+        try startListener(withConfig: config)
+        let identity = try XCTUnwrap(self.listener!.tlsIdentity)
+
+        // The discovered name must match the certificate of an independently created
+        // anonymous identity:
+        XCTAssertEqual(SecCertificateCopySubjectSummary(identity.certs[0]) as String?, commonName)
+
+        try stopListener()
+
+        // The identity created above must be found by the discovered name; this guards
+        // against the zero-count checks below passing vacuously with a wrong name:
+        XCTAssertGreaterThan(keychainItemCount(kSecClassIdentity, commonName: commonName), 0)
+
+        cleanUpAnonymousIdentities()
+
+        // No anonymous identities nor certificates should be left in the keychain:
+        XCTAssertEqual(keychainItemCount(kSecClassIdentity, commonName: commonName), 0)
+        XCTAssertEqual(keychainItemCount(kSecClassCertificate, commonName: commonName), 0)
+    }
+
+    func keychainItemCount(_ itemClass: CFString, commonName: String) -> Int {
+        let query: [CFString: Any] = [kSecClass: itemClass,
+                                      kSecMatchLimit: kSecMatchLimitAll,
+                                      kSecReturnRef: true]
+        var result: CFTypeRef?
+        let status = SecItemCopyMatching(query as CFDictionary, &result)
+        if status == errSecItemNotFound { return 0 }
+        guard status == errSecSuccess, let items = result as? [AnyObject] else {
+            XCTFail("Cannot query keychain items (OSStatus = \(status))")
+            return 0
+        }
+
+        var count = 0
+        for item in items {
+            var certRef: SecCertificate?
+            if itemClass == kSecClassIdentity {
+                guard SecIdentityCopyCertificate(item as! SecIdentity, &certRef) == errSecSuccess,
+                      certRef != nil else { continue }
+            } else {
+                certRef = (item as! SecCertificate)
+            }
+            let name = SecCertificateCopySubjectSummary(certRef!) as String?
+            if name == commonName {
+                count += 1
+            }
+        }
+        return count
+    }
+
     func testTLSListenerUserIdentity() throws {
-        if !self.keyChainAccessAllowed { return }
+        try XCTSkipUnless(self.keyChainAccessAllowed)
         
         let doc = createDocument("doc-1")
         try self.otherDB_defaultCollection!.save(document: doc)
@@ -478,7 +625,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
     }
     
     func testNonTLSNullListenerAuthenticator() throws {
-        if !self.keyChainAccessAllowed { return }
+        try XCTSkipUnless(self.keyChainAccessAllowed)
         
         let listener = try startListener(tls: false)
         XCTAssertNil(listener.tlsIdentity)
@@ -500,7 +647,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
     }
        
     func testNonTLSPasswordListenerAuthenticator() throws {
-        if !self.keyChainAccessAllowed { return }
+        try XCTSkipUnless(self.keyChainAccessAllowed)
         
         // Listener:
         let listenerAuth = ListenerPasswordAuthenticator.init {
@@ -540,7 +687,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
     }
     
     func testClientCertAuthWithCallback() throws {
-        if !self.keyChainAccessAllowed { return }
+        try XCTSkipUnless(self.keyChainAccessAllowed)
         
         // Listener:
         let listenerAuth = ListenerCertificateAuthenticator.init { (certs) -> Bool in
@@ -567,7 +714,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
     }
     
     func testClientCertAuthWithCallbackError() throws {
-        if !self.keyChainAccessAllowed { return }
+        try XCTSkipUnless(self.keyChainAccessAllowed)
         
         // Listener:
         let listenerAuth = ListenerCertificateAuthenticator.init { (certs) -> Bool in
@@ -593,7 +740,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
         try XCTSkipIf(true, "CBL-7005 : importIdentityWithData not working on newer macOS")
         #endif
         
-        if !self.keyChainAccessAllowed { return }
+        try XCTSkipUnless(self.keyChainAccessAllowed)
         
         // Root Cert:
         let rootCertData = try dataFromResource(name: "identity/client-ca", ofType: "der")
@@ -624,7 +771,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
     }
     
     func testClientCertAuthWithRootCertsError() throws {
-        if !self.keyChainAccessAllowed { return }
+        try XCTSkipUnless(self.keyChainAccessAllowed)
         
         // Root Cert:
         let rootCertData = try dataFromResource(name: "identity/client-ca", ofType: "der")
@@ -649,7 +796,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
     }
     
     func testConnectionStatus() throws {
-        if !self.keyChainAccessAllowed { return }
+        try XCTSkipUnless(self.keyChainAccessAllowed)
         
         let replicatorStop = expectation(description: "replicator stop")
         let pullFilterBusy = expectation(description: "pull filter busy")
@@ -705,7 +852,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
     }
     
     func testMultipleListenersOnSameDatabase() throws {
-        if !self.keyChainAccessAllowed { return }
+        try XCTSkipUnless(self.keyChainAccessAllowed)
         
         let config = URLEndpointListenerConfiguration(collections: [self.otherDB_defaultCollection!])
         let listener1 = URLEndpointListener(config: config)
@@ -728,7 +875,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
     }
     
     func testCloseWithActiveListener() throws {
-        if !self.keyChainAccessAllowed { return }
+        try XCTSkipUnless(self.keyChainAccessAllowed)
         
         try startListener()
         
@@ -745,7 +892,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
     func testEmptyNetworkInterface() throws {
         try XCTSkipIf(true, "Not applicable test on some network environment")
         
-        if !self.keyChainAccessAllowed { return }
+        try XCTSkipUnless(self.keyChainAccessAllowed)
         
         try startListener()
         let urls = self.listener!.urls!
@@ -789,7 +936,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
     }
     
     func testMultipleReplicatorsToListener() throws {
-        if !self.keyChainAccessAllowed { return }
+        try XCTSkipUnless(self.keyChainAccessAllowed)
         
         try startListener()
         
@@ -804,7 +951,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
     }
     
     func testMultipleReplicatorsToReadOnlyListener() throws {
-        if !self.keyChainAccessAllowed { return }
+        try XCTSkipUnless(self.keyChainAccessAllowed)
         
         var config = URLEndpointListenerConfiguration(collections: [self.otherDB_defaultCollection!])
         config.readOnly = true
@@ -820,7 +967,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
     }
     
     func testReadOnlyListener() throws {
-        if !self.keyChainAccessAllowed { return }
+        try XCTSkipUnless(self.keyChainAccessAllowed)
         
         let doc1 = createDocument()
         try self.defaultCollection!.save(document: doc1)
@@ -835,7 +982,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
     }
     
     func testReplicatorServerCertificate() throws {
-        if !self.keyChainAccessAllowed { return }
+        try XCTSkipUnless(self.keyChainAccessAllowed)
         
         let x1 = allowOverfillExpectation(description: "idle")
         let x2 = expectation(description: "stopped")
@@ -874,7 +1021,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
     }
     
     func testReplicatorServerCertificateWithTLSError() throws {
-        if !self.keyChainAccessAllowed { return }
+        try XCTSkipUnless(self.keyChainAccessAllowed)
         
         var x1 = expectation(description: "stopped")
         
@@ -963,7 +1110,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
     }
     
     func testAcceptOnlySelfSignedServerCertificate() throws {
-        if !self.keyChainAccessAllowed { return }
+        try XCTSkipUnless(self.keyChainAccessAllowed)
         
         // Listener:
         let listener = try startListener()
@@ -987,7 +1134,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
     }
     
     func testPinnedServerCertificate() throws {
-        if !self.keyChainAccessAllowed { return }
+        try XCTSkipUnless(self.keyChainAccessAllowed)
         
         // Listener:
         let listener = try startListener()
@@ -1016,7 +1163,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
         try XCTSkipIf(true, "CBL-7005 : importIdentityWithData not working on newer macOS")
         #endif
         
-        if !self.keyChainAccessAllowed { return }
+        try XCTSkipUnless(self.keyChainAccessAllowed)
         
         let data = try dataFromResource(name: "identity/certs", ofType: "p12")
         var identity: TLSIdentity!
@@ -1088,7 +1235,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
     }
     
     func testTLSPasswordListenerAuthenticator() throws {
-        if !self.keyChainAccessAllowed { return }
+        try XCTSkipUnless(self.keyChainAccessAllowed)
         
         let doc1 = createDocument()
         try self.otherDB_defaultCollection!.save(document: doc1)
@@ -1147,7 +1294,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
         try XCTSkipIf(true, "CBL-7005 : importIdentityWithData not working on newer macOS")
         #endif
         
-        if !keyChainAccessAllowed { return }
+        try XCTSkipUnless(self.keyChainAccessAllowed)
         
         try TLSIdentity.deleteIdentity(withLabel: serverCertLabel)
         let data = try dataFromResource(name: "identity/certs", ofType: "p12")
@@ -1191,7 +1338,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
         try XCTSkipIf(true, "CBL-7005 : importIdentityWithData not working on newer macOS")
         #endif
         
-        if !self.keyChainAccessAllowed { return }
+        try XCTSkipUnless(self.keyChainAccessAllowed)
         
         let data = try dataFromResource(name: "identity/certs", ofType: "p12")
         var identity: TLSIdentity!
@@ -1226,7 +1373,7 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
     }
     
     func testAcceptOnlySelfSignedCertificateWithPinnedCertificate() throws {
-        if !self.keyChainAccessAllowed { return }
+        try XCTSkipUnless(self.keyChainAccessAllowed)
         
         // Listener:
         let listener = try startListener()
@@ -1395,7 +1542,7 @@ extension URLEndpointListener {
         comps.scheme = self.config.disableTLS ? "ws" : "wss"
         comps.host = "localhost"
         comps.port = Int(self.port!)
-        comps.path = "/\(self.config.database.name)"
+        comps.path = "/\(self.config.collections.first!.database.name)"
         return comps.url!
     }
     
