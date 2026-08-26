@@ -35,21 +35,29 @@ extern atomic_int gC4ExpectExceptions;
 
 + (void) allowExceptionIn: (void (^)(void))block {
     CBLExpectExceptionsBegin();
-    block();
-    CBLExpectExceptionsEnd();
+    @try {
+        block();
+    }
+    @finally {
+        CBLExpectExceptionsEnd();
+    }
 }
 
 + (BOOL) catchException: (void(^)(void))tryBlock error: (NSError **)error {
+    CBLExpectExceptionsBegin();
     @try {
-        CBLExpectExceptionsBegin();
         tryBlock();
-        CBLExpectExceptionsEnd();
         return YES;
     }
     @catch (NSException *exception) {
-        *error = [[NSError alloc] initWithDomain: exception.name code: 0
-                                        userInfo: exception.userInfo];
+        if (error) {
+            *error = [[NSError alloc] initWithDomain: exception.name code: 0
+                                            userInfo: exception.userInfo];
+        }
         return NO;
+    }
+    @finally {
+        CBLExpectExceptionsEnd();
     }
 }
 

@@ -113,8 +113,10 @@ class URLEndpointListenerTest: ReplicatorTest {
         var result: CFTypeRef?
         var status = SecItemCopyMatching(query as CFDictionary, &result)
         if status != errSecItemNotFound {
-            XCTAssertEqual(status, errSecSuccess, "Cannot query identities (OSStatus = \(status))")
-            let identities = result as! [SecIdentity]
+            guard status == errSecSuccess, let identities = result as? [SecIdentity] else {
+                XCTFail("Cannot query identities (OSStatus = \(status))")
+                return
+            }
             for identity in identities {
                 var certRef: SecCertificate?
                 guard SecIdentityCopyCertificate(identity, &certRef) == errSecSuccess, let cert = certRef else {
@@ -141,8 +143,10 @@ class URLEndpointListenerTest: ReplicatorTest {
         if status == errSecItemNotFound {
             return
         }
-        XCTAssertEqual(status, errSecSuccess, "Cannot query certificates (OSStatus = \(status))")
-        let certs = result as! [SecCertificate]
+        guard status == errSecSuccess, let certs = result as? [SecCertificate] else {
+            XCTFail("Cannot query certificates (OSStatus = \(status))")
+            return
+        }
         for cert in certs {
             let name = SecCertificateCopySubjectSummary(cert) as String?
             if name == anonymousIdentityCommonName {
@@ -521,30 +525,28 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
 
         // The cleanup helpers sweep by the common name discovered from a certificate
         // that the product mints; the discovery must succeed for the cleanup to work:
-        let commonName = anonymousIdentityCommonName()
-        XCTAssertNotNil(commonName)
+        let commonName = try XCTUnwrap(anonymousIdentityCommonName())
 
         // Starting a TLS listener without an identity creates an anonymous identity:
         let config = URLEndpointListenerConfiguration(collections: [self.otherDB_defaultCollection!])
         try startListener(withConfig: config)
-        let identity = self.listener!.tlsIdentity
-        XCTAssertNotNil(identity)
+        let identity = try XCTUnwrap(self.listener!.tlsIdentity)
 
         // The discovered name must match the certificate of an independently created
         // anonymous identity:
-        XCTAssertEqual(SecCertificateCopySubjectSummary(identity!.certs[0]) as String?, commonName)
+        XCTAssertEqual(SecCertificateCopySubjectSummary(identity.certs[0]) as String?, commonName)
 
         try stopListener()
 
         // The identity created above must be found by the discovered name; this guards
         // against the zero-count checks below passing vacuously with a wrong name:
-        XCTAssertGreaterThan(keychainItemCount(kSecClassIdentity, commonName: commonName!), 0)
+        XCTAssertGreaterThan(keychainItemCount(kSecClassIdentity, commonName: commonName), 0)
 
         cleanUpAnonymousIdentities()
 
         // No anonymous identities nor certificates should be left in the keychain:
-        XCTAssertEqual(keychainItemCount(kSecClassIdentity, commonName: commonName!), 0)
-        XCTAssertEqual(keychainItemCount(kSecClassCertificate, commonName: commonName!), 0)
+        XCTAssertEqual(keychainItemCount(kSecClassIdentity, commonName: commonName), 0)
+        XCTAssertEqual(keychainItemCount(kSecClassCertificate, commonName: commonName), 0)
     }
 
     func keychainItemCount(_ itemClass: CFString, commonName: String) -> Int {
@@ -554,10 +556,13 @@ class URLEndpointListenerTest_Main: URLEndpointListenerTest {
         var result: CFTypeRef?
         let status = SecItemCopyMatching(query as CFDictionary, &result)
         if status == errSecItemNotFound { return 0 }
-        XCTAssertEqual(status, errSecSuccess, "Cannot query keychain items (OSStatus = \(status))")
+        guard status == errSecSuccess, let items = result as? [AnyObject] else {
+            XCTFail("Cannot query keychain items (OSStatus = \(status))")
+            return 0
+        }
 
         var count = 0
-        for item in (result as! [AnyObject]) {
+        for item in items {
             var certRef: SecCertificate?
             if itemClass == kSecClassIdentity {
                 guard SecIdentityCopyCertificate(item as! SecIdentity, &certRef) == errSecSuccess,
