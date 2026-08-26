@@ -19,7 +19,7 @@
 import Foundation
 import Combine
 import XCTest
-@testable import CouchbaseLiteSwift
+import CouchbaseLiteSwift
 
 @available(iOS 13.0, *)
 class PublisherTest: CBLTestCase {

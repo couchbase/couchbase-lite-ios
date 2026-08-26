@@ -1,8 +1,8 @@
 //
-//  CBLTestHelper.h
+//  CBL_EE_Swift_Binary_Tests.xcconfig
 //  CouchbaseLite
 //
-//  Copyright (c) 2017 Couchbase, Inc All rights reserved.
+//  Copyright (c) 2026 Couchbase, Inc All rights reserved.
 //
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -17,12 +17,5 @@
 //  limitations under the License.
 //
 
-#import <Foundation/Foundation.h>
-
-@interface CBLTestHelper : NSObject
-
-+ (void) allowExceptionIn: (void (^)(void))block;
-
-+ (BOOL) catchException: (void(^)(void))tryBlock error: (NSError **)error;
-
-@end
+#include "CBL_EE_Common.xcconfig"
+#include "CBL_Swift_Binary_Tests.xcconfig"

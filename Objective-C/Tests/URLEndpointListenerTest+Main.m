@@ -1484,27 +1484,16 @@
 
     // The identity created above must be found by the discovered name; this guards
     // against the zero-count checks below passing vacuously with a wrong name:
-    Assert([self anonymousIdentityCount] > 0);
+    Assert([self keychainItemCount: (id)kSecClassIdentity commonName: commonName] > 0);
 
     [self cleanUpAnonymousIdentities];
 
     // No anonymous identities nor certificates should be left in the keychain:
-    AssertEqual([self anonymousIdentityCount], 0);
-    AssertEqual([self anonymousCertificateCount], 0);
+    AssertEqual([self keychainItemCount: (id)kSecClassIdentity commonName: commonName], 0);
+    AssertEqual([self keychainItemCount: (id)kSecClassCertificate commonName: commonName], 0);
 }
 
-- (NSUInteger) anonymousIdentityCount {
-    return [self keychainItemCount: (id)kSecClassIdentity];
-}
-
-- (NSUInteger) anonymousCertificateCount {
-    return [self keychainItemCount: (id)kSecClassCertificate];
-}
-
-- (NSUInteger) keychainItemCount: (id)itemClass {
-    NSString* commonName = [self anonymousIdentityCommonName];
-    AssertNotNil(commonName);
-
+- (NSUInteger) keychainItemCount: (id)itemClass commonName: (NSString*)commonName {
     NSDictionary* query = @{(id)kSecClass: itemClass,
                             (id)kSecMatchLimit: (id)kSecMatchLimitAll,
                             (id)kSecReturnRef: @YES};

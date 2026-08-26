@@ -18,7 +18,7 @@
 //
 
 import XCTest
-@testable import CouchbaseLiteSwift
+import CouchbaseLiteSwift
 
 class ReplicatorTest_Collection: ReplicatorTest {
     override func setUpWithError() throws {

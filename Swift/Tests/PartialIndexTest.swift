@@ -17,7 +17,7 @@
 //
 
 import XCTest
-@testable import CouchbaseLiteSwift
+import CouchbaseLiteSwift
 
 /// Test Spec v1.0.3:
 /// https://github.com/couchbaselabs/couchbase-lite-api/blob/master/spec/tests/T0007-Partial-Index.md

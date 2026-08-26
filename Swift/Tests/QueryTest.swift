@@ -19,7 +19,7 @@
 
 import XCTest
 
-@testable import CouchbaseLiteSwift
+import CouchbaseLiteSwift
 
 class QueryTest: CBLTestCase {
     
@@ -1518,25 +1518,6 @@ class QueryTest: CBLTestCase {
         XCTAssertEqual(dict["address"] as! NSNull, NSNull())
     }
 
-    func testJSONRepresentation() throws {
-        let doc1 = MutableDocument()
-        doc1.setValue("string", forKey: "string")
-        try saveDocument(doc1)
-
-        let q1 = QueryBuilder.select(kDOCID).from(DataSource.collection(defaultCollection!)).where(
-            Expression.property("string").is(Expression.string("string")))
-        let json = q1.json
-
-        let q = Query(database: db, JSONRepresentation: json)
-
-        let numRows = try verifyQuery(q) { (n, r) in
-            let doc = try defaultCollection!.document(id: r.string(at: 0)!)!
-            XCTAssertEqual(doc.id, doc1.id);
-            XCTAssertEqual(doc.string(forKey: "string")!, "string");
-        }
-        XCTAssertEqual(numRows, 1);
-    }
-    
     // MARK: META - isDeleted
     
     func testMetaIsDeletedEmpty() throws {

@@ -29,16 +29,16 @@
             buildForAnalyzing = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "40CC4B7F302C2FF90002386D"
-               BuildableName = "CouchbaseLiteBinaryTests.xctest"
-               BlueprintName = "CBL_EE_ObjC_Binary_Tests"
+               BlueprintIdentifier = "40E92C76303E45A3005C088C"
+               BuildableName = "CouchbaseLiteSwiftBinaryTests.xctest"
+               BlueprintName = "CBL_Swift_Binary_Tests"
                ReferencedContainer = "container:CouchbaseLite.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
    </BuildAction>
    <TestAction
-      buildConfiguration = "Debug_EE"
+      buildConfiguration = "Debug"
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       shouldUseLaunchSchemeArgsEnv = "YES"
@@ -48,16 +48,16 @@
             skipped = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "40CC4B7F302C2FF90002386D"
-               BuildableName = "CouchbaseLiteBinaryTests.xctest"
-               BlueprintName = "CBL_EE_ObjC_Binary_Tests"
+               BlueprintIdentifier = "40E92C76303E45A3005C088C"
+               BuildableName = "CouchbaseLiteSwiftBinaryTests.xctest"
+               BlueprintName = "CBL_Swift_Binary_Tests"
                ReferencedContainer = "container:CouchbaseLite.xcodeproj">
             </BuildableReference>
          </TestableReference>
       </Testables>
    </TestAction>
    <LaunchAction
-      buildConfiguration = "Debug_EE"
+      buildConfiguration = "Debug"
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       launchStyle = "0"
@@ -69,17 +69,17 @@
       queueDebuggingEnableBacktraceRecording = "Yes">
    </LaunchAction>
    <ProfileAction
-      buildConfiguration = "Release_EE"
+      buildConfiguration = "Release"
       shouldUseLaunchSchemeArgsEnv = "YES"
       savedToolIdentifier = ""
       useCustomWorkingDirectory = "NO"
       debugDocumentVersioning = "YES">
    </ProfileAction>
    <AnalyzeAction
-      buildConfiguration = "Debug_EE">
+      buildConfiguration = "Debug">
    </AnalyzeAction>
    <ArchiveAction
-      buildConfiguration = "Release_EE"
+      buildConfiguration = "Release"
       revealArchiveInOrganizer = "YES">
    </ArchiveAction>
 </Scheme>

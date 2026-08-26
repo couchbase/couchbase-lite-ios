@@ -1,0 +1,71 @@
+//
+//  CBL_Swift_Binary_Tests.xcconfig
+//  CouchbaseLite
+//
+//  Copyright (c) 2026 Couchbase, Inc All rights reserved.
+//
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//  http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
+//
+
+#include "CBL_OS_Target_Versions.xcconfig"
+
+// Black-box binary test suite: compiles against the public CouchbaseLiteSwift
+// API only. The target has no dependency on the framework target; it compiles
+// and links against a staged binary framework in BinaryTests/Frameworks,
+// populated by Scripts/prepare_binary_test.sh. Deliberately has no internal or
+// vendor (LiteCore/fleece) header search paths — any internal import is a
+// compile error, and the shipped framework has no testability, so any
+// @testable import fails as well.
+
+// Marks the target as a binary test suite. Swift test code guards white-box
+// sections with #if !CBL_BINARY_TEST; the bridging helper (CBLTestHelper.m)
+// uses the preprocessor definition. Set here rather than detected in code, so
+// that a target missing it fails to build instead of silently dropping the
+// guarded tests.
+SWIFT_ACTIVE_COMPILATION_CONDITIONS = $(inherited) CBL_BINARY_TEST
+GCC_PREPROCESSOR_DEFINITIONS        = $(inherited) CBL_BINARY_TEST=1
+
+GENERATE_INFOPLIST_FILE   = YES
+PRODUCT_BUNDLE_IDENTIFIER = com.couchbase.CouchbaseLiteSwiftBinaryTests
+PRODUCT_NAME              = CouchbaseLiteSwiftBinaryTests
+
+// Test code is not held to warnings-as-errors, same as the other test targets.
+GCC_TREAT_WARNINGS_AS_ERRORS = NO
+
+// The staged binary xcframeworks in BinaryTests/Frameworks (see
+// Scripts/prepare_binary_test.sh) are linked and embedded via the target's
+// build phases; the embedded frameworks are loaded from the runpath below.
+LD_RUNPATH_SEARCH_PATHS   = $(inherited) @loader_path/Frameworks
+
+// Guarantee at compile time that the binary tests use only public API: without
+// this, Xcode's project-wide header map would let the bridging header's quoted
+// imports resolve internal headers, bypassing the search paths.
+USE_HEADERMAP             = NO
+
+// Test-owned directories only — never product header directories.
+HEADER_SEARCH_PATHS       = $(SRCROOT)/Swift/Tests
+
+SWIFT_OBJC_BRIDGING_HEADER = Swift/Tests/CBL Swift Tests-Bridging-Header.h
+
+// Need to disable as using Objective-C Bridging Header:
+BUILD_LIBRARY_FOR_DISTRIBUTION = NO
+
+// iOS runs app-hosted: keychain APIs fail with errSecMissingEntitlement
+// (-34018) in a hostless test runner, so the keychain tests need a real app
+// process. macOS has no such restriction and runs hostless. BUNDLE_LOADER is
+// deliberately unset — this bundle links the staged framework itself rather
+// than resolving symbols through the host.
+TEST_HOST[sdk=iphone*]    = $(BUILT_PRODUCTS_DIR)/CBL_Binary_Tests.app/CBL_Binary_Tests
+
+// Signed for device runs like the other iOS test bundles; macOS needs no identity.
+CODE_SIGN_IDENTITY[sdk=iphone*] = iPhone Developer

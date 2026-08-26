@@ -17,7 +17,13 @@
 //
 
 import XCTest
+// The white-box tests in the Internal section below need @testable access; the binary
+// tests compile against a shipped framework, which does not support testability.
+#if CBL_BINARY_TEST
+import CouchbaseLiteSwift
+#else
 @testable import CouchbaseLiteSwift
+#endif
 
 class TLSIdentityTest: CBLTestCase {
     let serverCertLabel = "CBL-Swift-Server-Cert"
@@ -432,6 +438,13 @@ class TLSIdentityTest: CBLTestCase {
         XCTAssert(abs(expiration.timeIntervalSince1970 - identity!.expiration.timeIntervalSince1970) < 5.0)
     }
     
+    // MARK: - Internal
+
+    // White-box tests that verify internal state; excluded from the binary tests.
+    // Note: a public rewrite (import the issuer via importIdentity and verify with
+    // SecTrust) is blocked by CBL-7005 (importIdentity broken on newer macOS).
+    #if !CBL_BINARY_TEST
+
     func testCreateIdentitySignedWithIssuer() throws {
         try XCTSkipUnless(keyChainAccessAllowed)
         
@@ -527,4 +540,6 @@ class TLSIdentityTest: CBLTestCase {
         checkIdentity = try TLSIdentity.identity(withLabel: self.serverCertLabel)
         XCTAssertNil(checkIdentity)
     }
+
+    #endif
 }

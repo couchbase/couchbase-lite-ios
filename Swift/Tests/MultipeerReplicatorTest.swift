@@ -19,6 +19,12 @@
 import XCTest
 @testable import CouchbaseLiteSwift
 
+// This test file uses internal APIs and is for the internal test targets only;
+// it cannot be part of the binary test targets (CBL_*_Binary_Tests).
+#if CBL_BINARY_TEST
+#error("This test file uses internal APIs and cannot run against a binary framework.")
+#endif
+
 /// Test Spec : https://github.com/couchbaselabs/couchbase-lite-api/blob/master/spec/tests/T0012-MultipeerReplicator.md
 /// Version : 1.1.0
 class MultipeerReplicatorTest: CBLTestCase {
