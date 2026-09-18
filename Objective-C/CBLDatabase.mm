@@ -116,6 +116,7 @@ static const C4DatabaseConfig2 kDBConfig = {
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         [self checkFileLogging];
+        CBLWarn(Database, @"LiteCore warn-on-errors is %s", c4log_getWarnOnErrors() ? "ON" : "OFF");
     });
 }
 

@@ -28,8 +28,7 @@ static void initialize(void)
     {
         initialized = 1;
         
-#ifdef DEBUG
+        // CBSE-23608 VF: always on (normally DEBUG only)
         c4log_warnOnErrors(true);
-#endif
     }
 }
