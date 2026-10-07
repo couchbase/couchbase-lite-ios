@@ -703,6 +703,57 @@ class CollectionTest: CBLTestCase {
         }
     }
     
+    /// A change delivered after the collection object is released is dropped, not crashed on (CBSE-23804).
+    func testCollectionChangeListenerOnReleasedCollectionObject() throws {
+        let exp = expectation(description: "change listener")
+        exp.isInverted = true
+        var token: ListenerToken?
+        try autoreleasepool {
+            let col = try db.createCollection(name: "colA")
+            token = col.addChangeListener { change in
+                exp.fulfill()
+            }
+            // Delivery is async on the main queue, so it happens in wait(for:), after col is released.
+            try createDocNumbered(col, start: 0, num: 1)
+        }
+        
+        wait(for: [exp], timeout: 2.0)
+        token?.remove()
+    }
+    
+    /// A change queued before the collection object is released is dropped, not crashed on (CBSE-23804).
+    func testCollectionChangeListenerQueuedChangeAfterCollectionReleased() throws {
+        _ = try db.createCollection(name: "colA")
+        
+        let queue = DispatchQueue(label: "suspended-listener-queue")
+        queue.suspend()
+        
+        let exp1 = expectation(description: "queued change")
+        exp1.isInverted = true
+        let exp2 = expectation(description: "posted change")
+        var token1: ListenerToken?
+        var token2: ListenerToken?
+        try autoreleasepool {
+            let col = try db.collection(name: "colA")!
+            token1 = col.addChangeListener(queue: queue) { change in
+                exp1.fulfill()
+            }
+            // Both listeners get the same notification, so once this fires,
+            // token1's change is already on the suspended queue.
+            token2 = col.addChangeListener { change in
+                exp2.fulfill()
+            }
+            try createDocNumbered(col, start: 0, num: 1)
+            wait(for: [exp2], timeout: expTimeout)
+        }
+        
+        queue.resume()
+        wait(for: [exp1], timeout: 2.0)
+        
+        token1?.remove()
+        token2?.remove()
+    }
+    
     // MARK: Index
     
     func testCollectionIndex() throws {
