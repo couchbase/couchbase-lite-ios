@@ -21,8 +21,13 @@
 
 @interface AppDelegate : UIResponder <UIApplicationDelegate>
 
-@property (strong, nonatomic) UIWindow *window;
+@end
 
+// The delegate of the app's window scene. Apps built with the iOS 27 SDK must use the
+// scene-based life cycle, or they fail to launch. The scene is configured in Info.plist.
+@interface SceneDelegate : UIResponder <UIWindowSceneDelegate>
+
+@property (strong, nonatomic) UIWindow *window;
 
 @end
 
