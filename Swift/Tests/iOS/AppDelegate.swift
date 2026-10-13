@@ -22,8 +22,6 @@ import UIKit
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
-    var window: UIWindow?
-
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // Mark as host app for test:
         let defaults = UserDefaults.standard
@@ -31,6 +29,16 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         defaults.synchronize()
         return true
     }
-    
+
+}
+
+/// The delegate of the app's window scene. Apps built with the iOS 27 SDK must use the
+/// scene-based life cycle, or they fail to launch. The scene is configured in Info.plist,
+/// which refers to this class by its Objective-C name.
+@objc(SceneDelegate)
+class SceneDelegate: UIResponder, UIWindowSceneDelegate {
+
+    var window: UIWindow?
+
 }
 
