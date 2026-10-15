@@ -30,7 +30,7 @@
     CBLProxyType _proxyType;
     NSString* _nonceKey;
     CFHTTPMessageRef _responseMsg;
-    NSString* _authorizationHeader, *_proxyAuthorizationHeader;
+    NSString* _proxyAuthorizationHeader;
     NSURLCredential* _credential, *_proxyCredential;
     NSUInteger _redirectCount;
 }
@@ -201,7 +201,6 @@ static NSDictionary* sOverrideProxySettings;
         if (![self addAuthentication: _proxyCredential toRequest: httpMsg forProxy: true])
             _proxyCredential = nil;
     }
-    _authorizationHeader = getHeader(httpMsg, @"Authorization");
     _proxyAuthorizationHeader = getHeader(httpMsg, @"Proxy-Authorization");
 
     NSData* body = _urlRequest.HTTPBody;
@@ -272,13 +271,10 @@ static NSDictionary* sOverrideProxySettings;
 
         case 401: {
             NSString* authResponse = getHeader(_responseMsg, @"WWW-Authenticate");
-            CBLLogInfo(WebSocket, @"%@: HTTP auth failed; sent Authorization: %@  ;  got WWW-Authenticate: %@",
-                       self, _authorizationHeader, authResponse);
+            CBLLogInfo(WebSocket, @"%@: HTTP auth failed; got WWW-Authenticate: %@", self, authResponse);
             NSDictionary* challengeInfo = [[self class] parseAuthHeader: authResponse];
             
             NSMutableDictionary* errorInfo = [NSMutableDictionary new];
-            if (_authorizationHeader)
-                errorInfo[@"HTTPAuthorization"] = _authorizationHeader;
             if (authResponse)
                 errorInfo[@"HTTPAuthenticateHeader"] = authResponse;
             if (challengeInfo)
@@ -293,7 +289,8 @@ static NSDictionary* sOverrideProxySettings;
             if (!_proxyAuthorizationHeader) {
                 if (!_proxyCredential)
                     _proxyCredential = [self credentialForAuthHeader: authResponse];
-                CBLLogInfo(WebSocket, @"%@: Proxy auth challenge; credential = %@", self, _proxyCredential);
+                CBLLogInfo(WebSocket, @"%@: Proxy auth challenge; found credential = %d",
+                           self, _proxyCredential != nil);
                 if (_proxyCredential) {
                     // Recoverable auth failure -- try again with new _proxyCredential:
                     _shouldRetry = YES;

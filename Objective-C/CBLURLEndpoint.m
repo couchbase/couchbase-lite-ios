@@ -31,11 +31,13 @@ NSString* const kCBLURLEndpointTLSScheme = @"wss";
 - (instancetype) initWithURL: (NSURL*)url {
     CBLAssertNotNil(url);
     
+    // Check for embedded credentials first so that the scheme error below,
+    // which includes the URL, can never print a username or password:
+    Assert(!url.user && !url.password, kCBLErrorMessageInvalidEmbeddedCredentialsInURL);
+    
     Assert([url.scheme isEqualToString: kCBLURLEndpointScheme] ||
            [url.scheme isEqualToString: kCBLURLEndpointTLSScheme],
            kCBLErrorMessageInvalidSchemeURLEndpoint, url);
-    
-    Assert(!url.user && !url.password, kCBLErrorMessageInvalidEmbeddedCredentialsInURL);
     
     self = [super init];
     if (self) {
