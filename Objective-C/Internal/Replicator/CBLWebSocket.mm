@@ -209,8 +209,7 @@ static void doDispose(C4Socket* s) {
             NSURL* proxyURL = [NSURL URLWithDataRepresentation: proxy.uncopiedNSData()
                                                  relativeToURL: nil];
             if (![_logic setProxyURL: proxyURL]) {
-                CBLWarn(Sync, @"Invalid replicator HTTPProxy setting <%.*s>",
-                        (int)proxy.size, (char *)proxy.buf);
+                CBLWarn(Sync, @"Invalid replicator HTTPProxy setting");
             }
         }
         
