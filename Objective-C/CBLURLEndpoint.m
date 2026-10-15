@@ -33,7 +33,7 @@ NSString* const kCBLURLEndpointTLSScheme = @"wss";
     
     Assert([url.scheme isEqualToString: kCBLURLEndpointScheme] ||
            [url.scheme isEqualToString: kCBLURLEndpointTLSScheme],
-           kCBLErrorMessageInvalidSchemeURLEndpoint, url);
+           kCBLErrorMessageInvalidSchemeURLEndpoint, url.scheme);
     
     Assert(!url.user && !url.password, kCBLErrorMessageInvalidEmbeddedCredentialsInURL);
     
