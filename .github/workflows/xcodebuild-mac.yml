@@ -14,6 +14,8 @@ jobs:
   build:
     name: build
     runs-on: macOS-latest
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.3.app/Contents/Developer
     strategy:
       matrix:
         scheme: ["CBL_ObjC", "CBL_Swift"]
