@@ -2,7 +2,7 @@ pipeline {
     options {
         disableConcurrentBuilds() 
     }
-    agent { label 'mobile-mac-mini'  }
+    agent { label 'sonoma'  }
     stages {
         stage('Cleanup'){
             steps {
@@ -49,9 +49,6 @@ pipeline {
             }
         }
         stage('Build'){
-            environment {        
-                KEYCHAIN_PWD = credentials("mobile-mac-mini-keychain")
-            }
             steps {
                 sh """ 
 		            ./couchbase-lite-ios/Scripts/pull_request_build_test.sh
