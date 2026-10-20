@@ -28,7 +28,7 @@ C4LogDomain kCBL_LogDomainWebSocket;
 C4LogDomain kCBL_LogDomainListener;
 
 static NSArray* c4Domains = @[@"DB", @"Query", @"Sync", @"WS", @"Listener"];
-static NSArray* platformDomains = @[@"BLIP", @"BLIPMessages", @"SyncBusy", @"TLS", @"Changes", @"Zip"];
+static NSArray* platformDomains = @[@"BLIP", @"BLIPMessages", @"SyncBusy", @"Changes", @"Zip"];
 
 static CBLLogLevel _domainsLevel = kCBLLogLevelNone;
 static CBLLogLevel _callbackLevel = kCBLLogLevelNone;
