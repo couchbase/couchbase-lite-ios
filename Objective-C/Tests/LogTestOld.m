@@ -299,6 +299,20 @@
     AssertEqual(customLogger.lines.count, 4);
 }
 
+- (void) testSetCustomLoggerToNil {
+    CBLDatabase.log.console.level = kCBLLogLevelWarning;
+    CBLDatabase.log.file.level = kCBLLogLevelNone;
+    C4LogDomain domain = c4log_getDomain("Sync", false);
+    
+    CustomLogger* customLogger = [[CustomLogger alloc] init];
+    customLogger.level = kCBLLogLevelVerbose;
+    CBLDatabase.log.custom = customLogger;
+    AssertEqual(c4log_getLevel(domain), kC4LogVerbose);
+    
+    CBLDatabase.log.custom = nil;
+    AssertEqual(c4log_getLevel(domain), kC4LogWarning);
+}
+
 - (void) testFileLoggingMaxSize {
     CBLLogFileConfiguration* config = [self logFileConfig];
     config.usePlainText = YES;
