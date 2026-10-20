@@ -84,9 +84,10 @@
     // Always install an Old-version sink (even when _custom is nil) so the deprecated
     // API consistently commits kCBLLogAPIOld. Setting CBLLogSinks.custom = nil would pass
     // a nil source to checkLogApiVersion, which defaults to kCBLLogAPINew and would then
-    // conflict with the old API.
+    // conflict with the old API. Without a logger, the sink's level is None.
     CBLCustomLogSinkBridge* bridge = [[CBLCustomLogSinkBridge alloc] initWithLogger: _custom];
-    CBLCustomLogSink* sink = [[CBLCustomLogSink alloc] initWithLevel: _custom.level logSink: bridge];
+    CBLLogLevel level = _custom ? _custom.level : kCBLLogLevelNone;
+    CBLCustomLogSink* sink = [[CBLCustomLogSink alloc] initWithLevel: level logSink: bridge];
     sink.version = kCBLLogAPIOld;
     CBLLogSinks.custom = sink;
 }
