@@ -90,7 +90,8 @@
 
 - (void) updateCustomLogSink {
     CBLCustomLogSinkBridge* bridge = [[CBLCustomLogSinkBridge alloc] initWithLogger: _custom];
-    CBLCustomLogSink* sink = [[CBLCustomLogSink alloc] initWithLevel: _custom.level logSink: bridge];
+    CBLLogLevel level = _custom ? _custom.level : kCBLLogLevelNone;
+    CBLCustomLogSink* sink = [[CBLCustomLogSink alloc] initWithLevel: level logSink: bridge];
     sink.version = kCBLLogAPIOld;
     CBLLogSinks.custom = sink;
 }
