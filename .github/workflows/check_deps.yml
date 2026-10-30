@@ -25,5 +25,5 @@ jobs:
     - name: Check Submodules
       working-directory: ${{github.workspace}}
       run: |
-        pip install termcolor
+        pip install termcolor colorama
         ./vendor/couchbase-lite-core/build_cmake/scripts/check_deps.py $GITHUB_BASE_REF ${{github.workspace}}
